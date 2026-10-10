@@ -1,0 +1,7 @@
+# 第三方参考仓库，不入版本库
+reference/
+
+# 日志与临时产物
+*.log
+output/
+tmp/
