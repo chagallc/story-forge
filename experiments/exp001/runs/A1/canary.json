@@ -1,0 +1,35 @@
+{
+  "hard_leaks": [
+    {
+      "chapter": 2,
+      "foreshadow": "F2",
+      "canary": "七弦",
+      "reveal_chapter": 9
+    },
+    {
+      "chapter": 3,
+      "foreshadow": "F2",
+      "canary": "七弦",
+      "reveal_chapter": 9
+    },
+    {
+      "chapter": 4,
+      "foreshadow": "F3",
+      "canary": "锡盒",
+      "reveal_chapter": 10
+    },
+    {
+      "chapter": 4,
+      "foreshadow": "F4",
+      "canary": "鹤嘴",
+      "reveal_chapter": 8
+    },
+    {
+      "chapter": 5,
+      "foreshadow": "F2",
+      "canary": "七弦",
+      "reveal_chapter": 9
+    }
+  ],
+  "count": 5
+}
