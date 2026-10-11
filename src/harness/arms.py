@@ -31,18 +31,27 @@ def run_arm(arm: str, run_idx: int, spec: dict, cfg: dict, outdir: str, chapters
 
     chapters: list[str] = []
     for ch in range(1, total + 1):
-        msgs = build_writer_messages(arm, spec, ledger, chapters, ch)
-        text = writer.chat(msgs, tag=f"arm{arm}-run{run_idx}-ch{ch:02d}")
-        chapters.append(text)
-        with open(os.path.join(ch_dir, f"ch{ch:02d}.md"), "w", encoding="utf-8") as f:
-            f.write(text)
-        print(f"  [arm {arm} run {run_idx}] chapter {ch}/{total} written ({len(text)} chars)")
+        ch_path = os.path.join(ch_dir, f"ch{ch:02d}.md")
+        rd_path = os.path.join(rd_dir, f"ch{ch:02d}.json")
+        # 断点续跑：已有非空产物的章节直接读盘，不重复调用
+        if os.path.exists(ch_path) and os.path.getsize(ch_path) > 0:
+            with open(ch_path, encoding="utf-8") as f:
+                chapters.append(f.read())
+            print(f"  [arm {arm} run {run_idx}] chapter {ch}/{total} resumed from disk")
+        else:
+            msgs = build_writer_messages(arm, spec, ledger, chapters, ch)
+            text = writer.chat(msgs, tag=f"arm{arm}-run{run_idx}-ch{ch:02d}")
+            chapters.append(text)
+            with open(ch_path, "w", encoding="utf-8") as f:
+                f.write(text)
+            print(f"  [arm {arm} run {run_idx}] chapter {ch}/{total} written ({len(text)} chars)")
 
-        rmsgs = build_reader_messages(spec["title"], chapters)
-        raw = reader.chat(rmsgs, tag=f"arm{arm}-run{run_idx}-reader-ch{ch:02d}")
-        parsed = parse_reader_json(raw)
-        with open(os.path.join(rd_dir, f"ch{ch:02d}.json"), "w", encoding="utf-8") as f:
-            json.dump(parsed, f, ensure_ascii=False, indent=2)
+        if not (os.path.exists(rd_path) and os.path.getsize(rd_path) > 0):
+            rmsgs = build_reader_messages(spec["title"], chapters)
+            raw = reader.chat(rmsgs, tag=f"arm{arm}-run{run_idx}-reader-ch{ch:02d}")
+            parsed = parse_reader_json(raw)
+            with open(rd_path, "w", encoding="utf-8") as f:
+                json.dump(parsed, f, ensure_ascii=False, indent=2)
 
     meta["finished_at"] = datetime.now(timezone.utc).isoformat()
     meta["writer_tokens"] = writer.total_tokens

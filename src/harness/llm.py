@@ -19,6 +19,11 @@ class LLMClient:
         self.budget = cfg.get("budget", 500_000)
         self.usage_log = usage_log
         self.total_tokens = 0
+        # 默认绕过系统代理（本机代理开关不定，DeepSeek 直连即可）；配置 use_system_proxy=true 才走代理
+        if cfg.get("use_system_proxy"):
+            self.opener = urllib.request.build_opener()
+        else:
+            self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
     def chat(self, messages, *, tag="", temperature=None, max_tokens=None):
         budget_tokens = max_tokens or self.max_tokens
@@ -40,7 +45,7 @@ class LLMClient:
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(req, timeout=300) as resp:
+                with self.opener.open(req, timeout=300) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
             except Exception as e:  # noqa: BLE001
                 last_err = e

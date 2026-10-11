@@ -1,0 +1,10 @@
+{
+  "arm": "A",
+  "run": 1,
+  "chapters": 12,
+  "writer_model": "deepseek-v4-pro",
+  "reader_model": "deepseek-flash",
+  "writer_temperature": 0.8,
+  "reader_temperature": 0.3,
+  "started_at": "2026-10-11T03:16:44.550526+00:00"
+}
