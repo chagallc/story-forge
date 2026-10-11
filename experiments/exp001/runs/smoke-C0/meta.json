@@ -1,0 +1,13 @@
+{
+  "arm": "C",
+  "run": 0,
+  "chapters": 2,
+  "writer_model": "deepseek-v4-pro",
+  "reader_model": "deepseek-flash",
+  "writer_temperature": 0.8,
+  "reader_temperature": 0.3,
+  "started_at": "2026-10-11T01:40:16.979390+00:00",
+  "finished_at": "2026-10-11T01:42:37.817774+00:00",
+  "writer_tokens": 12026,
+  "reader_tokens": 11713
+}

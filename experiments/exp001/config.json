@@ -1,0 +1,19 @@
+{
+  "writer": {
+    "base_url": "https://api.deepseek.com",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "model": "deepseek-v4-pro",
+    "temperature": 0.8,
+    "max_tokens": 8192,
+    "budget": 350000
+  },
+  "reader": {
+    "base_url": "https://api.deepseek.com",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "model": "deepseek-flash",
+    "temperature": 0.3,
+    "max_tokens": 4096,
+    "budget": 200000
+  },
+  "chapters": 12
+}
