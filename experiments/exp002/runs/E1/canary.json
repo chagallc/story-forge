@@ -1,0 +1,17 @@
+{
+  "hard_leaks": [
+    {
+      "chapter": 2,
+      "foreshadow": "F1",
+      "canary": "蓝鬃",
+      "reveal_chapter": 7
+    },
+    {
+      "chapter": 3,
+      "foreshadow": "F2",
+      "canary": "七弦",
+      "reveal_chapter": 9
+    }
+  ],
+  "count": 2
+}
