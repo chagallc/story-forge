@@ -2,6 +2,8 @@
 import json
 import re
 
+from .engine import arc_summary, build_engine_directive
+
 WRITER_SYSTEM = (
     "你是一位中文悬疑小说家。要求：每章约1000字；以场景、动作、对白推进故事，"
     "靠细节与潜台词制造悬念；禁止上帝视角解释人物动机；禁止总结式收尾；"
@@ -23,6 +25,15 @@ def _story_block(spec: dict) -> str:
     )
 
 
+def _story_block_engine(spec: dict) -> str:
+    """引擎模式：不给出逐章节拍，只给前提、人物与弧线锄点。"""
+    chars = "\n".join(f"- {c['name']}：{c['card']}" for c in spec["characters"])
+    return (
+        f"《{spec['title']}》\n\n前提：{spec['premise']}\n\n"
+        f"人物：\n{chars}\n\n全书弧线（仅锄点，不给逐章内容）：{arc_summary(spec)}"
+    )
+
+
 def _history_block(chapters: list[str]) -> str:
     if not chapters:
         return "（这是第一章，暂无前文）"
@@ -31,7 +42,18 @@ def _history_block(chapters: list[str]) -> str:
 
 
 def build_writer_messages(arm: str, spec: dict, ledger, chapters: list[str], chapter: int):
-    """按臂组装写作上下文。arm: A=单体全知 / B=分工无墙 / C=分工有墙。"""
+    """按臂组装写作上下文。arm: A=单体全知 / B=分工无墙 / C=分工有墙 / E=引擎模式（B 可见性）。"""
+    if arm == "E":
+        blocks = [_story_block_engine(spec)]
+        blocks.append(f"完整的伏笔设定（供你参考）：\n{ledger.full_text()}")
+        blocks.append(f"本章引擎指令（叙事引擎下发）：\n{build_engine_directive(spec, chapter)}")
+        blocks.append(f"伏笔调度：\n{ledger.directive_for(chapter)}")
+        blocks.append(f"任务：请写第{chapter}章。")
+        blocks.append(_history_block(chapters))
+        return [
+            {"role": "system", "content": WRITER_SYSTEM},
+            {"role": "user", "content": "\n\n".join(blocks)},
+        ]
     blocks = [_story_block(spec)]
     if arm == "A":
         blocks.append(f"完整的伏笔设定（你是唯一作者，统管埋设与回收）：\n{ledger.full_text()}")

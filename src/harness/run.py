@@ -18,18 +18,23 @@ EXP_DIR = os.path.join(ROOT, "experiments", "exp001")
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", required=True, choices=["A", "B", "C"])
+    ap.add_argument("--arm", required=True, choices=["A", "B", "C", "E"])
     ap.add_argument("--run", type=int, required=True)
+    ap.add_argument("--exp", default="exp001", help="实验目录名，默认 exp001")
     ap.add_argument("--smoke", action="store_true", help="只写 2 章验证管线")
     args = ap.parse_args()
 
-    with open(os.path.join(EXP_DIR, "spec.json"), encoding="utf-8") as f:
+    exp_dir = os.path.join(ROOT, "experiments", args.exp)
+    with open(os.path.join(exp_dir, "spec.json"), encoding="utf-8") as f:
         spec = json.load(f)
-    with open(os.path.join(EXP_DIR, "config.json"), encoding="utf-8") as f:
+    cfg_path = os.path.join(exp_dir, "config.json")
+    if not os.path.exists(cfg_path):
+        cfg_path = os.path.join(EXP_DIR, "config.json")
+    with open(cfg_path, encoding="utf-8") as f:
         cfg = json.load(f)
 
     tag = "smoke-" if args.smoke else ""
-    outdir = os.path.join(EXP_DIR, "runs", f"{tag}{args.arm}{args.run}")
+    outdir = os.path.join(exp_dir, "runs", f"{tag}{args.arm}{args.run}")
     chapters = run_arm(args.arm, args.run, spec, cfg, outdir, chapters_override=2 if args.smoke else None)
 
     hits = canary_hits(chapters, Ledger(spec))

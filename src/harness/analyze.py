@@ -41,8 +41,12 @@ def load_reader(run_dir):
     return out
 
 
-def analyze(run_name):
-    run_dir = os.path.join(RUNS_DIR, run_name)
+def analyze(run_ref: str):
+    if "/" in run_ref:
+        exp, run_name = run_ref.split("/", 1)
+    else:
+        exp, run_name = "exp001", run_ref
+    run_dir = os.path.join(ROOT, "experiments", exp, "runs", run_name)
     chapters = load_chapters(run_dir)
     readers = load_reader(run_dir)
 
