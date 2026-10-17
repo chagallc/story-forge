@@ -6,5 +6,8 @@
   "reader_model": "deepseek-flash",
   "writer_temperature": 0.8,
   "reader_temperature": 0.3,
-  "started_at": "2026-10-17T17:22:17.125975+00:00"
+  "started_at": "2026-10-17T17:22:17.125975+00:00",
+  "finished_at": "2026-10-17T17:23:43.771493+00:00",
+  "writer_tokens": 9137,
+  "reader_tokens": 7457
 }
