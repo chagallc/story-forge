@@ -1,0 +1,47 @@
+[
+  {
+    "file": "ch01.md",
+    "flags_before": [
+      "外文词混入",
+      "分节碎"
+    ],
+    "flags_after": [
+      "分节碎"
+    ],
+    "canary_intact": true,
+    "rounds": [
+      {
+        "round": 1,
+        "flags_before": [
+          "外文词混入",
+          "分节碎"
+        ],
+        "changed_chars": -21
+      },
+      {
+        "round": 2,
+        "flags_before": [
+          "分节碎"
+        ],
+        "changed_chars": 25
+      }
+    ]
+  },
+  {
+    "file": "ch02.md",
+    "flags_before": [
+      "冒号总结腔"
+    ],
+    "flags_after": [],
+    "canary_intact": true,
+    "rounds": [
+      {
+        "round": 1,
+        "flags_before": [
+          "冒号总结腔"
+        ],
+        "changed_chars": 16
+      }
+    ]
+  }
+]

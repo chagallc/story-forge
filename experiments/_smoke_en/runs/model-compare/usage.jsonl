@@ -1,0 +1,2 @@
+{"tag": "compare-glm-5.3-flash", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1588, "completion_tokens_details": {"reasoning_tokens": 24}, "prompt_tokens": 1741, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 3329}}
+{"tag": "compare-k3.1-pro", "model": "k3.1-pro", "usage": {"prompt_tokens": 1808, "completion_tokens": 5345, "total_tokens": 7153, "completion_tokens_details": {"reasoning_tokens": 3799}}}

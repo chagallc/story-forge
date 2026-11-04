@@ -1,0 +1,36 @@
+[
+  {
+    "file": "ch01.md",
+    "flags_before": [
+      "em-dash超标"
+    ],
+    "flags_after": [],
+    "canary_intact": true,
+    "rounds": [
+      {
+        "round": 1,
+        "flags_before": [
+          "em-dash超标"
+        ],
+        "changed_chars": -9
+      }
+    ]
+  },
+  {
+    "file": "ch02.md",
+    "flags_before": [
+      "em-dash超标"
+    ],
+    "flags_after": [],
+    "canary_intact": true,
+    "rounds": [
+      {
+        "round": 1,
+        "flags_before": [
+          "em-dash超标"
+        ],
+        "changed_chars": -15
+      }
+    ]
+  }
+]

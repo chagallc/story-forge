@@ -1,0 +1,2 @@
+{"tag": "polish-ch01-r1", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1710, "completion_tokens_details": {"reasoning_tokens": 0}, "prompt_tokens": 3645, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 5355}}
+{"tag": "polish-ch02-r1", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1827, "completion_tokens_details": {"reasoning_tokens": 28}, "prompt_tokens": 3843, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 5670}}

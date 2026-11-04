@@ -1,0 +1,69 @@
+{
+ "status": "success",
+ "softmax_confidence": 0.8374,
+ "ratio_confidence": 0.8352,
+ "labels_ratio": {
+  "0": 0.1648,
+  "1": 0.5088,
+  "2": 0.3264
+ },
+ "segment_labels": [
+  {
+   "text": "“Two hundred and six. Two hundred and seven.”\n\nKesh counted each turn of the grinding wheel. Sparks jumped from the evaluation blade and died against his apron. Six years at the wheel had left white seams across his knuckles and a burn notch in the heel of his left hand. He kept that hand steady.\n\nSeven days remained before the guild assessment. If Oren signed for him, journeyman’s pay would rise from eleven coppers a day to nineteen. Kesh had worked the figures on the back of his mother’s final notice: twenty-six silver owed, three silver and four copper saved, interest due at first snow. After the assessment, he would ask Oren for an advance against his own wages. Enough to clear the debt before winter.\n\nThe notice had been plain about the alternative. Before spring, the collector would take the house.\n\n“Two hundred and nine.”\n\nOren Vael came to stand beside him. The master of the eighth forge wore his sleeves folded to exactly two turns above the wrist. He watched Kesh finish the pass, then lifted the blade with tongs.\n\n“Heat’s even,” Kesh said. “The heel needs another day.”\n\nOren sighted along the edge. “The heel needs six hours. Your fear needs the other eighteen.”\n\nHe set it down without praising it. Kesh returned to the wheel.\n\nA cart ground into the yard, iron tires complaining on the stone. Four long crates rode under oiled canvas. The carter called for a signature, and Oren went out, already reaching for the pencil he kept behind his ear.\n\nKesh followed with the hoist chain.\n\nTheir own crates left through the upper gate stamped with an VIII inside the guild’s split-hammer seal. These carried something else. Black stencil, fresh enough to stain the canvas where it touched the wood: IX-M.\n\nKesh stopped with the chain hanging from both hands.\n\nOren signed the carter’s receipt. He checked the axle pins, counted the ropes aloud, and paid two coppers extra for the delivery coming before noon. The carter touched his cap.\n\n“That seal isn’t ours,” Kesh said.\n\nOren entered the two coppers in his pocket book.\n\n“Eastern dock,” he said. “Four crates, one cart, no storage charge if they’re aboard by dawn. Put the chain under the second one.”\n\nKesh looked again at the mark. Oren had already turned away.\n\nThey got the crates beneath the awning. ",
+   "label": 1,
+   "conf": 0.9986,
+   "order": 1,
+   "position": [
+    0,
+    2279
+   ]
+  },
+  {
+   "text": "Each one took Kesh, the carter, and Tamm, the striker, to lower. Tamm swore at the weight. Oren chalked a number on each lid and sent the carter off with a heel of bread from the forge kitchen.\n\nA coal wagon waited behind him.\n\nKesh logged the delivery because Oren had the buyer’s receipts spread across his desk. Forty sacks came off the wagon, black dust puffing where each one landed. Kesh carried the tally slate inside and opened the quarter’s account.\n\nHe read the column twice.\n\nLast quarter, one hundred and eight sacks. This quarter, two hundred and sixteen, with nine days still left. He turned to the output book. Sixty-one pieces finished then. Sixty-three now. Two more farming blades, one fewer helm rim.\n\nThe wheel kept turning behind him. Tamm had taken Kesh’s place and was doing it badly.\n\nKesh carried both books to Oren’s desk.\n\n“The coal account has doubled.”\n\nOren made a small correction to a receipt. “Good lump coal is twelve coppers the sack. Slack is seven. After the pass closes, add three.”\n\n“Output’s the same.”\n\n“Your wheel time costs me two coppers an hour. ",
+   "label": 2,
+   "conf": 0.5263,
+   "order": 2,
+   "position": [
+    2279,
+    1091
+   ]
+  },
+  {
+   "text": "Tamm’s costs me one and a half, and he’s presently ruining twice as much steel.”\n\nKesh did not move. “I only need to know which account to put it against.”\n\nOren laid down his pencil. From the drawer at his right he took a sheet of guild paper. Kesh recognized the blue line along its top before he saw his own name written beneath it.\n\nHis recommendation.\n\nOren dipped his pen and signed the bottom.\n\n“The assessment can be tomorrow,” he said. “Journeyman’s rate from the first of the month. I’ll advance twenty-three silver against it and carry the balance until spring.”\n\nThe paper dried between them.\n\nTwenty-three silver, added to what Kesh had saved. The collector’s stamp. His mother no longer leaving the downstairs shutter closed so the house would look empty.\n\nKesh put his fingers on the edge of the desk.\n\n“My blade isn’t finished.”\n\n“I’ve seen six years of your work. The guild will see my signature.”\n\n“You told me an edge gets judged by what it does.”\n\n“So does a recommendation.” Oren pushed the sheet an inch closer. “Take the afternoon off. Pay your mother’s debt. ",
+   "label": 0,
+   "conf": 0.402,
+   "order": 3,
+   "position": [
+    3370,
+    1083
+   ]
+  },
+  {
+   "text": "Leave the coal to whoever buys it.”\n\nFrom the yard came the shriek of Tamm grinding too hard.\n\nKesh looked at Oren’s signature. The ink had pooled where the pen had paused over the V.\n\n“Seven days,” Kesh said. “You can sign it again if the blade holds.”\n\nOren’s gaze went to the output book, still open under Kesh’s hand.\n\n“And if it doesn’t?”\n\n“Then it doesn’t.”\n\nThe wheel shrieked again. Kesh left the paper where it lay.\n\nAt the wheel, Tamm had put a flat in the evaluation blade’s bevel. Kesh took over without speaking and lost the rest of the afternoon recovering it. His shoulders ached by the supper bell. He did not eat.\n\nHe counted instead.\n\nEighteen sword blanks on the upper rack. Nine on the lower. Four axe heads awaiting hafts. Thirty-two finished pieces tagged for sale. He wrote the figures on a shaving of pine, then checked them against the output book while the others ate.\n\nSixty-three pieces finished. Sixty-three entered as sold.\n\nHe counted the empty coal sacks stacked by the wall. He counted the new ones. Forty, as delivered. ",
+   "label": 2,
+   "conf": 0.8751,
+   "order": 4,
+   "position": [
+    4453,
+    1054
+   ]
+  },
+  {
+   "text": "Under Oren’s awning stood four crates, entered nowhere in the book Kesh had been given.\n\n“Apprentice,” Oren said from the doorway.\n\nKesh closed the book.\n\n“Go home.”\n\n“The heel needs six hours.”\n\n“You’ve given it nine.”\n\nKesh set the evaluation blade on its rest. The bevel was true again, though narrower than he had planned. A full day’s margin gone.\n\nOren waited until Kesh banked the wheel and hung up his apron. At the gate, the master said, “A third-rate seal buys very little. Don’t spend yours before you have it.”\n\nKesh went down three steps. Then he stopped and counted them back up when Oren’s door shut.\n\nHe waited in the darkened yard until the windows above the forge went black. The crates would leave at dawn. By breakfast, there would be nothing to count but coal dust and a clean space under the awning.\n\nKesh took the pry bar from its hook. The iron was cold enough to hurt his scarred palm.\n\nAt the first crate, the IX-M stencil showed gray in the moonlight. He knelt, found the head of the nearest nail, and set the fork of the bar beneath it.",
+   "label": 1,
+   "conf": 0.9996,
+   "order": 5,
+   "position": [
+    5507,
+    1064
+   ]
+  }
+ ],
+ "usage": {
+  "total_tokens": 6571
+ },
+ "msg": "",
+ "makers_models_usage": {
+  "total_tokens": 10952
+ }
+}

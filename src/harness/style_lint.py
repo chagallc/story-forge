@@ -89,7 +89,23 @@ def lint_chapter_en(text: str) -> dict:
         flags.append("-ly副词堆叠")
     if checks["tricolon收尾"]:
         flags.append("tricolon收尾")
-    return {"checks": checks, "flags": flags}
+    result = {"checks": checks, "flags": flags}
+    # 命中样本（供润色层定向修复）
+    ev = {}
+    njb = [s for s in sents if EN_NOT_JUST_RE.search(s) or EN_WASNT_JUST_RE.search(s)]
+    if njb:
+        ev["not-just-but"] = njb[:3]
+    slop = [s for s in sents if EN_SLOP_RE.search(s)]
+    if slop:
+        ev["slop词"] = slop[:4]
+    beats = [s for s in sents if any(p in s.lower() for p in EN_STOCK_BEATS) or EN_EYES_RE.search(s)]
+    if beats:
+        ev["stock beats"] = beats[:3]
+    dash_s = [s for s in sents if "—" in s]
+    if checks["em-dash密度"] >= 2 and dash_s:
+        ev["em-dash"] = dash_s[:8]
+    result["evidence"] = ev
+    return result
 
 
 def lint_chapter(text: str, lang: str = "zh") -> dict:
@@ -139,8 +155,27 @@ def lint_chapter(text: str, lang: str = "zh") -> dict:
     if paras and checks["超短段占比"] > 0.15:
         flags.append("假深刻独词句")
 
-    return {"checks": {k: (round(v, 3) if isinstance(v, float) else v) for k, v in checks.items()},
-            "flags": flags}
+    result = {"checks": {k: (round(v, 3) if isinstance(v, float) else v) for k, v in checks.items()},
+              "flags": flags}
+    # 命中样本（供润色层定向修复）
+    ev = {}
+    opp = [s for s in sents if OPPOSITION_RE.search(s)]
+    if opp:
+        ev["对仗句式"] = opp[:3]
+    tpl = [s for s in sents if any(p in s for p in TEMPLATE_PHRASES)]
+    if tpl:
+        ev["模板句"] = tpl[:3]
+    colon = [s for s in sents if COLON_SUMMARY_RE.search(s)]
+    if checks["冒号总结腔"] >= 3 and colon:
+        ev["冒号总结腔"] = colon[:4]
+    dash_s = [s for s in sents if "——" in s]
+    if checks["破折号密度"] >= 2 and dash_s:
+        ev["破折号密度"] = dash_s[:5]
+    foreign = [s for s in sents if FOREIGN_RE.search(s)]
+    if foreign:
+        ev["外文混入"] = foreign[:3]
+    result["evidence"] = ev
+    return result
 
 
 def lint_run(chapters: list[str], lang: str = "zh") -> dict:

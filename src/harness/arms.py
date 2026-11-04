@@ -4,8 +4,20 @@ import os
 from datetime import datetime, timezone
 
 from .agents import build_reader_messages, build_writer_messages, parse_reader_json
+from .config import load_config
 from .ledger import Ledger
 from .llm import LLMClient
+
+
+def _maybe_polisher(cfg: dict, spec: dict, outdir: str):
+    """cfg 含 polish 配置时启用润色层；否则返回 None。polish 角色缺省复用 writer 端点。"""
+    pol = cfg.get("polish")
+    if not pol:
+        return None
+    role_cfg = dict(cfg["writer"] if isinstance(pol, bool) or pol is True else {**cfg["writer"], **pol})
+    client = LLMClient(role_cfg, os.path.join(outdir, "usage.jsonl"))
+    from .polish import Polisher
+    return Polisher(client, spec)
 
 
 def run_arm(arm: str, run_idx: int, spec: dict, cfg: dict, outdir: str, chapters_override: int = None):
@@ -18,6 +30,7 @@ def run_arm(arm: str, run_idx: int, spec: dict, cfg: dict, outdir: str, chapters
     ledger = Ledger(spec)
     writer = LLMClient(cfg["writer"], os.path.join(outdir, "usage.jsonl"))
     reader = LLMClient(cfg["reader"], os.path.join(outdir, "usage.jsonl"))
+    polisher = _maybe_polisher(cfg, spec, outdir)
     total = chapters_override or cfg.get("chapters", len(spec["beats"]))
 
     meta = {
@@ -41,10 +54,16 @@ def run_arm(arm: str, run_idx: int, spec: dict, cfg: dict, outdir: str, chapters
         else:
             msgs = build_writer_messages(arm, spec, ledger, chapters, ch)
             text = writer.chat(msgs, tag=f"arm{arm}-run{run_idx}-ch{ch:02d}")
+            if polisher:
+                text, prep = polisher.polish_chapter(text, ch, tag=f"arm{arm}-run{run_idx}-")
+                os.makedirs(os.path.join(outdir, "polish"), exist_ok=True)
+                with open(os.path.join(outdir, "polish", f"ch{ch:02d}.json"), "w", encoding="utf-8") as f:
+                    json.dump(prep, f, ensure_ascii=False, indent=2)
             chapters.append(text)
             with open(ch_path, "w", encoding="utf-8") as f:
                 f.write(text)
-            print(f"  [arm {arm} run {run_idx}] chapter {ch}/{total} written ({len(text)} chars)")
+            note = f" (polished: {'resolved' if prep.get('resolved') else prep.get('flags_after') or 'clean'})" if polisher else ""
+            print(f"  [arm {arm} run {run_idx}] chapter {ch}/{total} written ({len(text)} chars){note}")
 
         if not (os.path.exists(rd_path) and os.path.getsize(rd_path) > 0):
             rmsgs = build_reader_messages(spec["title"], chapters, lang=spec.get("language", "zh"))

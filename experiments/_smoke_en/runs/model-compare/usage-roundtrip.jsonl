@@ -1,0 +1,2 @@
+{"tag": "rt-en2zh", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1562, "completion_tokens_details": {"reasoning_tokens": 0}, "prompt_tokens": 1634, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 3196}}
+{"tag": "rt-zh2en", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1639, "completion_tokens_details": {"reasoning_tokens": 54}, "prompt_tokens": 1639, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 3278}}

@@ -1,0 +1,69 @@
+The wheel threw sparks in a short, mean arc, and Kesh counted them. Forty-one strokes to take the burr off the blade's spine. Forty-one the last time, too. He kept his weight on his heels and let his shoulders do the work, because his hands had stopped being reliable around the third hour and he needed them until dark.
+
+Behind him the eighth forge breathed: bellows, hammer, the hiss of the quench barrel. Master Oren Vael called it the oldest sound in Vhalun, older than the walls. Kesh called it four more days until the evaluation, and a signature at the bottom of a guild sheet.
+
+Four days. He had run the numbers so often they had worn smooth. Journeyman's rate came to eleven silver a tenday above apprentice's. His mother owed the collector Thurn forty-two silver and had owed it for two years, and the note said spring. Spring in the mountains came late, but it came. Eleven a tenday, twelve tendays to the thaw, and Oren would have to advance the rest against his wages, which meant Oren would have to sign the evaluation first.
+
+He turned the blade. Forty-two strokes.
+
+"Kesh."
+
+Oren stood at the yard doors with a carter beside him, and three crates on the cart, and the cart's bed sagging in a way that told Kesh what was inside without being told. Heavy. Long. Packed in straw to keep them from ringing against each other, which was a thing you did for bar stock and a thing you did for rifles.
+
+"Set them inside the small door," Oren said. "Not the yard. Inside, and don't stack them past three high."
+
+Kesh put the blade down and wiped his palms on his apron. The carter was already at the tail of the cart, and together they walked the first crate down the ramp, Kesh at the low end taking the weight. He was close enough to read the stencil.
+
+It was not the eighth forge's mark. Theirs was a hammer over a V, burned into the corner of every crate that left the yard, and Kesh had burned a hundred of them himself with the brand in the coal house. This one was a square with a bar through it and letters under the bar: IX-M. Clean stencil. Fresh paint. The crate was bound for the eastern dock; the carter's slate said so in chalk.
+
+"Mind the step," Oren said, and went back to his ledger.
+
+Kesh got the crate through the small door. When he came out for the second, the carter was drinking from a flask, and Oren was signing something with a flat, bored hand. Kesh looked at the stencil again. IX-M. He knew the guild marks the way he knew the grinding grits, and this was not a mark of the third-rate houses, and not of the first. It might have been a customs brand. It might have been a buyer's seal.
+
+"Master. This isn't ours."
+
+"It's a mark of passage." Oren did not look up. "Three high, Kesh."
+
+They stacked three high. The carter took his coin and his slate and went down the hill with an empty cart and a light horse, and Oren went back to the ledger and did not say anything else about it, and that was the strange part. A crate that wasn't theirs, going out the eastern dock, and the master of the eighth forge signed for it the way he signed for charcoal.
+
+Kesh finished the blade at the sixth hour. Then he hauled coal, because hauling coal was apprentice's work, and while he hauled he counted, because the coal book lived on a nail by the coal house door and he was the one who kept it.
+
+He carried his tally to the bench and added it twice.
+
+The quarter's coal had doubled. He checked the output slate: same sixty-one finished pieces as the quarter before, same twelve of them war-work, hinges and bridle bits and general iron. More heat. Same iron out the door. And the coal account was not a small error, or a spilled sack, or a carter's thumb on the scale. It was fourteen tons.
+
+He took the book to Oren that evening while the master was oiling the big hammer's helve.
+
+"Master. The coal's doubled this quarter."
+
+Oren kept oiling. "How much doubled."
+
+"Fourteen ton over the slate."
+
+"That's a price, not a mystery." Oren set the oil pot down. "Nine silver the ton off the dock gate. Eleven inland. Fifteen in a hard winter, when the passes close and the priories buy early. You want to know what coal costs, I'll tell you what coal costs. You want to know why a forge keeps a full coal house, that's because a forge that runs cold in the night is a forge that lost the night's work."
+
+"The output slate says sixty-one."
+
+"The output slate says what I write on the output slate." He picked the oil pot back up. "Your hands are shaking. Go home."
+
+Kesh went. He took the stair cut into the rock, ninety-four steps, and counted them, and at the bottom Thurn's boy was nailing a paper to the doorpost of his mother's house.
+
+Kesh stopped three steps up and read it upside down. It was not a new notice. It was the old notice, renewed, which was worse, because renewing cost the collector a copper and told you he had time.
+
+"Spring," the boy said, cheerful, and went off down the lane whistling.
+
+Inside, his mother had the fire banked low and was mending a strap by it. She did not ask about the paper. They had both read it years ago.
+
+Four days to the evaluation. Eleven silver a tenday. Fourteen tons of coal that went somewhere and made nothing the slate would admit to.
+
+Kesh sat down and ate, and did not sleep, and lay there doing the arithmetic again with the new number in it, and the arithmetic came out wrong in a way he could not put his finger on, so at some point past the middle of the night he got up, put his coat on, and went back up the ninety-four steps.
+
+The forge was cold. That was the first thing. The eighth forge was never cold, and the big hammer stood at rest with the helve down, and there was no glow under the ash door.
+
+But the quench barrel was wet at the rim, wet and cold, and the water in it had a scum on it that came from hot iron going in and coming out, over and over. Somebody had been working. Somebody had been working hours ago, and the ash they had raked out was still faintly warm under the shed's open bay, and it was not the eighth forge's ash.
+
+Kesh crouched and put the back of his hand near it. Warm. He straightened up and looked at the coal house, where thirty tons of coal sat against a slate that said sixteen, and he thought about the mark IX-M and the eastern dock and the master saying three high, and how the only thing Oren had given him when he asked was a price.
+
+He had four days. Asking would cost him the signature. Not asking would cost him the four days anyway, if the coin for a journeyman's slot had gone into a coal house that ran warm at midnight.
+
+Kesh took the tally stick off the nail. He counted the steps to the coal house door. Six. Then he put his hand flat on the latch and stood there in the dark with the cold biting at his knuckles, listening.
