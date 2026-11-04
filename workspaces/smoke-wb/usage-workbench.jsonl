@@ -1,2 +1,3 @@
-{"tag": "lock-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 400, "completion_tokens_details": {"reasoning_tokens": 0}, "prompt_tokens": 439, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 839}}
-{"tag": "wb-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1141, "completion_tokens_details": {"reasoning_tokens": 178}, "prompt_tokens": 1477, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2618}}
+{"tag": "discuss-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1109, "completion_tokens_details": {"reasoning_tokens": 10}, "prompt_tokens": 508, "prompt_tokens_details": {"cached_tokens": 448}, "total_tokens": 1617}}
+{"tag": "lock-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 913, "completion_tokens_details": {"reasoning_tokens": 0}, "prompt_tokens": 2392, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 3305}}
+{"tag": "wb-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 961, "completion_tokens_details": {"reasoning_tokens": 20}, "prompt_tokens": 1426, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2387}}
