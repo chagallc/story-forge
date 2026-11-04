@@ -1,0 +1,114 @@
+{
+  "book": {
+    "title": "雾锁九门",
+    "genre": "都市悬疑",
+    "language": "zh",
+    "platform": "qidian",
+    "logline": "典当行学徒发现每件死当品里都住着一个未完成的执念，而最新的一件，是他失踪师父的怀表。"
+  },
+  "opening_contract": {
+    "want_visible_by": 1500,
+    "disturbance_in_ch1": true,
+    "dialogue_ratio_min": 0.4,
+    "no_info_dump": true,
+    "notes": "0005"
+  },
+  "characters": [
+    {
+      "name": "陆小满",
+      "card": "24岁，九门典当行学徒，眼力毒，嘴更快。",
+      "want": "赎回师父留下的怀表，弄清他失踪那晚去了哪",
+      "need": "承认师父可能自己有秘密，而非只有受害者叙事",
+      "wound": "孤儿，师父是唯一给过他姓氏的人",
+      "value": "当铺规矩：死当不问来路——但他今天想破例",
+      "fear": "师父是自愿消失的，根本没打算带上他",
+      "contradiction": "守规矩的学徒要做一行里最破规矩的事",
+      "voice": {
+        "catchphrases": [
+          "按规矩说",
+          "这物件不干净"
+        ],
+        "speech_habits": [
+          "短句",
+          "先报价后说话"
+        ],
+        "sample_line": "按规矩说，死当不问来路。"
+      }
+    },
+    {
+      "name": "贺三刀",
+      "card": "55岁，行会老理事，笑面，账算得极清。",
+      "want": "把九门典当行并进行会统一管理",
+      "need": "挽回三十年前他亲手做砸的一桩局",
+      "wound": "当年他师父也是这样消失的，他选择了闭嘴",
+      "value": "行会秩序高于个人恩怨",
+      "fear": "陆小满查到当年的局和他有关",
+      "contradiction": "最讲规矩的人靠破坏规矩起家",
+      "voice": {
+        "catchphrases": [
+          "喝茶喝茶"
+        ],
+        "speech_habits": [
+          "绕着说",
+          "从不先出价"
+        ],
+        "sample_line": "喝茶喝茶，急什么。"
+      }
+    }
+  ],
+  "world": {
+    "setting": "九十年代末，某南方城市的老九门典当行街",
+    "glossary": [
+      "死当",
+      "九门",
+      "行会"
+    ]
+  },
+  "arc": {
+    "template": "悬疑假设弧",
+    "anchors": [
+      "雾锁九门·怀表夜当@第1章"
+    ],
+    "total_chapters": 12
+  },
+  "ledger": [
+    {
+      "id": "F1",
+      "plant_chapter": 1,
+      "reveal_chapter": 3,
+      "hook": "怀表背面刻着一个不属于师父籍贯的地名，只给特写不解释",
+      "reveal_plan": "地名是师父三十年前当学徒的旧铺号，贺三刀当年就在那里",
+      "canary": "泉 lock"
+    }
+  ],
+  "chapters": {
+    "1": {
+      "status": "written",
+      "discussion": "C:\\Users\\Lucia Zou\\Desktop\\OH-WorkSpace\\story-forge\\workspaces\\smoke-wb\\discussions\\ch01.jsonl",
+      "cell": {
+        "chapter": 1,
+        "arc_label": "雾锁九门·怀表夜当",
+        "amplitude": "M",
+        "plan": "当铺夜班开场，陆小满收到师父的怀表死当，决定赎表查师父下落；贺三刀同一夜登门喝茶，以场面话施压要把行并走，陆小满被赎表所需的钱逼向贺三刀的并走条件。",
+        "disruption": "怀表背面刻着陌生地名'泉lock'，且表针停在师父失踪那晚的时刻——师父的消失可能不是意外。",
+        "crisis": "赎表需要钱，唯一来钱的路是接受贺三刀并行的条件；接受则等于替疑似逼走师父的人做事。",
+        "improvisation": "陆小满表面应承喝茶场面话、不撕破脸，暗中记下贺三刀话术里的破绽与表上刻痕作为查证的起点。",
+        "end_hook": "新信息型",
+        "pressure": [
+          {
+            "char": "陆小满",
+            "motive": "want",
+            "force": "赎表查师父的下落，而'泉lock'刻痕与停摆时刻把这一want逼成眼前必须行动的事",
+            "cost": "要赎表就必须伸手向贺三刀要钱，接受并走的条件，可见地折断自己的立场"
+          },
+          {
+            "char": "贺三刀",
+            "motive": "contradiction",
+            "force": "夜访当铺、全程用喝茶规矩话术施压并走，用规矩的名义破坏规矩",
+            "cost": "场面话说得太满，每句威胁都留在陆小满耳中，成为日后可被翻出的把柄"
+          }
+        ]
+      }
+    }
+  }
+}

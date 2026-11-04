@@ -110,6 +110,13 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
+def make_client(role_cfg: dict, usage_log: str):
+    """按配置路由客户端：api_style=codex 走 Codex OAuth，否则 OpenAI 兼容。"""
+    if role_cfg.get("api_style") == "codex":
+        return CodexClient(role_cfg, usage_log)
+    return LLMClient(role_cfg, usage_log)
+
+
 class LLMClient:
     def __init__(self, cfg: dict, usage_log: str):
         self.base = cfg["base_url"].rstrip("/")

@@ -6,14 +6,7 @@ from datetime import datetime, timezone
 from .agents import build_reader_messages, build_writer_messages, parse_reader_json
 from .config import load_config
 from .ledger import Ledger
-from .llm import CodexClient, LLMClient
-
-
-def make_client(role_cfg: dict, usage_log: str):
-    """按配置路由客户端：api_style=codex 走 Codex OAuth，否则 OpenAI 兼容。"""
-    if role_cfg.get("api_style") == "codex":
-        return CodexClient(role_cfg, usage_log)
-    return LLMClient(role_cfg, usage_log)
+from .llm import CodexClient, LLMClient, make_client  # noqa: F401 (make_client re-export)
 
 
 def _maybe_polisher(cfg: dict, spec: dict, outdir: str):
