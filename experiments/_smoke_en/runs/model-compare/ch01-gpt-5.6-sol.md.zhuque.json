@@ -1,0 +1,49 @@
+{
+ "status": "success",
+ "softmax_confidence": 0.9999,
+ "ratio_confidence": 1,
+ "labels_ratio": {
+  "0": 0,
+  "1": 0.606,
+  "2": 0.394
+ },
+ "segment_labels": [
+  {
+   "text": "Kesh counted forty-two turns of the grinding wheel before the blade stopped fighting him.\n\n“Forty. Forty-one. Forty-two.”\n\nHe lifted the short sword from the rest and sighted along its edge. Gray morning lay in the high windows. Against it, the steel showed every fault.\n\nOne flat place near the point.\n\nHe set the blade back.\n\nMaster Oren looked up from the worktable. “You’ll grind it hollow.”\n\n“It’s flat.”\n\n“It’s half a hair.”\n\n“Still flat.”\n\n“Then you have nine minutes.”\n\nKesh leaned into the treadle. The wheel spun under his boot. Grit struck his apron and bare forearms. He held the sword steady while the scars across his fingers pulled tight with the strain.\n\nNine minutes until the guild examiner arrived. Nine minutes before Oren laid three pieces on the table and declared whether six years at the eighth forge had made Kesh fit to work for wages.\n\nJourneyman wages.\n\nKesh had worked the sum before dawn. Thirty-two silver in his mother’s debt box. Five more due at month’s end. If Oren advanced him three months against a journeyman contract, the collector could be paid before the first hard frost.\n\nThe red notice in their front window said otherwise. PAYMENT OR SEIZURE. The collector had pressed it flat with his thumb and told Kesh’s mother that a roof had value even in winter.\n\nThe edge brightened. Kesh counted six more turns, then raised the blade.\n\nOren crossed the floor and tested it with a square thumbnail. His left hand had two missing fingertips. He could still find half a hair of bad work in the dark.\n\n“Better,” he said.\n\n“Good enough?”\n\n“Good enough costs twelve silver. Better costs eighteen.”\n\nKesh waited.\n\nOren placed the sword beside a socketed spearhead and a woodcutter’s axe on the evaluation table. “Don’t ask a question when you can read the price.”\n\nHooves clattered in the alley.\n\nKesh looked toward the open loading doors. “Examiner?”\n\n“At this hour?” Oren checked the brass clock above the furnace. “No.”\n\nA wagon backed through the doors, guided by a boy in an eastern-dock coat. Its rear wheels bumped over the threshold. Two crates filled the bed, each long enough for polearms and deep enough to need four men.\n\nThe driver slapped the wagon rail. “Vael?”\n\nOren wiped his hands. ",
+   "label": 2,
+   "conf": 0.9617,
+   "order": 1,
+   "position": [
+    0,
+    2231
+   ]
+  },
+  {
+   "text": "“Here.”\n\n“Transfer from Ninth.”\n\nThe eighth forge had its seal cut into every finished crate: an eight-spoked wheel inside a square. These crates bore black stencil instead.\n\nIX-M.\n\nKesh read it twice.\n\nOren gave the mark one glance. “Put them by the east wall.”\n\nThe driver jumped down. “Dock order says they go straight through.”\n\n“Dock orders cost dock rates. Floor storage is three coppers per hour.”\n\nThe man swore and waved in the porters.\n\nKesh watched them lift the first crate. Fresh iron bands circled it. No soot. No rain marks. When one porter lost his grip, the crate struck the wagon bed with a dense, close-packed knock.\n\n“Hands,” Oren said.\n\nKesh turned back.\n\nThe sword lay waiting. Beside it, Oren had placed a cloth purse. Its mouth hung open enough to show silver.\n\n“For coal,” Oren said. “Hessa wants payment before noon. Take the lower street. It saves twenty-eight steps.”\n\nKesh looked at the clock. Seven minutes.\n\n“You said the examiner was coming.”\n\n“He is.”\n\n“The coal yard is fifteen minutes there and back.”\n\n“Twelve if you run.”\n\nThe porters brought the second crate in. Oren did not watch them. He adjusted the spearhead until it sat square with the edge of the table.\n\nKesh took the purse. It weighed too much for a routine order.\n\nAt the ledger stand by the door, Oren’s coal book lay open. Kesh had copied its columns every sixth day since midsummer. The latest total had been inked in Oren’s narrow hand.\n\nOne hundred sixty-four crowns.\n\nKesh set the purse on the page.\n\n“Master.”\n\n“Six minutes.”\n\n“This quarter’s coal is double.”\n\nOren’s hand stopped over the axe.\n\nKesh ran a blackened finger beneath the figure. “We used eighty-one last quarter. Seventy-nine before that.”\n\n“Coal was nine bits a sack in spring. It is fourteen now.”\n\n“That doesn’t make double.”\n\n“A cart costs two silver from the north yard. Three from Hessa. Wet sacks lose one part in twelve by weight.”\n\n“We haven’t made double.”\n\nOren turned the axe head toward the window. “A finished sword brings eighteen silver retail. Twelve guild. Eight if sold in lots above fifty.”\n\nKesh looked at him.\n\nThere were no lots above fifty. In three months they had finished nineteen swords, thirty spearheads, and eleven axes. Kesh knew because he had ground every edge.\n\nThe wagon driver coughed near the east wall. One crate sat beside him. The other had already gone.\n\nKesh looked toward the rear passage. Its door was swinging shut.\n\nOren picked up the coal purse and pressed it into Kesh’s hand. “Five minutes. Bring me a receipt.”\n\n“You didn’t answer.”\n\n“Journeymen are paid for answers. Apprentices are paid in instruction.”\n\n“I’m not paid.”\n\n“Exactly.”\n\nThe driver laughed once, then covered it with another cough.\n\nHeat climbed Kesh’s neck. He closed his scarred fingers around the purse.\n\nOren stepped closer. Soot had settled in the lines around his mouth. “Your work is sound. Your recommendation can be signed today.”\n\nKesh’s grip loosened.\n\n“Today?”\n\n“At noon. Examiner or no examiner.”\n\nGuild recommendations did not work that way. The examiner tested. The master witnessed. Both seals went on the contract.\n\nOren glanced at the open coal book. “There are delays in the guild. Men lose places while clerks measure rules. I can hold a place at the eighth for four crowns.”\n\n“Four?”\n\n“Deducted over twelve weeks.”\n\n“And an advance?”\n\nOren’s gaze moved to Kesh’s patched cuff. “How much?”\n\n“Thirty-seven.”\n\nThe clock ticked once. Twice.\n\nOren took a key from his belt and opened the iron cashbox under the worktable. He counted coins into stacks of ten, each click clean and separate.\n\nKesh had imagined this moment every night for a month. He would ask. Oren would complain about margins. Kesh would offer winter hours. The bargain would hurt, but the red notice would come down.\n\nOren counted out thirty-seven silver.\n\nThe amount sat between them.\n\n“A year’s contract,” Oren said. “No outside commissions. No guild petitions without my approval. You keep my books as you’ve kept them.”\n\nKesh stared at the coins. “Which books?”\n\nOren closed the cashbox.\n\nThe examiner’s cane struck the alley stones outside.\n\nOren swept the silver back into one stack. “Decide before he enters.”\n\nKesh heard his mother scraping frost from the inside of their window last winter. He saw the red notice under the collector’s thumb.\n\nThen he saw IX-M in wet black paint.\n\nHe took the coal purse.\n\nOren’s shoulders lowered by the width of a finger.\n\n“I’ll get the receipt,” Kesh said.\n\nThe examiner appeared in the doorway as Kesh slipped past him. White guild braid. Silver-headed cane. A face pinched by the climb.\n\n“Apprentice Duran?” the man asked.\n\nKesh kept walking.\n\nHe ran to Hessa’s yard in eleven minutes and returned in twelve. He paid fourteen bits per sack, demanded the weight, and counted the wagon charge twice. While Hessa’s clerk wrote the receipt, Kesh turned it over and listed the eighth forge’s output from memory.\n\nNineteen swords.\n\nThirty spearheads.\n\nEleven axes.\n\nAt the forge door, the examiner’s voice carried over the hammering.\n\n“Your master says you withdrew.”\n\nKesh entered. Oren stood beside the evaluation table. The sword, spearhead, and axe had been removed.\n\nThe silver was gone too.\n\n“I had an errand,” Kesh said.\n\nThe examiner tapped his cane against the floor. “A journeyman who leaves his test leaves his place.”\n\nOren held out his hand for the receipt.\n\nKesh gave it to him blank side up.\n\n",
+   "label": 1,
+   "conf": 0.9968,
+   "order": 2,
+   "position": [
+    2231,
+    5421
+   ]
+  },
+  {
+   "text": "Oren read the figures on the back. His thumb covered the final line.\n\n“You count well,” he said.\n\n“I grind better.”\n\n“So you do.”\n\nThe examiner looked between them. “Shall I mark him absent?”\n\nOren folded the receipt once. “Come tomorrow.”\n\nThe cane struck the floor. “My return fee is six silver.”\n\n“I know the price.”\n\nWhen the examiner had gone, Oren fed the folded receipt into the furnace. Kesh watched the paper curl black.\n\n“East wall,” Oren said. “Those crates need moving before dusk.”\n\nOnly one crate remained there.\n\nKesh took up the iron hooks. He worked until Oren left for the guild hall, then until the eastern-dock driver rattled away with an empty wagon.\n\nAt closing, Kesh barred the front doors and counted the day’s finished pieces.\n\nTwo knives. One mattock head. The short sword.\n\nHe wrote them on the inside of his wrist with chalk. Beneath them, he wrote the coal delivered and the coal already charged.\n\nThe totals refused to meet.\n\nAcross the dark forge, Oren’s private ledger stand waited beside the quench barrel. The upper book recorded wages and sales. Below it sat a narrow drawer Kesh had dusted for six years and never opened.\n\nHe crossed the floor, counting his steps under his breath.\n\n“Eight. Nine. Ten.”\n\nAt eleven, he set his burned hand on the drawer pull.",
+   "label": 2,
+   "conf": 0.9815,
+   "order": 3,
+   "position": [
+    7652,
+    1293
+   ]
+  }
+ ],
+ "usage": {
+  "total_tokens": 8945
+ },
+ "msg": "",
+ "makers_models_usage": {
+  "total_tokens": 14909
+ }
+}

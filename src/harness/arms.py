@@ -6,7 +6,14 @@ from datetime import datetime, timezone
 from .agents import build_reader_messages, build_writer_messages, parse_reader_json
 from .config import load_config
 from .ledger import Ledger
-from .llm import LLMClient
+from .llm import CodexClient, LLMClient
+
+
+def make_client(role_cfg: dict, usage_log: str):
+    """按配置路由客户端：api_style=codex 走 Codex OAuth，否则 OpenAI 兼容。"""
+    if role_cfg.get("api_style") == "codex":
+        return CodexClient(role_cfg, usage_log)
+    return LLMClient(role_cfg, usage_log)
 
 
 def _maybe_polisher(cfg: dict, spec: dict, outdir: str):
@@ -15,7 +22,7 @@ def _maybe_polisher(cfg: dict, spec: dict, outdir: str):
     if not pol:
         return None
     role_cfg = dict(cfg["writer"] if isinstance(pol, bool) or pol is True else {**cfg["writer"], **pol})
-    client = LLMClient(role_cfg, os.path.join(outdir, "usage.jsonl"))
+    client = make_client(role_cfg, os.path.join(outdir, "usage.jsonl"))
     from .polish import Polisher
     return Polisher(client, spec)
 
@@ -28,8 +35,8 @@ def run_arm(arm: str, run_idx: int, spec: dict, cfg: dict, outdir: str, chapters
     os.makedirs(rd_dir, exist_ok=True)
 
     ledger = Ledger(spec)
-    writer = LLMClient(cfg["writer"], os.path.join(outdir, "usage.jsonl"))
-    reader = LLMClient(cfg["reader"], os.path.join(outdir, "usage.jsonl"))
+    writer = make_client(cfg["writer"], os.path.join(outdir, "usage.jsonl"))
+    reader = make_client(cfg["reader"], os.path.join(outdir, "usage.jsonl"))
     polisher = _maybe_polisher(cfg, spec, outdir)
     total = chapters_override or cfg.get("chapters", len(spec["beats"]))
 
