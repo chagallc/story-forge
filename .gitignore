@@ -5,3 +5,10 @@ reference/
 *.log
 output/
 tmp/
+
+# API key 本地配置，绝不入库
+config/models.local.json
+
+# Python 缓存
+__pycache__/
+*.pyc

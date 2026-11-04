@@ -2,17 +2,26 @@
 import json
 import re
 
-from .engine import arc_summary, build_engine_directive
+from .engine import arc_summary, build_engine_directive, motive_stack_block
 
 WRITER_SYSTEM = (
-    "你是一位中文悬疑小说家。要求：每章约1000字；以场景、动作、对白推进故事，"
-    "靠细节与潜台词制造悬念；禁止上帝视角解释人物动机；禁止总结式收尾；"
+    "你是一位中文小说家。要求：每章约1000字；以场景、动作、对白推进故事，"
+    "靠细节与潜台词制造悬念；禁止上帝视角解释人物动机，人物动机只能通过选择、行动与代价呈现；"
+    "每个人物的重要行动必须满足动机链四问（想要什么/什么拦住/为什么是现在/为什么是她），"
+    "行动必须付出可见代价；禁止总结式收尾；"
     "严格遵循给定的大纲与指令。输出纯正文，不要标题、不要注释。"
+    "\n\n文风守门：\n"
+    "1. 禁用「不是A，而是B」式对仗句；\n"
+    "2. 禁用模板腔：值得注意的是/从某种意义上说/仿佛在诉说/空气仿佛凝固/不知过了多久/眼神里闪过一丝/嘴角勾起一抹；\n"
+    "3. 允许自然重复用词，刻意避免重复反而不像人写的；\n"
+    "4. 句长要有波动，短句与长句混着来；\n"
+    "5. 少用破折号与冒号总结腔；段落不要都碎成两三行。"
 )
 
 READER_SYSTEM = (
     "你是一位普通悬疑小说读者，从未看过本书的任何设定资料，只读已发表的正文章节。"
     "请诚实给出你的阅读反应，不装聪明也不装笨。"
+    "特别地：对每个人物的行动判断“这个人会不会这么做”，对不可信的行动直说原因。"
 )
 
 
@@ -26,11 +35,14 @@ def _story_block(spec: dict) -> str:
 
 
 def _story_block_engine(spec: dict) -> str:
-    """引擎模式：不给出逐章节拍，只给前提、人物与弧线锄点。"""
+    """引擎模式：不给出逐章节拍，只给前提、人物（含动机栈）与弧线锄点。"""
     chars = "\n".join(f"- {c['name']}：{c['card']}" for c in spec["characters"])
+    motive = motive_stack_block(spec)
     return (
         f"《{spec['title']}》\n\n前提：{spec['premise']}\n\n"
-        f"人物：\n{chars}\n\n全书弧线（仅锄点，不给逐章内容）：{arc_summary(spec)}"
+        f"人物：\n{chars}\n\n"
+        + (f"{motive}\n\n" if motive else "")
+        + f"全书弧线（仅锄点，不给逐章内容）：{arc_summary(spec)}"
     )
 
 
@@ -82,6 +94,7 @@ def build_reader_messages(title: str, chapters: list[str]):
         "{\n"
         '  "guesses": [{"content": "你猜测的真相或走向", "confidence": 1到10的整数, "evidence": "支撑这个猜测的原文引用"}],\n'
         '  "desire_next": 1到10的整数（想读下一章的欲望）,\n'
+        '  "motive_check": [{"char": "人物名", "action": "该人物本章一个重要行动", "believable": 1到10的整数（这个人会不会这么做）, "why": "一句话理由"}],\n'
         '  "notes": "一句话总评"\n'
         "}"
     )

@@ -19,6 +19,57 @@ HOOK_NOTE = {
     "轻收束": "章末安静落地，允许闭合，不吊钩。",
 }
 
+MOTIVE_FIELD_NOTE = {
+    "want": "表层欲望（他自己知道且承认）",
+    "need": "深层需求（他自己没有意识到，主题层）",
+    "wound": "旧伤（解释他为什么这样行事）",
+    "value": "底线（可以让他翻脸或越线的东西）",
+    "fear": "恐惧（压力测试点）",
+    "contradiction": "内在矛盾（欲望与需求/底线的冲突形式）",
+}
+
+MOTIVE_CHAIN_RULE = (
+    "动机链四问（每个重要行动必须无声地全部成立，以场景、选择与代价呈现，禁止旁白解释）：\n"
+    "1. 她此刻想要什么；\n"
+    "2. 什么拦住了她；\n"
+    "3. 为什么是现在（时机压力）；\n"
+    "4. 为什么是她（换一个人不会这么做）。\n"
+    "行动必须付出可见代价：花钱、冒险、留把柄，至少其一。"
+)
+
+
+def motive_stack_block(spec: dict) -> str:
+    """全员动机栈总表（作者全知层，随人物卡注入写作上下文）。"""
+    chars = spec.get("characters", [])
+    if not chars or "want" not in chars[0]:
+        return ""
+    lines = ["人物动机栈（写作时人物行动的总依据）："]
+    for c in chars:
+        lines.append(f"【{c['name']}】{c.get('card', '')}")
+        for k in ("want", "need", "wound", "value", "fear", "contradiction", "voice"):
+            if c.get(k):
+                lines.append(f"  {k}：{c[k]}（{MOTIVE_FIELD_NOTE.get(k, k)}）")
+    return "\n".join(lines)
+
+
+def pressure_block(spec: dict, chapter: int) -> str:
+    """本章动机压力指令：谁的第几个动机被什么力压制，代价是什么。"""
+    cell = cell_for(spec, chapter) or {}
+    pressures = cell.get("pressure", [])
+    if not pressures:
+        return ""
+    lines = ["本章动机压力（与本章计划/颠覆同源，写人物行动时必须兑现）："]
+    for p in pressures:
+        lines.append(
+            f"- {p['char']} 的[{MOTIVE_FIELD_NOTE.get(p.get('motive', ''), p.get('motive', ''))}]"
+            f"受压：{p['force']}；行动代价：{p['cost']}"
+        )
+    if cell.get("amplitude") == "B":
+        lines.append(
+            "本章是呼吸拍：写出受压角色的反应-困境-决定三步，决定必须体现他对动机排序的重新排列（这是本章真正的产出）。"
+        )
+    return "\n".join(lines)
+
 
 def cell_for(spec: dict, chapter: int) -> dict | None:
     cells = spec.get("engine", {}).get("cells", [])
@@ -49,4 +100,8 @@ def build_engine_directive(spec: dict, chapter: int) -> str:
         f"断章钩子：{HOOK_NOTE.get(cell['end_hook'], cell['end_hook'])}（{cell['end_hook']}）",
         "写法要求：让读者先看见计划，再让它被推翻。回收的真相以『计划崩塌』的方式到达，禁止以旁白公布答案。",
     ]
+    pressure = pressure_block(spec, chapter)
+    if pressure:
+        lines.append(pressure)
+    lines.append(MOTIVE_CHAIN_RULE)
     return "\n".join(line for line in lines if line)

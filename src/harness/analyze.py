@@ -7,6 +7,9 @@ import json
 import os
 import sys
 
+from .metrics import motive_curve, motive_flags
+from .style_lint import lint_run
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RUNS_DIR = os.path.join(ROOT, "experiments", "exp001", "runs")
 
@@ -91,6 +94,9 @@ def analyze(run_ref: str):
         "soft_leak_count": len(soft),
         "soft_examples": soft[:6],
         "desire_curve": desire,
+        "motive_curve": motive_curve(readers),
+        "motive_flags": motive_flags(readers),
+        "style_lint": lint_run(chapters),
     }
 
 

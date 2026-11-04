@@ -12,14 +12,19 @@ class BudgetExceeded(RuntimeError):
 class LLMClient:
     def __init__(self, cfg: dict, usage_log: str):
         self.base = cfg["base_url"].rstrip("/")
-        self.key = os.environ[cfg["api_key_env"]]
+        # key 直传（models.local.json）优先，向后兼容环境变量方式
+        if cfg.get("api_key"):
+            self.key = cfg["api_key"]
+        else:
+            self.key = os.environ[cfg["api_key_env"]]
         self.model = cfg["model"]
         self.temperature = cfg.get("temperature", 0.7)
         self.max_tokens = cfg.get("max_tokens", 4096)
         self.budget = cfg.get("budget", 500_000)
+        self.extra_body = cfg.get("extra_body", {})
         self.usage_log = usage_log
         self.total_tokens = 0
-        # 默认绕过系统代理（本机代理开关不定，DeepSeek 直连即可）；配置 use_system_proxy=true 才走代理
+        # 默认绕过系统代理（本机代理开关不定，国内端点直连即可）；配置 use_system_proxy=true 才走代理
         if cfg.get("use_system_proxy"):
             self.opener = urllib.request.build_opener()
         else:
@@ -38,6 +43,7 @@ class LLMClient:
                 "temperature": self.temperature if temperature is None else temperature,
                 "max_tokens": budget_tokens,
             }
+            body.update(self.extra_body)
             req = urllib.request.Request(
                 self.base + "/chat/completions",
                 data=json.dumps(body).encode("utf-8"),

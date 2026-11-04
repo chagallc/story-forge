@@ -1,0 +1,20 @@
+{
+  "writer": {
+    "$provider": "zhipu",
+    "model": "glm-5.3-flash",
+    "temperature": 0.8,
+    "max_tokens": 8192,
+    "budget": 400000,
+    "extra_body": {"thinking": {"type": "disabled"}}
+  },
+  "reader": {
+    "$provider": "qwen",
+    "model": "qwen3.8-flash",
+    "temperature": 0.3,
+    "max_tokens": 4096,
+    "budget": 200000,
+    "extra_body": {"thinking": {"type": "disabled"}}
+  },
+  "chapters": 12,
+  "_readers_rotation": "正式跑批 5 次重复时 reader 按家族轮换：qwen3.8-flash / k3.1-pro / glm-5.3 / qwen3.8-max / k3.1-pro-highspeed，保证异构读者矩阵"
+}

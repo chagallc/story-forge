@@ -1,0 +1,4 @@
+{"tag": "armE-run99-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1129, "completion_tokens_details": {"reasoning_tokens": 36}, "prompt_tokens": 1425, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2554}}
+{"tag": "armE-run99-reader-ch01", "model": "qwen3.8-flash", "usage": {"prompt_tokens": 1295, "total_tokens": 2088, "completion_tokens": 793, "prompt_tokens_details": {"cached_tokens": 0, "text_tokens": 1295}}}
+{"tag": "armE-run99-ch02", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1252, "completion_tokens_details": {"reasoning_tokens": 20}, "prompt_tokens": 2626, "prompt_tokens_details": {"cached_tokens": 2624}, "total_tokens": 3878}}
+{"tag": "armE-run99-reader-ch02", "model": "qwen3.8-flash", "usage": {"prompt_tokens": 2484, "total_tokens": 3453, "completion_tokens": 969, "prompt_tokens_details": {"cached_tokens": 0, "text_tokens": 2484}}}

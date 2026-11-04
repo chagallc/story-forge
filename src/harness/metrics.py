@@ -25,3 +25,23 @@ def desire_curve(reader_results: list[dict]) -> list[int]:
         v = r.get("desire_next")
         curve.append(v if isinstance(v, int) else None)
     return curve
+
+
+def motive_curve(reader_results: list[dict]) -> list[float | None]:
+    """逐章人物行动可信度均值曲线（动机压力层验收指标）。"""
+    curve = []
+    for r in reader_results:
+        checks = r.get("motive_check") or []
+        scores = [c.get("believable") for c in checks if isinstance(c.get("believable"), (int, float))]
+        curve.append(round(sum(scores) / len(scores), 2) if scores else None)
+    return curve
+
+
+def motive_flags(reader_results: list[dict]) -> list[dict]:
+    """汇总所有可信度 ≤5 的行动（出戏行动清单）。"""
+    flags = []
+    for idx, r in enumerate(reader_results, start=1):
+        for c in r.get("motive_check") or []:
+            if isinstance(c.get("believable"), (int, float)) and c["believable"] <= 5:
+                flags.append({"chapter": idx, **c})
+    return flags

@@ -9,6 +9,7 @@ import json
 import os
 
 from .arms import run_arm
+from .config import load_config
 from .ledger import Ledger
 from .metrics import canary_hits
 
@@ -30,8 +31,7 @@ def main():
     cfg_path = os.path.join(exp_dir, "config.json")
     if not os.path.exists(cfg_path):
         cfg_path = os.path.join(EXP_DIR, "config.json")
-    with open(cfg_path, encoding="utf-8") as f:
-        cfg = json.load(f)
+    cfg = load_config(os.path.dirname(cfg_path))
 
     tag = "smoke-" if args.smoke else ""
     outdir = os.path.join(exp_dir, "runs", f"{tag}{args.arm}{args.run}")
