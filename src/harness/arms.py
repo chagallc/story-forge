@@ -47,7 +47,7 @@ def run_arm(arm: str, run_idx: int, spec: dict, cfg: dict, outdir: str, chapters
             print(f"  [arm {arm} run {run_idx}] chapter {ch}/{total} written ({len(text)} chars)")
 
         if not (os.path.exists(rd_path) and os.path.getsize(rd_path) > 0):
-            rmsgs = build_reader_messages(spec["title"], chapters)
+            rmsgs = build_reader_messages(spec["title"], chapters, lang=spec.get("language", "zh"))
             raw = reader.chat(rmsgs, tag=f"arm{arm}-run{run_idx}-reader-ch{ch:02d}")
             parsed = parse_reader_json(raw)
             with open(rd_path, "w", encoding="utf-8") as f:

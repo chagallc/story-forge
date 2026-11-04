@@ -1,6 +1,7 @@
 """金丝雀硬泄漏扫描：确定性，不经过任何 LLM。
 
-规则：暗账条目的金丝雀词在回收章之前的章节出现 = 硬泄漏。
+规则：暗账条目的金丝雀词在回收章之前的章节出现 = 硬泄漏；
+埋设章（plant_chapter）出现属合法埋设，豁免。
 """
 
 
@@ -8,7 +9,7 @@ def canary_hits(chapters: list[str], ledger) -> list[dict]:
     hits = []
     for idx, text in enumerate(chapters, start=1):
         for e in ledger.entries:
-            if idx < e["reveal_chapter"] and e["canary"] in text:
+            if e["plant_chapter"] < idx < e["reveal_chapter"] and e["canary"] in text:
                 hits.append({
                     "chapter": idx,
                     "foreshadow": e["id"],

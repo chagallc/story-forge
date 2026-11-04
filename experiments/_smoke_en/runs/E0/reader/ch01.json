@@ -1,0 +1,36 @@
+{
+  "guesses": [
+    {
+      "content": "The 'Ninth Forge' is not a separate physical location but a secret production line hidden within the Eighth Forge, using stolen or diverted resources to fulfill contracts for House Merrin.",
+      "confidence": 9,
+      "evidence": "the ninth forge is not cold. It moved. It moved into the eighth forge, in the dark, and my master is feeding it."
+    },
+    {
+      "content": "Master Oren Vael is complicit in this scheme, likely coerced by debt or greed, and uses Kesh's need for journeyman status as leverage to keep him silent.",
+      "confidence": 8,
+      "evidence": "Bring me a good blade and we will discuss numbers."
+    }
+  ],
+  "desire_next": 9,
+  "motive_check": [
+    {
+      "char": "Kesh",
+      "action": "Copying tallies onto his palm with lamp-black instead of paper.",
+      "believable": 7,
+      "why": "It shows desperation and quick thinking, though copying onto skin is risky if he sweats or washes his hands, but fits his character as someone who counts everything obsessively."
+    },
+    {
+      "char": "Kesh",
+      "action": "Trying to break into the office door immediately after discovering the fraud.",
+      "believable": 6,
+      "why": "While his anger is justified, jumping straight to breaking and entering without a plan feels slightly reckless for a character described as meticulous and cautious about his mother's debt; however, the urgency of losing everything makes it plausible."
+    },
+    {
+      "char": "Oren Vael",
+      "action": "Ignoring Kesh's questions about the freight and focusing only on the blade count.",
+      "believable": 9,
+      "why": "This perfectly matches the description of a man who 'prices fish'—he is transactional, evasive, and prioritizes output over ethics."
+    }
+  ],
+  "notes": "A tight, atmospheric opening that establishes high stakes through economic pressure rather than magic, making Kesh's discovery feel earned and dangerous."
+}

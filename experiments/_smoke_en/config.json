@@ -1,0 +1,20 @@
+{
+  "writer": {
+    "$provider": "zhipu",
+    "model": "glm-5.3-flash",
+    "temperature": 0.8,
+    "max_tokens": 8192,
+    "budget": 150000,
+    "extra_body": {"thinking": {"type": "disabled"}}
+  },
+  "reader": {
+    "$provider": "qwen",
+    "model": "qwen3.8-flash",
+    "temperature": 0.3,
+    "max_tokens": 4096,
+    "budget": 100000,
+    "extra_body": {"thinking": {"type": "disabled"}}
+  },
+  "chapters": 2,
+  "_note": "英文模式烟雾配置。英文写作模型待评测对比（候选：glm-5.3-flash / k3.1-pro / qwen3.8-max / gpt 待接入），正式英文实验前先跑对比盲评。"
+}

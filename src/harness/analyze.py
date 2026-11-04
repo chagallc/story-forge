@@ -53,6 +53,16 @@ def analyze(run_ref: str):
     chapters = load_chapters(run_dir)
     readers = load_reader(run_dir)
 
+    # 实验语言（spec.json 的 language 字段，默认 zh）
+    lang = "zh"
+    spec_path = os.path.join(ROOT, "experiments", exp, "spec.json")
+    if os.path.exists(spec_path):
+        try:
+            with open(spec_path, encoding="utf-8") as f:
+                lang = json.load(f).get("language", "zh")
+        except (json.JSONDecodeError, OSError):
+            pass
+
     # 金丝雀出现章（含回收章及之后）
     canary_presence = {f: [] for f in CANARIES}
     for idx, text in enumerate(chapters, start=1):
@@ -96,7 +106,7 @@ def analyze(run_ref: str):
         "desire_curve": desire,
         "motive_curve": motive_curve(readers),
         "motive_flags": motive_flags(readers),
-        "style_lint": lint_run(chapters),
+        "style_lint": lint_run(chapters, lang),
     }
 
 

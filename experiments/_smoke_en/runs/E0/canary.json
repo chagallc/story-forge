@@ -1,0 +1,17 @@
+{
+  "hard_leaks": [
+    {
+      "chapter": 1,
+      "foreshadow": "F1",
+      "canary": "IX-M",
+      "reveal_chapter": 2
+    },
+    {
+      "chapter": 1,
+      "foreshadow": "F2",
+      "canary": "quench barrel",
+      "reveal_chapter": 2
+    }
+  ],
+  "count": 2
+}

@@ -1,0 +1,13 @@
+{
+  "arm": "E",
+  "run": 0,
+  "chapters": 2,
+  "writer_model": "glm-5.3-flash",
+  "reader_model": "qwen3.8-flash",
+  "writer_temperature": 0.8,
+  "reader_temperature": 0.3,
+  "started_at": "2026-11-04T06:21:03.166307+00:00",
+  "finished_at": "2026-11-04T06:23:37.270719+00:00",
+  "writer_tokens": 8815,
+  "reader_tokens": 6833
+}

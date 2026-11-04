@@ -1,0 +1,110 @@
+{
+  "id": "_smoke_en",
+  "language": "en",
+  "title": "The Ninth Forge",
+  "premise": "In the mountain city of Vhalun, forge-apprentice Kesh Duran discovers his master has been quietly supplying war-grade weapons to the family that ruined his own. When the ninth forge of the guild goes cold, someone must decide what loyalty is worth. Smoke test story for the English pipeline.",
+  "characters": [
+    {
+      "name": "Kesh Duran",
+      "card": "19, forge-apprentice, third-rate guild, hands scarred from six years at the grinding wheel.",
+      "want": "Buy out his mother's debt before winter by earning journeyman status.",
+      "need": "To stop measuring his worth by what he can endure.",
+      "wound": "His father died in a guild worksite the family was never compensated for.",
+      "value": "He does not lie about metal — what a blade can and cannot do.",
+      "fear": "Becoming a man who signs his name to other people's deaths.",
+      "contradiction": "The fastest path to journeyman runs through the man who owned his father's contract.",
+      "voice": "Counts things under his breath — coins, strikes, stairs."
+    },
+    {
+      "name": "Master Oren Vael",
+      "card": "57, master smith of the eighth forge, generous in public, meticulous ledgers in private.",
+      "want": "Keep the forge alive through the guild war regardless of whose coin comes in.",
+      "need": "To be forgiven by no one, because forgiveness would mean he could stop.",
+      "wound": "Lost two sons to the same border war his steel now feeds.",
+      "value": "The forge takes no sides; it takes payment.",
+      "fear": "Kesh finding the second ledger.",
+      "contradiction": "He trains Kesh like a son while shipping rifles to the family that orphaned him.",
+      "voice": "Speaks in measurements and prices."
+    }
+  ],
+  "beats": ["(engine mode, see engine field)"],
+  "ledger": [
+    {
+      "id": "F1",
+      "plant_chapter": 1,
+      "reveal_chapter": 2,
+      "hook": "Plant a detail: Kesh notices the delivery crates bound for the eastern dock are stenciled with a guild seal that isn't theirs, and Oren is oddly casual about it. Show the seal, no explanation.",
+      "reveal_plan": "The crates carry war-grade steel to House Merrin, the family that bought his father's unpaid contract. The 'guild seal' is a laundering mark Oren uses to pass contraband through the ninth forge. Keyword: the stenciled mark reads 'IX-M'.",
+      "canary": "IX-M"
+    },
+    {
+      "id": "F2",
+      "plant_chapter": 1,
+      "reveal_chapter": 2,
+      "hook": "Plant a detail: the eighth forge's coal account has doubled this quarter, though output has not. Kesh mentions it to Oren and gets a price-quote answer instead of a reason.",
+      "reveal_plan": "The extra coal feeds a second, unofficial forge — the real ninth forge — running night shifts for House Merrin. Oren quotes prices because every question Kesh asks is, to him, a negotiation about silence. Keyword: the night-shift tally chalked behind the quench barrel.",
+      "canary": "quench barrel"
+    }
+  ],
+  "engine": {
+    "template": "progression arc",
+    "arc": [
+      {"name": "ordinary world", "chapter": 1},
+      {"name": "first breach", "chapter": 2}
+    ],
+    "envelope": [
+      {"chapter": 1, "amplitude": "M"},
+      {"chapter": 2, "amplitude": "L"}
+    ],
+    "cells": [
+      {
+        "chapter": 1,
+        "amplitude": "M",
+        "arc_label": "ordinary world",
+        "plan": "Kesh works the grinding wheel to earn his journeyman evaluation, planning to ask Oren to advance his mother's debt from his own wages.",
+        "disruption": "A delivery crate arrives stenciled with a seal that isn't theirs, and the coal account makes no sense — the forge is spending heat it isn't selling.",
+        "crisis": "If the evaluation fails, the debt collector takes the house before spring.",
+        "improvisation": "Kesh starts counting what the forge actually makes versus what it sells, deciding to find the answer himself rather than ask.",
+        "end_hook": "即将行动型",
+        "pressure": [
+          {
+            "char": "Kesh Duran",
+            "motive": "want",
+            "force": "The forge's odd spending threatens the journeyman evaluation his debt plan depends on; investigating could cost him the recommendation he needs.",
+            "cost": "Asking questions marks him as disloyal in a guild where loyalty is the only currency a third-rate apprentice has."
+          },
+          {
+            "char": "Master Oren Vael",
+            "motive": "fear",
+            "force": "Kesh is counting the coal, which means the boy is one ledger away from the second forge; Oren must decide whether to buy his silence or trust his obedience.",
+            "cost": "Buying silence with a journeyman slot means signing his name to the boy's complicity."
+          }
+        ]
+      },
+      {
+        "chapter": 2,
+        "amplitude": "L",
+        "arc_label": "first breach",
+        "plan": "Kesh works a night shift unofficially, planning to catch the hidden forge's delivery and prove it without accusing anyone.",
+        "disruption": "Behind the quench barrel he finds the night tally in his own master's handwriting — and the crate stencil 'IX-M' matches the House Merrin mark his father's contract was sold under.",
+        "crisis": "The steel he has been grinding for weeks is already in Merrin rifles pointed at the border where his father died.",
+        "improvisation": "Kesh chooses to keep grinding and copy the ledger, planning to take proof not to the guild but to the one man the Merrins fear.",
+        "end_hook": "两难型",
+        "pressure": [
+          {
+            "char": "Kesh Duran",
+            "motive": "value",
+            "force": "His rule — never lie about metal — collides with the fact that every blade he finishes this month feeds the family that ruined his own.",
+            "cost": "Staying silent makes him a liar by omission; speaking burns the journeyman path his mother's house depends on."
+          },
+          {
+            "char": "Master Oren Vael",
+            "motive": "contradiction",
+            "force": "He wants Kesh kept close and kept ignorant, and the boy's new night shifts put both goals in the same room with a lit lamp.",
+            "cost": "Stopping Kesh now confirms what the boy suspects; letting him continue hands him the evidence."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "guesses": [
+    {
+      "content": "Kesh will choose to work the night shift and gather more concrete financial evidence (the 'second ledger') before approaching Assessor Hale, likely risking his mother's house in the process.",
+      "confidence": 9,
+      "evidence": "He would take the unofficial night shift... He would find out what the fire was making and who came to carry it away."
+    },
+    {
+      "content": "Oren Vael is not purely evil but a pragmatist trapped by debt or guild politics, which explains why he lets Kesh know about the secret rather than killing him or firing him immediately.",
+      "confidence": 7,
+      "evidence": "\"Steel is warm somewhere.\" Oren picked up the chalk and dropped it in Kesh's palm... \"Grind the next billet.\""
+    }
+  ],
+  "desire_next": 8,
+  "motive_check": [
+    {
+      "char": "Kesh",
+      "action": "Breaking into his master's office to look for a second ledger after discovering the coal discrepancy.",
+      "believable": 6,
+      "why": "While desperate, breaking into a locked office is a high-risk felony that might jeopardize his evaluation and his mother's safety too quickly; a more cautious apprentice might have just watched Tam Breel or asked direct questions first."
+    },
+    {
+      "char": "Oren Vael",
+      "action": "Confronting Kesh at the quench barrel instead of reporting him or threatening him with violence.",
+      "believable": 5,
+      "why": "It feels slightly contrived for a seasoned criminal mastermind to casually reveal the scale of his illegal operation ('2200 rounds') to an apprentice he knows is suspicious, unless he intends to recruit Kesh, which makes the threat implicit rather than explicit."
+    },
+    {
+      "char": "Tam Breel",
+      "action": "Looking away and giving vague answers when Kesh asks about the crates.",
+      "believable": 9,
+      "why": "This is classic complicit middle-management behavior; he knows the truth but fears the consequences of speaking it, so he deflects."
+    }
+  ],
+  "notes": "The atmosphere is gritty and compelling, though Oren's decision to essentially recruit Kesh via a cryptic conversation feels a bit too convenient for a thriller setup."
+}

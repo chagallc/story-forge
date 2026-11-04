@@ -5,6 +5,8 @@ lint 结果作为 analyze 报告的一节，供人工与评审 agent 参考。
 """
 import re
 
+# ---------- 中文规则（zh） ----------
+
 TEMPLATE_PHRASES = [
     "值得注意的是", "从某种意义上说", "仿佛在诉说", "空气仿佛凝固", "不知过了多久",
     "时光仿佛静止", "眼神里闪过一丝", "嘴角勾起一抹", "声音不大却清晰",
@@ -23,7 +25,76 @@ def _sentences(text: str) -> list[str]:
     return [p for p in (s.strip() for s in parts) if p]
 
 
-def lint_chapter(text: str) -> dict:
+# ---------- 英文规则（en） ----------
+
+EN_SLOP_WORDS = [
+    "delve", "tapestry", "testament", "embark", "navigate", "shimmer", "myriad",
+    "intricate", "palpable", "ethereal", "mesmerizing", "captivating", "enthralling",
+    "breathtaking", "awe-inspiring", "symphony", "kaleidoscope", "unspoken",
+]
+EN_SLOP_RE = re.compile(
+    r"\b(" + "|".join(EN_SLOP_WORDS) + r")\b", re.IGNORECASE)
+EN_NOT_JUST_RE = re.compile(
+    r"\bnot (?:just|merely|only|simply) [^.!?]{1,60}\b(?:but|rather|it was)\b", re.IGNORECASE)
+EN_WASNT_JUST_RE = re.compile(r"\b(?:was|were)n't just\b", re.IGNORECASE)
+EN_STOCK_BEATS = [
+    "breath she didn't know she was holding", "breath he didn't know he was holding",
+    "little did she know", "little did he know", "little did they know",
+    "something shifted", "the air was thick with", "and then, everything changed",
+    "time seemed to slow", "the weight of the world",
+]
+EN_EYES_RE = re.compile(r"eyes (?:gleamed|glinted|darkened|softened) with", re.IGNORECASE)
+EN_PARTICIPIAL_RE = re.compile(
+    r", (?:signaling|marking|bringing|heralding|promising|heralding) ", re.IGNORECASE)
+EN_LY_RE = re.compile(r"\b\w+ly\b")
+EN_TRICOLON_RE = re.compile(r"\w+, \w+, and \w+[.!?\"]\s*$")
+
+
+def lint_chapter_en(text: str) -> dict:
+    words = len(re.findall(r"\b\w+\b", text))
+    n_500 = max(words / 500, 0.001)
+    sents = _sentences(text)
+    lens = [len(s.split()) for s in sents] or [0]
+    mean_len = sum(lens) / len(lens)
+    std = (sum((x - mean_len) ** 2 for x in lens) / len(lens)) ** 0.5 if len(lens) > 1 else 0.0
+    cv = std / mean_len if mean_len else 0.0
+
+    checks = {
+        "not-just-but": len(EN_NOT_JUST_RE.findall(text)) + len(EN_WASNT_JUST_RE.findall(text)),
+        "slop词密度": round(len(EN_SLOP_RE.findall(text)) / n_500, 3),
+        "stock beats": sum(text.lower().count(p) for p in EN_STOCK_BEATS) + len(EN_EYES_RE.findall(text)),
+        "句长CV": round(cv, 3),
+        "em-dash密度": round(text.count("—") / n_500, 3),
+        "participial tail": len(EN_PARTICIPIAL_RE.findall(text)),
+        "-ly副词密度": round(len(EN_LY_RE.findall(text)) / n_500, 3),
+        "词数": words,
+    }
+    closer = sents[-1] if sents else ""
+    checks["tricolon收尾"] = 1 if EN_TRICOLON_RE.search(closer.strip()) else 0
+
+    flags = []
+    if checks["not-just-but"] >= 2:
+        flags.append("not-just-but×2+")
+    if checks["slop词密度"] >= 1:
+        flags.append("slop词超标")
+    if checks["stock beats"] > 0:
+        flags.append("stock beats")
+    if 0 < checks["句长CV"] < 0.45:
+        flags.append("句长过匀")
+    if checks["em-dash密度"] >= 2:
+        flags.append("em-dash超标")
+    if checks["participial tail"] >= 2:
+        flags.append("participial尾巴")
+    if checks["-ly副词密度"] >= 8:
+        flags.append("-ly副词堆叠")
+    if checks["tricolon收尾"]:
+        flags.append("tricolon收尾")
+    return {"checks": checks, "flags": flags}
+
+
+def lint_chapter(text: str, lang: str = "zh") -> dict:
+    if lang == "en":
+        return lint_chapter_en(text)
     n_chars = max(len(text), 1)
     n_k = n_chars / 1000
     sents = _sentences(text)
@@ -72,8 +143,8 @@ def lint_chapter(text: str) -> dict:
             "flags": flags}
 
 
-def lint_run(chapters: list[str]) -> dict:
-    per_ch = [lint_chapter(t) for t in chapters]
+def lint_run(chapters: list[str], lang: str = "zh") -> dict:
+    per_ch = [lint_chapter(t, lang) for t in chapters]
     flagged = [i + 1 for i, r in enumerate(per_ch) if r["flags"]]
     return {
         "per_chapter": per_ch,
