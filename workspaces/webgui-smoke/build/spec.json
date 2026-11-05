@@ -1,0 +1,111 @@
+{
+  "id": "雾锁九门（WebGUI 冒烟）",
+  "language": "zh",
+  "title": "雾锁九门（WebGUI 冒烟）",
+  "premise": "典当行学徒发现每件死当品里都住着一个未完成的执念，而最新的一件，是他失踪师父的怀表。",
+  "characters": [
+    {
+      "name": "陆小满",
+      "card": "24岁，九门典当行学徒，眼力毒，嘴更快。",
+      "anchors": [
+        "守规矩",
+        "重师徒"
+      ],
+      "want": "改：查清师父失踪真相",
+      "need": "承认师父可能自己有秘密，而非只有受害者叙事",
+      "wound": "孤儿，师父是唯一给过他姓氏的人",
+      "value": "当铺规矩：死当不问来路——但他今天想破例",
+      "fear": "师父是自愿消失的，根本没打算带上他",
+      "contradiction": "守规矩的学徒要做一行里最破规矩的事",
+      "voice": {
+        "catchphrases": [
+          "按规矩说",
+          "这物件不干净"
+        ],
+        "speech_habits": [
+          "短句"
+        ],
+        "forbidden": [
+          "不说完整性解释句"
+        ],
+        "sample_line": "按规矩说，死当不问来路。",
+        "mes_example": [
+          "「按规矩说，死当不问来路。」陆小满把当票推回去。"
+        ]
+      },
+      "knowledge_rules": {
+        "learn": [
+          {
+            "fact_id": "F1",
+            "when": "亲自看见怀表背面刻痕"
+          }
+        ],
+        "never_learn": [
+          "F1_REVEAL"
+        ]
+      },
+      "lorebook": [
+        {
+          "fact_id": "F1",
+          "keywords": [
+            "怀表",
+            "刻痕"
+          ],
+          "content_ref": "ledger:F1"
+        }
+      ],
+      "id": "char_01"
+    }
+  ],
+  "beats": [
+    "（工作台模式：见 engine.cells）"
+  ],
+  "ledger": [
+    {
+      "id": "F1",
+      "plant_chapter": 1,
+      "reveal_chapter": 3,
+      "hook": "怀表背面刻着一个不属于师父籍贯的地名，只给特写不解释",
+      "reveal_plan": "地名是师父三十年前当学徒的旧铺号",
+      "canary": "旧铺"
+    },
+    {
+      "id": "F1_REVEAL",
+      "plant_chapter": 3,
+      "reveal_chapter": 6,
+      "hook": "（底牌登记用）贺三刀与旧铺号的关系",
+      "reveal_plan": "贺三刀当年就在旧铺号当学徒",
+      "canary": "旧铺"
+    }
+  ],
+  "engine": {
+    "template": "悬疑假设弧",
+    "arc": [],
+    "envelope": [],
+    "cells": [
+      {
+        "arc_label": "启动章：守规矩者的第一次破例",
+        "amplitude": "L",
+        "plan": "陆小满计划按规矩把这批死当验完、登记、封存，用照章办事压住师父失踪后的不安",
+        "disruption": "死当堆里认出师父失踪前随身的怀表，正面打听货源来历只换来同行滴水不漏的可疑说辞，正路走不通，计划被推翻",
+        "crisis": "若按规矩把怀表封存上缴底账，查清师父失踪的最后一件实物线索就此脱手；若私藏，底账缺口立刻成为掌柜能咬住的把柄",
+        "improvisation": "陆小满先守半步规矩完成登记，登记时漏写死当来源经手人，再把怀表从封存箱抽出私藏，决意从底账私查，尽管钥匙在掌柜身上",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "wound",
+            "force": "师父失踪后，怀表这只遗物逼他在'按规矩封存死当'与'留下怀表私查底账'之间抉择，守规矩压不安的人设第一次被自己打破",
+            "cost": "底账上留下一笔漏写经手人的缺口，留下随时会被掌柜咬住的把柄，自己开始被盯上"
+          }
+        ],
+        "end_hook": "即将行动型",
+        "chapter": 1
+      }
+    ]
+  },
+  "_generated": {
+    "from": "story-bible.json",
+    "bible_revision": 8,
+    "generated_at": "2026-11-05T13:09:37"
+  }
+}

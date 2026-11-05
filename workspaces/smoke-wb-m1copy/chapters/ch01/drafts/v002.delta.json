@@ -4,53 +4,34 @@
   "base_state_revision": 0,
   "ops": [
     {
-      "op": "set_inventory",
-      "character_id": "char_01",
-      "value": "黄铜怀表（背面刻'柳河铺'，指针停在十一点四十）",
-      "evidence": "解开，是块怀表。黄铜壳，链子断了一截，表盖内侧的漆磨掉一半。"
-    },
-    {
-      "op": "set_location",
-      "character_id": "char_01",
-      "value": "师父的当铺（铺内柜台/天井）",
-      "evidence": "凌晨的雾从窗缝挤进来，柜台上的铜秤盘蒙了一层水汽。"
-    },
-    {
-      "op": "learn",
-      "character_id": "char_01",
-      "fact_id": "F1",
-      "evidence": "背面有一道刻字，刀工很深，刻的人手稳，一笔一笔不带犹豫：\n\n**柳河铺。**"
-    },
-    {
       "op": "advance_hook",
       "hook_id": "F1",
       "action": "plant",
-      "evidence": "柳河铺在北，隔着两千里。这个名字陆小满没听过，师父二十年里没提过一次，喝醉了也没提过。"
+      "evidence": "临江。永昌号。"
+    },
+    {
+      "op": "advance_hook",
+      "hook_id": "F1_REVEAL",
+      "action": "payoff",
+      "evidence": "「你师父走的那晚上，来过我那儿。」他说，「坐了一炷香，什么都没说，走了。」"
     },
     {
       "op": "learn",
       "character_id": "char_01",
       "fact_id": "F1_REVEAL",
-      "evidence": "一块背了十几年漆的老表，去年才被人刻上这三个字。"
+      "evidence": "师父三年前来过贺三刀那儿。他从来不知道这件事"
     },
     {
-      "op": "advance_hook",
-      "hook_id": "F1_REVEAL",
-      "action": "develop",
-      "evidence": "刻字的人知道柳河铺。刻完，把表送进了他师父常来的铺子，挑了三更天，挑了他当值。"
-    },
-    {
-      "op": "add_relationship",
-      "a": "char_01",
-      "b": "char_02",
-      "type": "怀疑戒备（行会理事对学徒，暗含施压）",
-      "evidence": "贺三刀那种人，一个字都不用说，账本上记一笔就够了。"
-    },
-    {
-      "op": "set_false_belief",
+      "op": "set_inventory",
       "character_id": "char_01",
-      "value": "贺三刀注意到的是墙角死当篓最下层的包袱（那里没有表）",
-      "evidence": "视线扫过墙角那半篓死当的时候，在最下层的包袱上停了不到一息。那包袱里没有表。"
+      "value": "银壳怀表（死当，链断半截，内底刻「临江。永昌号」）",
+      "evidence": "陆小满关了半扇门板，回身把怀表又拿起来。"
+    },
+    {
+      "op": "set_inventory",
+      "character_id": "char_01",
+      "value": "铜镇纸（师父遗物，裹好收在袖中，准备典当凑死当本钱）",
+      "evidence": "铜镇纸他重新拿出来，裹好，收进袖子。"
     }
   ]
 }

@@ -1,2 +1,2 @@
-{"tag": "wb-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1486, "completion_tokens_details": {"reasoning_tokens": 0}, "prompt_tokens": 1393, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2879}}
-{"tag": "delta-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 599, "completion_tokens_details": {"reasoning_tokens": 64}, "prompt_tokens": 1858, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2457}}
+{"tag": "wb-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1153, "completion_tokens_details": {"reasoning_tokens": 18}, "prompt_tokens": 1393, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2546}}
+{"tag": "delta-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 668, "completion_tokens_details": {"reasoning_tokens": 362}, "prompt_tokens": 1507, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2175}}

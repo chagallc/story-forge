@@ -5,7 +5,6 @@
     "char_01": {
       "knowledge": {
         "knows": [
-          "F1",
           "F1_HOOK"
         ],
         "unknown_to_them": [],
@@ -13,7 +12,9 @@
       },
       "location": "典当行阁楼",
       "injuries": [],
-      "inventory": [],
+      "inventory": [
+        "师父当票的誊本（贴身夹袄内袋）"
+      ],
       "relationships": {}
     },
     "char_02": {
@@ -21,30 +22,22 @@
         "knows": [],
         "unknown_to_them": [],
         "false_beliefs": [
-          "陆小满没有从师父那里得到任何交代"
+          "贺三刀以为那块怀表只是普通死当，未察觉陆小满已私下誊录当票并发现铺号刻字"
         ]
       },
-      "location": "当铺（已离开，往南去）",
+      "location": "",
       "injuries": [],
       "inventory": [],
       "relationships": {
         "char_01": {
-          "type": "行会理事与当铺学徒，以利诱施压",
+          "type": "行会理事与学徒（监视/施压）",
           "chapter": 1,
-          "evidence": "「行里的意思，九门并进来，统一账制，统一收当。」贺三刀端起茶，吹了吹，「你照旧坐柜，工钱由行会出，比现在厚。」"
+          "evidence": "月底账我带走核对。死当在册，一件都不能少。"
         }
       }
     }
   },
   "facts": {
-    "F1": {
-      "learned_by": [
-        "char_01"
-      ],
-      "chapters": [
-        1
-      ]
-    },
     "F1_HOOK": {
       "learned_by": [
         "char_01"
@@ -59,13 +52,13 @@
       "history": [
         {
           "chapter": 1,
-          "action": "develop",
-          "evidence": "临江号。光绪年立，民国二十六年歇业。歇业那一栏后头，还有一个手写的小注，墨已经发灰。"
+          "action": "plant",
+          "evidence": "指针停在戌时三刻，一动不动。"
         }
       ],
-      "status": "develop",
+      "status": "plant",
       "chapter": 1,
-      "evidence": "临江号。光绪年立，民国二十六年歇业。歇业那一栏后头，还有一个手写的小注，墨已经发灰。"
+      "evidence": "指针停在戌时三刻，一动不动。"
     }
   },
   "timeline": [
@@ -73,14 +66,13 @@
       "chapter": 1,
       "draft": "v001",
       "ops": [
+        "set_inventory",
         "set_location",
-        "set_location",
-        "learn",
         "advance_hook",
         "add_relationship",
         "set_false_belief"
       ],
-      "committed_at": "2026-11-05T11:58:46"
+      "committed_at": "2026-11-05T12:49:05"
     },
     {
       "chapter": 2,
@@ -89,7 +81,7 @@
         "learn",
         "set_location"
       ],
-      "committed_at": "2026-11-05T11:58:47"
+      "committed_at": "2026-11-05T12:49:05"
     }
   ],
   "exemptions": [
@@ -103,7 +95,7 @@
       "source_text_hash": "bbd367c84faaa968fb44a2b0b2101a40acf6b9c1",
       "reason": "结构刻意短句，保留",
       "created_by": "author",
-      "created_at": "2026-11-05T11:58:47"
+      "created_at": "2026-11-05T12:49:05"
     }
   ]
 }

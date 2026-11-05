@@ -1,0 +1,21 @@
+{
+  "revision": 0,
+  "as_of_chapter": 0,
+  "characters": {
+    "char_01": {
+      "knowledge": {
+        "knows": [],
+        "unknown_to_them": [],
+        "false_beliefs": []
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {}
+    }
+  },
+  "facts": {},
+  "hooks": {},
+  "timeline": [],
+  "exemptions": []
+}

@@ -1,0 +1,61 @@
+{
+  "revision": 1,
+  "as_of_chapter": 1,
+  "characters": {
+    "char_01": {
+      "knowledge": {
+        "knows": [
+          "F1"
+        ],
+        "unknown_to_them": [],
+        "false_beliefs": [
+          "他打算在死当登记单的经手人栏只写「赵」，隐瞒自己私拿怀表的事，赌掌柜不会追问贩子姓名"
+        ]
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [
+        "黄铜怀表（师父的，表盖有磕痕，背面刻「永济号」）"
+      ],
+      "relationships": {}
+    }
+  },
+  "facts": {
+    "F1": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        1
+      ]
+    }
+  },
+  "hooks": {
+    "F1_REVEAL": {
+      "history": [
+        {
+          "chapter": 1,
+          "action": "plant",
+          "evidence": "背面上刻着三个字：永济号。"
+        }
+      ],
+      "status": "plant",
+      "chapter": 1,
+      "evidence": "背面上刻着三个字：永济号。"
+    }
+  },
+  "timeline": [
+    {
+      "chapter": 1,
+      "draft": "v001",
+      "ops": [
+        "learn",
+        "set_inventory",
+        "advance_hook",
+        "set_false_belief"
+      ],
+      "committed_at": "2026-11-05T13:10:24"
+    }
+  ],
+  "exemptions": []
+}
