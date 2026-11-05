@@ -4,34 +4,47 @@
   "base_state_revision": 0,
   "ops": [
     {
-      "op": "advance_hook",
-      "hook_id": "F1",
-      "action": "plant",
-      "evidence": "临江。永昌号。"
-    },
-    {
-      "op": "advance_hook",
-      "hook_id": "F1_REVEAL",
-      "action": "payoff",
-      "evidence": "「你师父走的那晚上，来过我那儿。」他说，「坐了一炷香，什么都没说，走了。」"
+      "op": "set_location",
+      "character_id": "char_01",
+      "value": "九门当铺",
+      "evidence": "雨从酉时下到现在，柜台的铜盘上积了一层水汽。"
     },
     {
       "op": "learn",
       "character_id": "char_01",
-      "fact_id": "F1_REVEAL",
-      "evidence": "师父三年前来过贺三刀那儿。他从来不知道这件事"
+      "fact_id": "F1",
+      "evidence": "师父失踪四十一天了。行会报过官，官差查了十天，卷宗上写“行踪不明，暂无可循之线”。"
+    },
+    {
+      "op": "advance_hook",
+      "hook_id": "F1",
+      "action": "develop",
+      "evidence": "“不用登记。”那人抬手把怀表往前推了半寸，“你师父姓周，对吧。表是他的。”"
     },
     {
       "op": "set_inventory",
       "character_id": "char_01",
-      "value": "银壳怀表（死当，链断半截，内底刻「临江。永昌号」）",
-      "evidence": "陆小满关了半扇门板，回身把怀表又拿起来。"
+      "value": "银壳怀表",
+      "evidence": "陆小满把怀表揣进贴身的口袋"
     },
     {
-      "op": "set_inventory",
+      "op": "advance_hook",
+      "hook_id": "F1_REVEAL",
+      "action": "plant",
+      "evidence": "他师父是保定人，保定城里的老周家，族谱他抄过，没有这三个字。"
+    },
+    {
+      "op": "set_false_belief",
       "character_id": "char_01",
-      "value": "铜镇纸（师父遗物，裹好收在袖中，准备典当凑死当本钱）",
-      "evidence": "铜镇纸他重新拿出来，裹好，收进袖子。"
+      "value": "蓑衣人与贺三刀的关系需隐瞒，三天内贺理事会来，收表的话别提蓑衣人",
+      "evidence": "门帘落下之前，那人留了一句：“三天之内，贺理事会来。你收这表的话，别提我。”"
+    },
+    {
+      "op": "add_relationship",
+      "a": "char_02",
+      "b": "char_01",
+      "type": "上门讨茶的相熟人",
+      "evidence": "“小满，”门外是贺三刀的声音，笑着，带着雨气，“喝茶喝茶，这么晚了，讨杯热茶。”"
     }
   ]
 }

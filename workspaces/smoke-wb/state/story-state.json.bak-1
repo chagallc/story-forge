@@ -8,31 +8,31 @@
         "unknown_to_them": [],
         "false_beliefs": []
       },
-      "location": "九门典当行铺子",
+      "location": "九门典当行",
       "injuries": [],
       "inventory": [
-        "师父当票的誊本（贴身夹袄内袋）"
+        "刻有柳泉巷的怀表（蓝布包着，藏在柜台底下）"
       ],
-      "relationships": {}
+      "relationships": {
+        "char_02": {
+          "type": "行会理事与当铺伙计（监视与被监视）",
+          "chapter": 1,
+          "evidence": "行会老理事，五十多的人，肩背挺得像根房梁。他不等让就进来了"
+        }
+      }
     },
     "char_02": {
       "knowledge": {
         "knows": [],
         "unknown_to_them": [],
         "false_beliefs": [
-          "贺三刀以为那块怀表只是普通死当，未察觉陆小满已私下誊录当票并发现铺号刻字"
+          "陆小满接的那单死当是合规的普通死当"
         ]
       },
       "location": "",
       "injuries": [],
       "inventory": [],
-      "relationships": {
-        "char_01": {
-          "type": "行会理事与学徒（监视/施压）",
-          "chapter": 1,
-          "evidence": "月底账我带走核对。死当在册，一件都不能少。"
-        }
-      }
+      "relationships": {}
     }
   },
   "facts": {},
@@ -42,12 +42,12 @@
         {
           "chapter": 1,
           "action": "plant",
-          "evidence": "指针停在戌时三刻，一动不动。"
+          "evidence": "今晚柜台上多了一样东西，用蓝布包着，下午送来的，死当，当票存根压在账本下面。"
         }
       ],
       "status": "plant",
       "chapter": 1,
-      "evidence": "指针停在戌时三刻，一动不动。"
+      "evidence": "今晚柜台上多了一样东西，用蓝布包着，下午送来的，死当，当票存根压在账本下面。"
     }
   },
   "timeline": [
@@ -55,13 +55,13 @@
       "chapter": 1,
       "draft": "v001",
       "ops": [
-        "set_inventory",
         "set_location",
+        "set_inventory",
         "advance_hook",
         "add_relationship",
         "set_false_belief"
       ],
-      "committed_at": "2026-11-05T12:49:05"
+      "committed_at": "2026-11-05T13:30:44"
     }
   ],
   "exemptions": []

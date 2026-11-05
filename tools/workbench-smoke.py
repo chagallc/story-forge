@@ -325,7 +325,7 @@ def main():
     r = run(["commit", BOOK, "1"], input="y\n\n")
     if "never_learn" in (r.stdout or "") or "never_learn" in (r.stderr or ""):
         print("[flaky 防护] delta 撞 never_learn 红名单，模拟作者移除冲突 op 后重跑 commit")
-        dp = os.path.join(drafts_dir(BOOK, 1), "v001.delta.json")
+        dp = os.path.join(wb.drafts_dir(BOOK, 1), "v001.delta.json")
         dj = load_json(dp)
         bad = [o for o in dj.get("ops", [])
                if o.get("op") == "learn" and any(

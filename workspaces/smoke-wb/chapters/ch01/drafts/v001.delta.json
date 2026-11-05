@@ -4,35 +4,35 @@
   "base_state_revision": 0,
   "ops": [
     {
-      "op": "set_inventory",
-      "character_id": "char_01",
-      "value": "师父当票的誊本（贴身夹袄内袋）",
-      "evidence": "誊本他折了三折，塞进自己贴身的夹袄内袋。"
-    },
-    {
       "op": "set_location",
       "character_id": "char_01",
-      "value": "九门典当行铺子",
-      "evidence": "陆小满捏着指尖上那一点红，站在灯底下没动。"
+      "value": "九门典当行",
+      "evidence": "九门典当行夜里不点大灯。他值夜，铺子里就他和一柜子死当"
+    },
+    {
+      "op": "set_inventory",
+      "character_id": "char_01",
+      "value": "刻有柳泉巷的怀表（蓝布包着，藏在柜台底下）",
+      "evidence": "一块怀表。黄铜壳子，链子断了一环。"
     },
     {
       "op": "advance_hook",
       "hook_id": "F1",
       "action": "plant",
-      "evidence": "指针停在戌时三刻，一动不动。"
+      "evidence": "今晚柜台上多了一样东西，用蓝布包着，下午送来的，死当，当票存根压在账本下面。"
     },
     {
       "op": "add_relationship",
-      "a": "char_02",
-      "b": "char_01",
-      "type": "行会理事与学徒（监视/施压）",
-      "evidence": "月底账我带走核对。死当在册，一件都不能少。"
+      "a": "char_01",
+      "b": "char_02",
+      "type": "行会理事与当铺伙计（监视与被监视）",
+      "evidence": "行会老理事，五十多的人，肩背挺得像根房梁。他不等让就进来了"
     },
     {
       "op": "set_false_belief",
       "character_id": "char_02",
-      "value": "贺三刀以为那块怀表只是普通死当，未察觉陆小满已私下誊录当票并发现铺号刻字",
-      "evidence": "他不看货，先看柜台。"
+      "value": "陆小满接的那单死当是合规的普通死当",
+      "evidence": "「那单死当，收得合规吧？」"
     }
   ]
 }

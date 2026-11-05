@@ -16,7 +16,7 @@
     "cost": "留下把柄"
   },
   "intended_consequence": "拿到第一条线索",
-  "recorded_consequence": "钩子 F1 plant；钩子 F1_REVEAL payoff；char_01 获知 F1_REVEAL；char_01 物品变动：银壳怀表（死当，链断半截，内底刻「临江。永昌号」）；char_01 物品变动：铜镇纸（师父遗物，裹好收在袖中，准备典当凑死当本钱）",
+  "recorded_consequence": "char_01 行至 九门当铺；char_01 获知 F1；钩子 F1 develop；char_01 物品变动：银壳怀表；钩子 F1_REVEAL plant；char_01 误信：蓑衣人与贺三刀的关系需隐瞒，三天内贺理事会来，收表的话别提蓑衣人；char_02 → char_01：上门讨茶的相熟人",
   "reader_promise": {
     "type": "信息",
     "content": "地名指向旧铺号"

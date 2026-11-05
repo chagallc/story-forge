@@ -4,32 +4,25 @@
   "lint_report": [
     "分节碎"
   ],
-  "dropped_ops": [],
+  "dropped_ops": [
+    "ops[2] learn 的 evidence 不是正文子串：『背面刻着四个字。刻工很深，不是装饰，是有人拿刀一点一点凿上去…』",
+    "ops[3] learn 的 evidence 不是正文子串：『那是九门典当行的铺号印。他自己的铺子。…』",
+    "ops[4] advance_hook 的 evidence 不是正文子串：『背面刻着四个字。刻工很深，不是装饰，是有人拿刀一点一点凿上去…』",
+    "ops[5] advance_hook 的 evidence 不是正文子串：『那是九门典当行的铺号印。他自己的铺子。…』"
+  ],
   "warnings": [],
   "kept_ops": [
     {
-      "op": "learn",
+      "op": "set_location",
       "character_id": "char_01",
-      "fact_id": "F1",
-      "evidence": "这道痕他见过。三年前师父在库房搬箱子磕的，当时还骂了半天箱子摆得不是地方。"
+      "value": "九门典当行",
+      "evidence": "九门典当行的柜台有半人高，陆小满趴在后面打瞌睡"
     },
     {
       "op": "set_inventory",
       "character_id": "char_01",
-      "value": "黄铜怀表（师父的，表盖有磕痕，背面刻「永济号」）",
-      "evidence": "然后趁赵把式背身点碗的工夫，把怀表从油布里拿出来，塞进自己袖袋。"
-    },
-    {
-      "op": "advance_hook",
-      "hook_id": "F1_REVEAL",
-      "action": "plant",
-      "evidence": "背面上刻着三个字：永济号。"
-    },
-    {
-      "op": "set_false_belief",
-      "character_id": "char_01",
-      "value": "他打算在死当登记单的经手人栏只写「赵」，隐瞒自己私拿怀表的事，赌掌柜不会追问贩子姓名",
-      "evidence": "他落在纸上的字是：经手，赵。"
+      "value": "银壳怀表（背面刻有「临水镇」，带九门典当行铺号印戳记）",
+      "evidence": "布包里是一块怀表。银壳，走时不走时还看不出来"
     }
   ]
 }
