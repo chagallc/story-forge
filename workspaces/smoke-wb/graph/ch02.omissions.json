@@ -1,0 +1,32 @@
+{
+  "chapter": 2,
+  "delta_draft": "v001",
+  "note": "待审补丁建议：正文观察到但 delta 未登记的状态变化。人工审核后可把 suggested_op 手工并入对应 drafts/vNNN.delta.json 并重跑 commit 流程；本文件绝不自动改正史。",
+  "omissions": [
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "怀表无当票",
+      "evidence": "「当票呢？」\n「没有。」",
+      "suggested_op": {
+        "op": "learn",
+        "evidence": "「当票呢？」\n「没有。」",
+        "character_id": "char_01",
+        "fact_id": "怀表无当票"
+      }
+    },
+    {
+      "character_id": "char_01",
+      "kind": "inventory",
+      "value": "怀表留在柜面（未当场取回）",
+      "evidence": "怀表在柜面上躺着。",
+      "suggested_op": {
+        "op": "set_inventory",
+        "evidence": "怀表在柜面上躺着。",
+        "character_id": "char_01",
+        "value": "怀表留在柜面（未当场取回）"
+      }
+    }
+  ],
+  "generated_at": "2026-11-05T13:00:57"
+}

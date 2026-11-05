@@ -1,0 +1,135 @@
+{
+  "chapter": 1,
+  "canon_revision": 1,
+  "extractor_model": "qwen3.8-flash",
+  "extracted_at": "2026-11-05T13:02:06",
+  "events": [
+    {
+      "id": "ev_001_01",
+      "description": "陆小满以二十块死当价格从一名汉子手中购得一只怀表",
+      "participants": [
+        "char_01"
+      ],
+      "location": "九门典当行柜台",
+      "modality": "actual",
+      "evidence": "“二十块。”陆小满说，“死当，不赎。”\n\n“行。”",
+      "caused_by": []
+    },
+    {
+      "id": "ev_001_02",
+      "description": "陆小满确认怀表为师父失踪当晚遗物并发现背面刻有“津门盛”字样",
+      "participants": [
+        "char_01"
+      ],
+      "location": "九门典当行柜台",
+      "modality": "actual",
+      "evidence": "他心跳快起来，把表翻过来。\n\n背面刻着三个字：津门盛。",
+      "caused_by": [
+        "ev_001_01"
+      ]
+    },
+    {
+      "id": "ev_001_03",
+      "description": "陆小满将怀表藏入暗格并在账本页脚秘密记录时间",
+      "participants": [
+        "char_01"
+      ],
+      "location": "九门典当行柜台",
+      "modality": "actual",
+      "evidence": "陆小满把表揣进怀里，压上柜板的暗格。",
+      "caused_by": [
+        "ev_001_02"
+      ]
+    },
+    {
+      "id": "ev_001_04",
+      "description": "贺三刀点破陆小满在账本上的私记行为并施压要求其签署并行条款",
+      "participants": [
+        "char_01",
+        "char_02"
+      ],
+      "location": "九门典当行后堂",
+      "modality": "actual",
+      "evidence": "“对喽。”贺三刀笑，“那你柜上那本账，页脚上写的是什么？”",
+      "caused_by": [
+        "ev_001_04"
+      ]
+    },
+    {
+      "id": "ev_001_05",
+      "description": "陆小满被迫签署行会并行条款以保全铺子",
+      "participants": [
+        "char_01",
+        "char_02"
+      ],
+      "location": "九门典当行后堂",
+      "modality": "actual",
+      "evidence": "陆小满按了手印，贺三刀收起文书，起身，走到门口又回头。",
+      "caused_by": [
+        "ev_001_05"
+      ]
+    },
+    {
+      "id": "ev_001_06",
+      "description": "贺三刀警告陆小满不要打听津门之事",
+      "participants": [
+        "char_01",
+        "char_02"
+      ],
+      "location": "九门典当行门口",
+      "modality": "actual",
+      "evidence": "“小满，津门那个地方，三十年前有家铺子，早关了。”他说，“你别去打听。”",
+      "caused_by": [
+        "ev_001_06"
+      ]
+    },
+    {
+      "id": "ev_001_07",
+      "description": "陆小满意识到贺三刀知晓怀表秘密并在账本上补写线索",
+      "participants": [
+        "char_01"
+      ],
+      "location": "九门典当行后堂",
+      "modality": "actual",
+      "evidence": "可他说出了“津门”两个字。\n\n陆小满从暗格里取出怀表",
+      "caused_by": [
+        "ev_001_07"
+      ]
+    }
+  ],
+  "state_changes_observed": [
+    {
+      "character_id": "char_01",
+      "kind": "inventory",
+      "value": "获得黄铜怀表（背面刻有'津门盛'）",
+      "evidence": "陆小满把表揣进怀里，压上柜板的暗格。"
+    },
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "得知贺三刀知晓'津门'及怀表秘密",
+      "evidence": "可他说出了“津门”两个字。"
+    },
+    {
+      "character_id": "char_01",
+      "kind": "false_belief",
+      "value": "认为师父是自愿离开",
+      "evidence": "师父是自愿走的。这个念头冒出来的时候，他把手攥紧了"
+    }
+  ],
+  "hooks_touched": [
+    {
+      "hook_id": "F1",
+      "action": "plant"
+    },
+    {
+      "hook_id": "F1_REVEAL",
+      "action": "develop"
+    }
+  ],
+  "unresolved_questions": [
+    "贺三刀为何知道怀表背面的'津门'二字？",
+    "师父失踪与'津门盛'有何关联？",
+    "贺三刀提到的三十年前关掉的津门铺子是什么背景？"
+  ]
+}

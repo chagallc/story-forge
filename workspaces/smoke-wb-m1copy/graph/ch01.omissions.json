@@ -1,0 +1,32 @@
+{
+  "chapter": 1,
+  "delta_draft": "v002",
+  "note": "待审补丁建议：正文观察到但 delta 未登记的状态变化。人工审核后可把 suggested_op 手工并入对应 drafts/vNNN.delta.json 并重跑 commit 流程；本文件绝不自动改正史。",
+  "omissions": [
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "得知贺三刀知晓'津门'及怀表秘密",
+      "evidence": "可他说出了“津门”两个字。",
+      "suggested_op": {
+        "op": "learn",
+        "evidence": "可他说出了“津门”两个字。",
+        "character_id": "char_01",
+        "fact_id": "得知贺三刀知晓'津门'及怀表秘密"
+      }
+    },
+    {
+      "character_id": "char_01",
+      "kind": "false_belief",
+      "value": "认为师父是自愿离开",
+      "evidence": "师父是自愿走的。这个念头冒出来的时候，他把手攥紧了",
+      "suggested_op": {
+        "op": "set_false_belief",
+        "evidence": "师父是自愿走的。这个念头冒出来的时候，他把手攥紧了",
+        "character_id": "char_01",
+        "value": "认为师父是自愿离开"
+      }
+    }
+  ],
+  "generated_at": "2026-11-05T13:02:06"
+}

@@ -8,29 +8,31 @@
           "F1"
         ],
         "unknown_to_them": [],
-        "false_beliefs": []
+        "false_beliefs": [
+          "贺三刀今夜来这趟，等的未必是章程的答复，可能惦记着登记簿上那块表"
+        ]
       },
-      "location": "当铺",
+      "location": "南城自家的当铺",
       "injuries": [],
-      "inventory": [],
+      "inventory": [
+        "黄铜怀表（死当收进，十五块）"
+      ],
       "relationships": {}
     },
     "char_02": {
       "knowledge": {
         "knows": [],
         "unknown_to_them": [],
-        "false_beliefs": [
-          "陆小满没有从师父那里得到任何交代"
-        ]
+        "false_beliefs": []
       },
-      "location": "当铺（已离开，往南去）",
+      "location": "",
       "injuries": [],
       "inventory": [],
       "relationships": {
         "char_01": {
-          "type": "行会理事与当铺学徒，以利诱施压",
+          "type": "行会理事施压吞并当铺",
           "chapter": 1,
-          "evidence": "「行里的意思，九门并进来，统一账制，统一收当。」贺三刀端起茶，吹了吹，「你照旧坐柜，工钱由行会出，比现在厚。」"
+          "evidence": "行会下月改章程，九门这样的散铺，要并进来统一管。"
         }
       }
     }
@@ -50,13 +52,13 @@
       "history": [
         {
           "chapter": 1,
-          "action": "develop",
-          "evidence": "临江号。光绪年立，民国二十六年歇业。歇业那一栏后头，还有一个手写的小注，墨已经发灰。"
+          "action": "plant",
+          "evidence": "要么师父那晚把表给了人，要么这表转了几道手，恰好在师父消失的同一夜里回到了南城。"
         }
       ],
-      "status": "develop",
+      "status": "plant",
       "chapter": 1,
-      "evidence": "临江号。光绪年立，民国二十六年歇业。歇业那一栏后头，还有一个手写的小注，墨已经发灰。"
+      "evidence": "要么师父那晚把表给了人，要么这表转了几道手，恰好在师父消失的同一夜里回到了南城。"
     }
   },
   "timeline": [
@@ -65,13 +67,13 @@
       "draft": "v001",
       "ops": [
         "set_location",
-        "set_location",
+        "set_inventory",
         "learn",
         "advance_hook",
         "add_relationship",
         "set_false_belief"
       ],
-      "committed_at": "2026-11-05T11:58:46"
+      "committed_at": "2026-11-05T13:00:42"
     }
   ],
   "exemptions": []

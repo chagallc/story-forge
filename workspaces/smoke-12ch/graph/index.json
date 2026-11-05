@@ -1,0 +1,10 @@
+{
+  "chapters": {
+    "12": {
+      "versions": [
+        "ch12.fact.json"
+      ],
+      "latest": "ch12.fact.json"
+    }
+  }
+}

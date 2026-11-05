@@ -1,0 +1,1 @@
+{"tag": "fact-ch01", "model": "qwen3.8-flash", "usage": {"prompt_tokens": 543, "total_tokens": 954, "completion_tokens": 411, "prompt_tokens_details": {"cached_tokens": 0, "text_tokens": 543}}}

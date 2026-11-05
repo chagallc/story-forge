@@ -1,46 +1,52 @@
 #!/usr/bin/env python3
-"""工作台冒烟测试 v3（M2：正史提交/角色认知/上下文投影/豁免状态，工单验收 #1~#4）。
+"""工作台冒烟测试 v4（M3A：滚动连载 + 最小故事图谱，工单验收 #1~#5）。
 
-主流程（BOOK=smoke-wb，清空重建，真实 LLM，投影关=M1 行为）：
-  new(schema v3) → char(v3 四分区 JSON seed) → discuss(选分支) → lock(章节卡 id 化) →
-  write(draft+delta+lint 三件套，前文只读 canon) → commit(canon+state 原子推进+备份) →
-  再 commit（负样本：revision 不匹配必须拒绝）
+主流程（BOOK=smoke-wb，清空重建，真实 LLM，投影关）：
+  new(schema v4) → char(v4 JSON seed) → discuss → lock → write → commit
+  （commit 成功后自动触发真实 qwen 抽取 → 断言 facts 文件生成且 evidence 为 canon 子串）
+  → 重复 commit 负样本。
 
-离线段（FakeClient 假客户端，零 LLM）：
-  - 写 ch2 上下文断言：投影开=HOT/WARM（无 COLD、无 shadows、无 ch1 drafts 内容）
-  - 投影关=M1 E 臂形态（全文历史+完整暗账），前文同样是 canon 优先
-  - delta 预清洗：name→id 改写 / 非白名单 op 丢弃 / evidence 非子串丢弃
-  - commit ch2：state.revision 推进、characters.knowledge 确定性推进（验收 #5）
-  - 豁免生命周期：exempt → lint 过滤 → 正文改动后豁免失效
-  - state.py 4 组负样本（revision 不匹配/非白名单/非子串/never_learn 冲突）
+离线段（FakeClient，零 LLM）：
+  - 投影双模式 / canon 截断 / delta 预清洗 / 豁免生命周期 / state 负样本（M2 沿用）
+  - 12 章规模回归：FakeClient 离线写满 smoke-12ch 12 章（write+commit 每章 3 个假回复）
+    → plan 展开 13-16 章（滚动纪律/锚点入 arc/V2 卷激活，验收 #2）
+  - 遗漏检测：ch7 fact 观察到 knowledge 变化而 delta 无 learn op → 警告 + ch07.omissions.json
+  - evidence 校验：ch3 fact 含伪造 evidence 事件 → 被丢弃
+  - facts 不可变 append-only：重抽 ch1 → v2 文件，首版不动，index 登记
+  - 图谱隔离（验收 #3）：删 graph/ 后 status/write/commit 不受影响，重抽恢复
+  - 双书并行（验收 #4）：smoke-12ch 与 smoke-wb 各自 map/plan 互不干扰
+  - legacy 可 map 可 plan（验收 #5）
 
 迁移段：
-  - smoke-wb-m1copy（M1 格式真实副本）：status 迁移 v2→v3（id 生成/card.json 改写/written→drafted）
-    → write 续写（draft 跨迁移版本递增）→ commit 建正史
-  - smoke-wb-legacy（v1 cell 格式）：status 迁移 → write 直通 → commit（无卡跳过回填）
+  - smoke-wb-m1copy（M1 提交态构造）：status 迁移 v2→v4 → write → commit（真实 LLM 抽取）
+  - smoke-wb-legacy（v1 cell 格式）：迁移 → write 直通 → commit → map + plan（--extend 截断）
 
-依赖：experiments/exp003 + config/models.local.json；真实 LLM 约 6 次调用（讨论1+卡1+主书写作2+副本写作2）。
+依赖：experiments/exp003 + config/models.local.json；真实 LLM 约 8 次
+（讨论1+卡1+主书写作2+主书抽取2+副本写作2+副本抽取1）。
 """
+import builtins
+import contextlib
+import io
 import json
 import os
 import shutil
 import subprocess
 import sys
-import io
-import contextlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 import workbench as wb  # noqa: E402
+from src.harness import graph as gh  # noqa: E402
 from src.harness.context import build_context  # noqa: E402
 from src.harness.engine import build_engine_directive  # noqa: E402
 from src.harness.schema import validate_card  # noqa: E402
 from src.harness.state import StoryState, text_sha1  # noqa: E402
 
-BOOK = "smoke-wb"            # 主流程：v3 全流程（真实 LLM）
-M1COPY = "smoke-wb-m1copy"   # M1 格式真实副本：迁移续写（真实 LLM）
-LEGACY = "smoke-wb-legacy"   # v1 cell 格式：离线直通验证
+BOOK = "smoke-wb"            # 主流程：v4 全流程（真实 LLM）
+BOOK12 = "smoke-12ch"        # 12 章离线回归（FakeClient）
+M1COPY = "smoke-wb-m1copy"   # M1 格式副本：迁移续写（真实 LLM）
+LEGACY = "smoke-wb-legacy"   # v1 cell 格式：离线直通 + map/plan
 
 ENV = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
 RESULTS = []
@@ -176,6 +182,106 @@ def seed_ch2_card(bible):
     return card2
 
 
+# ---------------- 12 章离线回归工厂（验收 #2） ----------------
+
+CARD_TEMPLATE = {
+    "chapter": 1, "chapter_type": "A", "base_state_revision": 0,
+    "pov": {"character": "char_01", "tense": "past"},
+    "time_place": "当夜，九门典当行", "opening_state": "怀表在柜上",
+    "objective": "查清地名来历", "obstacle": "行会并局施压",
+    "choice": {"selected": "私查地名", "irreversible": True, "cost": "留下把柄"},
+    "intended_consequence": "线索推进", "recorded_consequence": None,
+    "reader_promise": {"type": "信息", "content": "地名指向旧铺号"},
+    "ending_state": "线索到手", "allowed_fact_ids": ["F1"],
+    "prohibited_developments": ["不揭示地名含义"], "active_hook_ids": ["F1"],
+    "dialogue_budget": {"min_ratio": 0.4},
+    "engine": {"arc_label": "连载推进", "amplitude": "L",
+               "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+               "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+               "crisis": "收下死当就得罪行会", "improvisation": "表面答应私下暗查",
+               "pressure": [{"char": "char_01", "motive": "fear",
+                             "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+                             "cost": "私查留把柄"}],
+               "end_hook": "新信息型"},
+}
+
+EV_LOCATION = "雨夜。柜上灯昏。"          # 各章 delta/事实共用的 evidence（BODY 中的连续子串）
+EV_DECISION = "他决定今晚就把地名查清楚。"
+EV_WATCH = "怀表在柜面上躺着。"
+
+
+def seed_12ch_book():
+    """12 章离线回归书（FakeClient 全程，真实目录在 workspaces/smoke-12ch）。"""
+    shutil.rmtree(wb.ws_dir(BOOK12), ignore_errors=True)
+    d = wb.ws_dir(BOOK12)
+    os.makedirs(os.path.join(d, "chapters"), exist_ok=True)
+    os.makedirs(os.path.join(d, "discussions"), exist_ok=True)
+    bible = {
+        "schema_version": 4, "revision": 0,
+        "book": {"title": "雾锁九门（连载回归）", "genre": "都市悬疑", "language": "zh",
+                 "platform": "qidian", "logline": "12 章离线回归", "context_projection": False},
+        "opening_contract": {"dialogue_ratio_min": 0.40},
+        "characters": json.loads(json.dumps(CHARACTERS_V3)),
+        "world": {"setting": "九十年代末，某南方城市的老九门典当行街", "glossary": ["死当", "九门"]},
+        "compass": {"ending_direction": "旧铺号真相", "reader_promise": "每章一次反转",
+                    "active_long_line_ids": []},
+        "arc": {"template": "悬疑假设弧", "anchors": [], "total_chapters": 24,
+                "locked_through": 0, "planned_through": 8,
+                "compass": {"ending_direction": "旧铺号真相", "reader_promise": "每章一次反转",
+                            "active_long_line_ids": []},
+                "volumes": [{"id": "V1", "status": "active", "chapters": [1, 12]},
+                            {"id": "V2", "status": "skeleton", "chapters": [13, 24]}]},
+        "ledger": json.loads(json.dumps(LEDGER_SEED)),
+        "shadows": [],
+        "chapters": {},
+    }
+    with open(wb.bible_path(BOOK12), "w", encoding="utf-8") as f:
+        json.dump(bible, f, ensure_ascii=False, indent=2)
+    for ch in range(1, 13):  # 12 张合法卡（文件权威，status=locked）
+        card = json.loads(json.dumps(CARD_TEMPLATE))
+        card["chapter"] = ch
+        cf = wb.card_file(BOOK12, ch)
+        os.makedirs(os.path.dirname(cf), exist_ok=True)
+        wb._write_json(cf, card)
+        bible["chapters"][str(ch)] = {"status": "locked",
+                                      "card_path": wb.rel_path(BOOK12, cf), "card": card}
+    wb.save_bible(BOOK12, bible)
+
+
+def fake_replies_for_chapter(ch, *, omission=False, bad_evidence=False):
+    """一章的 3 个假回复：write 正文 → write delta → commit 后事实抽取。
+
+    omission=True：fact 观察到 knowledge 变化但 delta 无 learn op（遗漏检测用例）。
+    bad_evidence=True：fact 含一个伪造 evidence 的事件（evidence 校验用例）。
+    """
+    body = _short_paras_prose()
+    delta = {"chapter": ch, "draft": "v001", "base_state_revision": 0, "ops": [
+        {"op": "set_location", "character_id": "陆小满", "value": "九门典当行",
+         "evidence": EV_LOCATION}]}
+    state_changes = [{"character_id": "char_01", "kind": "location", "value": "九门典当行",
+                      "evidence": EV_LOCATION}]
+    if omission:
+        state_changes.append({"character_id": "char_01", "kind": "knowledge",
+                              "value": "F1", "evidence": EV_DECISION})
+    events = [{"description": f"第{ch}章：贺三刀施压", "participants": ["char_01", "char_02"],
+               "location": "九门典当行", "modality": "actual", "evidence": "「三天。三天后来收。」",
+               "caused_by": ["ev_001_01"] if ch > 1 else []}]
+    if bad_evidence:
+        events.append({"description": "伪造事件", "participants": [], "location": "",
+                       "evidence": "这句不在正文里，必须被丢弃", "caused_by": []})
+    fact = {"chapter": ch, "events": events, "state_changes_observed": state_changes,
+            "hooks_touched": [{"hook_id": "F1", "action": "plant"}],
+            "unresolved_questions": [f"第{ch}章留下的悬念"]}
+    return [_short_paras_prose(), json.dumps(delta, ensure_ascii=False),
+            json.dumps(fact, ensure_ascii=False)]
+
+
+def run_input(answers):
+    """补丁 builtins.input：按序返回 answers。"""
+    it = iter(answers)
+    return lambda prompt="": next(it)
+
+
 def seed_m1_copy():
     """按 M1 提交态构造 M1 格式工作区（schema v2、人物无 id、ch1 written + name 卡 + v001 草稿）。
 
@@ -265,9 +371,12 @@ def main():
     r = run(["new", BOOK], input=new_input)
     check("new 退出码 0", r.returncode == 0, r.stderr[-500:])
     bible = wb.load_bible(BOOK)
-    check("bible schema v3 + 投影默认关",
-          bible.get("schema_version") == 3
-          and (bible["book"].get("context_projection")) is False)
+    check("bible schema v4 + 投影默认关 + volumes + 纪律窗口",
+          bible.get("schema_version") == 4
+          and (bible["book"].get("context_projection")) is False
+          and bible["arc"]["planned_through"] == 8
+          and bible["arc"]["volumes"][0]["id"] == "V1"
+          and bible["arc"]["compass"]["active_long_line_ids"] == [])
     check("compass/arc/shadows 默认齐全",
           bible.get("shadows") == [] and bible["arc"].get("locked_through") == 0
           and bible["compass"].get("active_long_line_ids") == [])
@@ -325,7 +434,7 @@ def main():
     r = run(["commit", BOOK, "1"], input="y\n\n")
     if "never_learn" in (r.stdout or "") or "never_learn" in (r.stderr or ""):
         print("[flaky 防护] delta 撞 never_learn 红名单，模拟作者移除冲突 op 后重跑 commit")
-        dp = os.path.join(drafts_dir(BOOK, 1), "v001.delta.json")
+        dp = os.path.join(wb.drafts_dir(BOOK, 1), "v001.delta.json")
         dj = load_json(dp)
         bad = [o for o in dj.get("ops", [])
                if o.get("op") == "learn" and any(
@@ -350,6 +459,7 @@ def main():
           (load_json(wb.card_file(BOOK, 1)).get("recorded_consequence") or "") != "")
     bible = wb.load_bible(BOOK)
     check("状态机 committed", bible["chapters"]["1"].get("status") == "committed")
+    check("commit 推进 locked_through", bible["arc"]["locked_through"] == 1)
     delta1d = load_json(delta1)
     if any(op.get("op") == "learn" for op in delta1d["ops"]):
         fact_ids = {op["fact_id"] for op in delta1d["ops"] if op.get("op") == "learn"}
@@ -357,6 +467,26 @@ def main():
         for cdata in st.data["characters"].values():
             knows |= set((cdata.get("knowledge") or {}).get("knows") or [])
         check("delta learn 已推进 state.knowledge", fact_ids <= knows, f"{fact_ids} vs {knows}")
+
+    # P-G1：commit 后自动抽取（真实 qwen）→ facts 文件 + evidence 子串校验（验收 #1 前半）
+    fact1_path = os.path.join(wb.ws_dir(BOOK), "graph", "facts", "ch01.fact.json")
+    check("commit 后 facts 文件生成（真实抽取，失败不阻塞）", os.path.exists(fact1_path),
+          r.stdout[-300:] if os.path.exists(fact1_path) is False else "")
+    if os.path.exists(fact1_path):
+        f1 = load_json(fact1_path)
+        canon1_text = open(canon1, encoding="utf-8").read()
+        check("fact 结构（chapter/canon_revision/extractor_model/events）",
+              f1.get("chapter") == 1 and isinstance(f1.get("canon_revision"), int)
+              and f1.get("extractor_model") and isinstance(f1.get("events"), list))
+        check("fact 所有 events/changes 的 evidence 均为 canon 子串",
+              all(ev["evidence"] in canon1_text for ev in f1["events"])
+              and all(s["evidence"] in canon1_text for s in f1["state_changes_observed"]))
+        idx = gh.load_index(wb.ws_dir(BOOK))
+        check("graph/index.json 登记 ch01", "1" in idx.get("chapters", {}))
+    else:
+        RESULTS.append(False)
+        RESULTS.append(False)
+        RESULTS.append(False)
 
     # commit 负样本：同 delta 再 commit → base_state_revision 不匹配拒绝
     r = run(["commit", BOOK, "1"], input="y\n\n")
@@ -413,7 +543,7 @@ def main():
         check("ch2 首稿 v001（draft 版本号按章内递增）",
               os.path.exists(os.path.join(wb.drafts_dir(BOOK, 2), "v001.md")))
 
-        # —— commit ch2（离线）：验收 #5 的确定性 state 推进 ——
+        # —— commit ch2（离线）：验收 #5 的确定性 state 推进（真实 qwen 抽取挂 commit）——
         wb.client_for = real_client_for
         r = run(["commit", BOOK, "2"], input="y\n\n")
         check("commit ch2 退出码 0", r.returncode == 0, (r.stderr or "")[-400:])
@@ -424,6 +554,9 @@ def main():
               and c01.get("location") == "典当行阁楼"
               and os.path.exists(wb.state_path(BOOK) + ".bak-1"),
               json.dumps(st.data["characters"], ensure_ascii=False)[:200])
+        fact2_path = os.path.join(wb.ws_dir(BOOK), "graph", "facts", "ch02.fact.json")
+        check("commit ch2 触发真实抽取 → facts 生成", os.path.exists(fact2_path),
+              (r.stdout or "")[-300:])
 
         # —— 投影关（M1 行为）——
         bible = wb.load_bible(BOOK)
@@ -495,11 +628,13 @@ def main():
     check("M1 副本 status 不报错", r.returncode == 0, (r.stderr or "")[-400:])
     mig = load_json(wb.bible_path(M1COPY))
     mcard_file = load_json(wb.card_file(M1COPY, 1))
-    check("M1 副本迁移 v2→v3：id 生成/card.json 改写/written→drafted/投影默认关",
-          mig.get("schema_version") == 3
+    check("M1 副本迁移 v2→v4：id 生成/card.json 改写/written→drafted/volumes+纪律收敛",
+          mig.get("schema_version") == 4
           and mig["characters"][0].get("id") == "char_01"
           and mcard_file["pov"]["character"] == "char_01"
           and mig["chapters"]["1"]["status"] == "drafted"
+          and mig["arc"]["planned_through"] == 9  # locked 1 + 8
+          and mig["arc"]["volumes"][0]["chapters"] == [1, 12]
           and mig["book"]["context_projection"] is False)
     r = run(["write", M1COPY, "1"])
     print("--- M1 副本 write 输出尾部 ---")
@@ -539,10 +674,12 @@ def main():
     r = run(["status", LEGACY])
     check("v1 status 迁移不报错", r.returncode == 0 and "migrated" in r.stdout)
     lmig = load_json(wb.bible_path(LEGACY))
-    check("v1 迁移链：cell 原样保留 + 包装卡 id 化",
-          lmig["schema_version"] == 3
+    check("v1 迁移链：cell 原样保留 + 包装卡 id 化 + v4（volumes/纪律收敛）",
+          lmig["schema_version"] == 4
           and lmig["chapters"]["1"]["cell"]["pressure"][0]["char"] == "陆小满"
-          and lmig["chapters"]["1"]["card"]["engine"]["pressure"][0]["char"] == "char_01")
+          and lmig["chapters"]["1"]["card"]["engine"]["pressure"][0]["char"] == "char_01"
+          and lmig["arc"]["planned_through"] == 8
+          and lmig["arc"]["volumes"][0]["id"] == "V1")
     spec0 = {"language": "zh", "characters": legacy_bible["characters"], "ledger": legacy_bible["ledger"],
              "engine": {"cells": [legacy_bible["chapters"]["1"]["cell"]]}}
     directive0 = build_engine_directive(spec0, 1)
@@ -586,6 +723,198 @@ def main():
     r = run(["status", BOOK])
     check("status 展示 committed/正史行", r.returncode == 0 and "★" in r.stdout
           and "state.revision" in r.stdout)
+
+    # ============ 8. M3A：12 章离线回归（FakeClient）→ plan 展开 13-16（验收 #2） ============
+    seed_12ch_book()
+    replies = []
+    for c in range(1, 13):
+        replies.extend(fake_replies_for_chapter(c, omission=(c == 7), bad_evidence=(c == 3)))
+    fake12 = FakeClient(replies)
+    real_client_for2, real_input = wb.client_for, builtins.input
+    try:
+        wb.client_for = lambda *a, **k: fake12
+        builtins.input = run_input(["y", ""] * 12)  # 每章 commit：确认 y + 回车采纳提炼句
+        buf12 = io.StringIO()
+        with contextlib.redirect_stdout(buf12):
+            for c in range(1, 13):
+                wb.cmd_write([BOOK12, str(c)])
+                wb.cmd_commit([BOOK12, str(c)])
+        out12 = buf12.getvalue()
+    finally:
+        wb.client_for, builtins.input = real_client_for2, real_input
+    b12 = wb.load_bible(BOOK12)
+    check("12 章全部 committed（FakeClient 离线写满）",
+          all((b12["chapters"].get(str(c)) or {}).get("status") == "committed" for c in range(1, 13)))
+    check("locked_through 推进到 12", b12["arc"]["locked_through"] == 12)
+    facts12_dir = os.path.join(wb.ws_dir(BOOK12), "graph", "facts")
+    check("12 份 facts 文件生成（commit 自动抽取）",
+          all(os.path.exists(os.path.join(facts12_dir, f"ch{c:02d}.fact.json")) for c in range(1, 13)))
+    canon12_text = _short_paras_prose()
+    facts12 = gh.load_all_latest_facts(wb.ws_dir(BOOK12))
+    check("全部 facts 的 evidence 均为 canon 子串（代码校验）",
+          len(facts12) == 12
+          and all(ev["evidence"] in canon12_text for f in facts12.values() for ev in f["events"]))
+    check("ch3 伪造 evidence 事件被丢弃并警告",
+          len(facts12[3]["events"]) == 1 and "必须被丢弃" not in json.dumps(facts12[3], ensure_ascii=False)
+          and "evidence 非 canon 子串" in out12)
+    omissions_path = os.path.join(wb.ws_dir(BOOK12), "graph", "ch07.omissions.json")
+    check("ch7 遗漏警告 + 待审补丁文件（正文有变化 delta 无 op）",
+          os.path.exists(omissions_path) and "遗漏警告" in out12)
+    if os.path.exists(omissions_path):
+        om7 = load_json(omissions_path)
+        check("omissions 为待审建议（suggested_op，绝不自动改正史）",
+              om7["omissions"] and om7["omissions"][0]["suggested_op"]["op"] == "learn"
+              and om7["omissions"][0]["kind"] == "knowledge")
+    st12 = StoryState(wb.state_path(BOOK12))
+    knows12 = ((st12.data["characters"].get("char_01") or {}).get("knowledge") or {}).get("knows") or []
+    check("遗漏未进正史（state.knowledge 不含 F1）", "F1" not in knows12, str(knows12))
+
+    # plan 展开 13-16（locked 12 > planned 8：写超前于规划，起点取 max+1）
+    anchors_13_16 = [
+        {"chapter": 13, "arc_label": "中段：假线索", "amplitude": "L", "direction": "假线索把陆小满引向行会旧账"},
+        {"chapter": 14, "arc_label": "中段：盟友", "amplitude": "M", "direction": "钟表匠入局，指出表有两层刻字"},
+        {"chapter": 15, "arc_label": "中段：倒计时", "amplitude": "M", "direction": "行会限三日交铺，倒计时开始"},
+        {"chapter": 16, "arc_label": "中段：反转", "amplitude": "XL", "direction": "假线索崩塌，贺三刀不是主谋"}]
+    try:
+        wb.client_for = lambda *a, **k: FakeClient([json.dumps(anchors_13_16, ensure_ascii=False)])
+        builtins.input = run_input(["y"] * 4)
+        bufp = io.StringIO()
+        with contextlib.redirect_stdout(bufp):
+            wb.cmd_plan([BOOK12])
+        outp = bufp.getvalue()
+    finally:
+        wb.client_for, builtins.input = real_client_for2, real_input
+    b12 = wb.load_bible(BOOK12)
+    check("plan 展开 13-16：planned_through 8→16", b12["arc"]["planned_through"] == 16,
+          outp[-300:] if b12["arc"]["planned_through"] != 16 else "")
+    check("锚点入 arc（4 条，含 amplitude 与方向）",
+          len(b12["arc"]["anchors"]) == 4 and "中段：反转@第16章（XL）" in b12["arc"]["anchors"][-1])
+    vols12 = {v["id"]: v for v in b12["arc"]["volumes"]}
+    check("V2 卷激活（规划越过卷边界自动追加/激活）", vols12.get("V2", {}).get("status") == "active")
+    check("滚动纪律窗口（16-12=4 ≤ 8）", b12["arc"]["planned_through"] - b12["arc"]["locked_through"] <= 8)
+
+    # map 产物（验收 #1 后半）
+    r = run(["map", BOOK12])
+    gpath = os.path.join(wb.ws_dir(BOOK12), "graph", "graph.json")
+    hpath = os.path.join(wb.ws_dir(BOOK12), "graph", "map.html")
+    g12 = load_json(gpath)
+    check("map 产物 graph.json + map.html 存在且 nodes/edges 非空",
+          r.returncode == 0 and os.path.exists(hpath) and g12["nodes"] and g12["edges"])
+    ntypes = {n["type"] for n in g12["nodes"]}
+    etypes = {e["type"] for e in g12["edges"]}
+    check("节点类型克制（Character/Chapter/Event/Location 四类）",
+          ntypes == {"Character", "Chapter", "Event", "Location"}, str(ntypes))
+    check("边类型 ⊆ 工单五类且五类齐备（含跨章 CAUSES/RELATES_TO）",
+          etypes <= {"PARTICIPATES_IN", "OCCURS_AT", "CAUSES", "RELATES_TO", "KNOWS"}
+          and {"PARTICIPATES_IN", "OCCURS_AT", "KNOWS", "CAUSES"} <= etypes, str(etypes))
+    # RELATES_TO / CAUSES 单元断言（12 章正文无关系变化，最小夹具验证）
+    def _mini_fact(ch, rel_value):
+        return {"chapter": ch, "events": [
+            {"id": f"ev_{ch:03d}_01", "description": f"事件{ch}", "participants": [],
+             "location": "", "evidence": "e",
+             "caused_by": ["ev_001_01"] if ch > 1 else []}],
+            "state_changes_observed": [
+                {"character_id": "char_01", "kind": "relationship", "value": rel_value,
+                 "target": "char_02", "evidence": "e"}],
+            "hooks_touched": [], "unresolved_questions": []}
+    gmini = gh.replay_graph(b12, {1: _mini_fact(1, "同盟"), 2: _mini_fact(2, "决裂")})
+    rels = sorted((e for e in gmini["edges"] if e["type"] == "RELATES_TO"),
+                  key=lambda e: e["valid_from"])
+    check("RELATES_TO 边（valid_from/valid_to 解析：同盟 1~1，决裂 2~开）",
+          len(rels) == 2 and rels[0]["valid_from"] == 1 and rels[0]["valid_to"] == 1
+          and rels[1]["valid_from"] == 2 and rels[1]["valid_to"] is None
+          and rels[0]["rel_type"] == "同盟" and rels[1]["rel_type"] == "决裂",
+          json.dumps(rels, ensure_ascii=False))
+    check("CAUSES 边（跨章 event 引用）", any(e["type"] == "CAUSES"
+          and e["source"] == "ev:ev_001_01" and e["target"] == "ev:ev_002_01"
+          for e in gmini["edges"]))
+    check("map 使用 vendor cytoscape（本地离线）",
+          "cytoscape(" in open(hpath, encoding="utf-8").read()
+          and os.path.getsize(os.path.join(ROOT, "tools", "vendor", "cytoscape.min.js")) > 100000)
+    r = run(["map", BOOK12, "--as-of", "6"])
+    check("--as-of 6 只重放第 1~6 章", r.returncode == 0
+          and load_json(gpath)["meta"]["chapters"] == list(range(1, 7)))
+
+    # facts 不可变 append-only：重抽 ch1 → v2 文件，首版不动
+    first_v1 = open(os.path.join(facts12_dir, "ch01.fact.json"), encoding="utf-8").read()
+    empty_fact = {"chapter": 1, "events": [], "state_changes_observed": [],
+                  "hooks_touched": [], "unresolved_questions": []}
+    try:
+        wb.client_for = lambda *a, **k: FakeClient([json.dumps(empty_fact, ensure_ascii=False)])
+        with contextlib.redirect_stdout(io.StringIO()):
+            wb.run_fact_extraction(BOOK12, wb.load_bible(BOOK12), 1, _short_paras_prose(),
+                                   {"draft": "v001", "ops": []}, st12.revision)
+    finally:
+        wb.client_for = real_client_for2
+    idx12 = gh.load_index(wb.ws_dir(BOOK12))
+    check("重抽产生 ch01.fact.v2.json 且首版逐字不动",
+          os.path.exists(os.path.join(facts12_dir, "ch01.fact.v2.json"))
+          and open(os.path.join(facts12_dir, "ch01.fact.json"), encoding="utf-8").read() == first_v1
+          and len(idx12["chapters"]["1"]["versions"]) == 2
+          and idx12["chapters"]["1"]["latest"] == "ch01.fact.v2.json")
+
+    # ============ 9. 图谱隔离（验收 #3）：graph/ 损坏不影响 commit/write/status ============
+    shutil.rmtree(os.path.join(wb.ws_dir(BOOK12), "graph"))
+    r = run(["status", BOOK12])
+    check("删 graph/ 后 status 不受影响", r.returncode == 0)
+    r = run(["map", BOOK12])
+    check("删 graph/ 后 map 可重建（空图）", r.returncode == 0)
+    real_client_for2, real_input = wb.client_for, builtins.input
+    try:
+        fake_rec = FakeClient([
+            _short_paras_prose(),
+            json.dumps({"chapter": 12, "draft": "v002", "base_state_revision": st12.revision, "ops": []},
+                       ensure_ascii=False),
+            json.dumps({"chapter": 12,
+                        "events": [{"description": "重抽恢复", "participants": ["char_01"],
+                                    "location": "九门典当行", "evidence": EV_WATCH, "caused_by": []}],
+                        "state_changes_observed": [], "hooks_touched": [], "unresolved_questions": []},
+                       ensure_ascii=False)])
+        wb.client_for = lambda *a, **k: fake_rec
+        builtins.input = run_input(["y", ""])
+        with contextlib.redirect_stdout(io.StringIO()):
+            wb.cmd_write([BOOK12, "12"])
+            wb.cmd_commit([BOOK12, "12"])
+    finally:
+        wb.client_for, builtins.input = real_client_for2, real_input
+    check("删 graph/ 后 write+commit 正常且重抽恢复 facts",
+          os.path.exists(os.path.join(wb.ws_dir(BOOK12), "graph", "facts", "ch12.fact.json")))
+
+    # ============ 10. 双书并行（验收 #4）：各自 map/plan 互不干扰 ============
+    r1 = run(["map", BOOK12])
+    r2 = run(["map", BOOK])
+    h12 = open(hpath, encoding="utf-8").read()
+    h_wb = open(os.path.join(wb.ws_dir(BOOK), "graph", "map.html"), encoding="utf-8").read()
+    check("双书各自 map 成功且内容隔离（各自标题）",
+          r1.returncode == 0 and r2.returncode == 0
+          and "连载回归" in h12 and "连载回归" not in h_wb and "雾锁九门</h1>" in h_wb)
+    check("双书规划互不干扰（BOOK12 planned=16，BOOK planned 仍=8）",
+          wb.load_bible(BOOK12)["arc"]["planned_through"] == 16
+          and wb.load_bible(BOOK)["arc"]["planned_through"] == 8)
+
+    # ============ 11. legacy 可 map 可 plan（验收 #5） ============
+    r = run(["map", LEGACY])
+    check("legacy（v1 cell 格式迁移后）可 map",
+          r.returncode == 0 and os.path.exists(os.path.join(wb.ws_dir(LEGACY), "graph", "map.html")))
+    try:
+        wb.client_for = lambda *a, **k: FakeClient([json.dumps(
+            [{"chapter": 9, "arc_label": "续写", "amplitude": "S", "direction": "顺延"}],
+            ensure_ascii=False)])
+        builtins.input = run_input(["y"])
+        buf_l = io.StringIO()
+        with contextlib.redirect_stdout(buf_l):
+            wb.cmd_plan([LEGACY, "--extend", "4"])
+        out_l = buf_l.getvalue()
+    finally:
+        wb.client_for, builtins.input = real_client_for2, real_input
+    bl = wb.load_bible(LEGACY)
+    check("legacy 可 plan 且滚动纪律截断（locked 1 + cap 9 → planned 9）",
+          bl["arc"]["planned_through"] == 9 and "截断" in out_l,
+          out_l[-300:] if bl["arc"]["planned_through"] != 9 else "")
+
+    # ============ 12. 收尾总览 ============
+    r = run(["status", BOOK12])
+    check("12ch status：12×★ 与正史行", r.returncode == 0 and r.stdout.count("★") >= 12)
 
     n_fail = RESULTS.count(False)
     print(f"\n=== smoke 完成：{len(RESULTS) - n_fail}/{len(RESULTS)} 项通过 ===")
