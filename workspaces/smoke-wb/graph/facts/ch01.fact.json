@@ -1,0 +1,67 @@
+{
+  "chapter": 1,
+  "canon_revision": 1,
+  "extractor_model": "qwen3.8-flash",
+  "extracted_at": "2026-11-05T13:00:52",
+  "events": [
+    {
+      "id": "ev_001_01",
+      "description": "神秘人雨夜当掉一块怀表，陆小满发现底盖刻有“通州湾”及残缺的“永昌号”，怀疑与失踪师父有关。",
+      "participants": [
+        "char_01"
+      ],
+      "location": "九门散铺柜台",
+      "modality": "actual",
+      "evidence": "底盖内侧刻着三个字，刀工很深，不是一双手能做出的漂亮活儿：**通州湾**。",
+      "caused_by": []
+    },
+    {
+      "id": "ev_001_02",
+      "description": "贺三刀以行会改章程为由施压要求并铺，并暗示陆小满需伪造登记簿信息以应对明早检查。",
+      "participants": [
+        "char_01",
+        "char_02"
+      ],
+      "location": "九门散铺店内",
+      "modality": "actual",
+      "evidence": "对了，明早的簿子，记得按老规矩填齐了送来。空着一栏，行会要罚铺子的钱。”",
+      "caused_by": [
+        "ev_001_01"
+      ]
+    }
+  ],
+  "state_changes_observed": [
+    {
+      "character_id": "char_01",
+      "kind": "inventory",
+      "value": "怀表（死当入柜）",
+      "evidence": "布包解开，一块怀表躺在粗布里。"
+    },
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "怀表底盖刻有“通州湾”及“永昌号”字样",
+      "evidence": "底盖内侧刻着三个字，刀工很深，不是一双手能做出的漂亮活儿：**通州湾**。"
+    },
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "怀表底盖残端拼出三十年前的日期",
+      "evidence": "残端拼出来，是个日期。\n\n三十年前的。"
+    },
+    {
+      "character_id": "char_01",
+      "kind": "false_belief",
+      "value": "认为登记簿空白页会导致被行会处罚或留下把柄",
+      "evidence": "填齐了送来，就是编。编了，明早过目时对不上口供，把柄就攥在行会手里。"
+    }
+  ],
+  "hooks_touched": [],
+  "unresolved_questions": [
+    "师父失踪当晚是否将怀表交给了卖主？",
+    "卖主“周某”的真实身份及其与师父的关系是什么？",
+    "怀表上的“通州湾”和“永昌号”指向什么秘密？",
+    "三十年前的日期意味着什么？",
+    "陆小满如何应对明早的行会查账？"
+  ]
+}

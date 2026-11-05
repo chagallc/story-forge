@@ -1,0 +1,54 @@
+{
+  "chapter": 3,
+  "chapter_type": "A",
+  "base_state_revision": 0,
+  "pov": {
+    "character": "char_01",
+    "tense": "past"
+  },
+  "time_place": "当夜，九门典当行",
+  "opening_state": "怀表在柜上",
+  "objective": "查清地名来历",
+  "obstacle": "行会并局施压",
+  "choice": {
+    "selected": "私查地名",
+    "irreversible": true,
+    "cost": "留下把柄"
+  },
+  "intended_consequence": "线索推进",
+  "recorded_consequence": "char_01 行至 九门典当行",
+  "reader_promise": {
+    "type": "信息",
+    "content": "地名指向旧铺号"
+  },
+  "ending_state": "线索到手",
+  "allowed_fact_ids": [
+    "F1"
+  ],
+  "prohibited_developments": [
+    "不揭示地名含义"
+  ],
+  "active_hook_ids": [
+    "F1"
+  ],
+  "dialogue_budget": {
+    "min_ratio": 0.4
+  },
+  "engine": {
+    "arc_label": "连载推进",
+    "amplitude": "L",
+    "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+    "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+    "crisis": "收下死当就得罪行会",
+    "improvisation": "表面答应私下暗查",
+    "pressure": [
+      {
+        "char": "char_01",
+        "motive": "fear",
+        "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+        "cost": "私查留把柄"
+      }
+    ],
+    "end_hook": "新信息型"
+  }
+}

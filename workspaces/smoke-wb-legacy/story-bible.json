@@ -32,10 +32,27 @@
   },
   "arc": {
     "template": "悬疑假设弧",
-    "anchors": [],
+    "anchors": [
+      "续写@第9章（S）｜顺延"
+    ],
     "total_chapters": 12,
-    "locked_through": 0,
-    "planned_through": 12
+    "locked_through": 1,
+    "planned_through": 9,
+    "compass": {
+      "ending_direction": "",
+      "reader_promise": "",
+      "active_long_line_ids": []
+    },
+    "volumes": [
+      {
+        "id": "V1",
+        "status": "active",
+        "chapters": [
+          1,
+          12
+        ]
+      }
+    ]
   },
   "ledger": [
     {
@@ -91,12 +108,12 @@
       }
     }
   },
-  "revision": 2,
+  "revision": 3,
   "compass": {
     "ending_direction": "",
     "reader_promise": "",
     "active_long_line_ids": []
   },
   "shadows": [],
-  "schema_version": 3
+  "schema_version": 4
 }

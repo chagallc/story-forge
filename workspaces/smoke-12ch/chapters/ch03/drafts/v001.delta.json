@@ -1,0 +1,13 @@
+{
+  "chapter": 3,
+  "draft": "v001",
+  "base_state_revision": 2,
+  "ops": [
+    {
+      "op": "set_location",
+      "character_id": "char_01",
+      "value": "九门典当行",
+      "evidence": "雨夜。柜上灯昏。"
+    }
+  ]
+}

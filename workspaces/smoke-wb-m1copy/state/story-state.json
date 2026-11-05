@@ -4,27 +4,16 @@
   "characters": {
     "char_01": {
       "knowledge": {
-        "knows": [
-          "F1",
-          "F1_REVEAL"
-        ],
+        "knows": [],
         "unknown_to_them": [],
-        "false_beliefs": [
-          "贺三刀注意到的是墙角死当篓最下层的包袱（那里没有表）"
-        ]
+        "false_beliefs": []
       },
-      "location": "师父的当铺（铺内柜台/天井）",
+      "location": "九门典当行",
       "injuries": [],
       "inventory": [
-        "黄铜怀表（背面刻'柳河铺'，指针停在十一点四十）"
+        "黄铜怀表（表背刻“津门盛”，表针停在丑时三刻）"
       ],
-      "relationships": {
-        "char_02": {
-          "type": "怀疑戒备（行会理事对学徒，暗含施压）",
-          "chapter": 1,
-          "evidence": "贺三刀那种人，一个字都不用说，账本上记一笔就够了。"
-        }
-      }
+      "relationships": {}
     },
     "char_02": {
       "knowledge": {
@@ -38,48 +27,19 @@
       "relationships": {}
     }
   },
-  "facts": {
-    "F1": {
-      "learned_by": [
-        "char_01"
-      ],
-      "chapters": [
-        1
-      ]
-    },
-    "F1_REVEAL": {
-      "learned_by": [
-        "char_01"
-      ],
-      "chapters": [
-        1
-      ]
-    }
-  },
+  "facts": {},
   "hooks": {
-    "F1": {
-      "history": [
-        {
-          "chapter": 1,
-          "action": "plant",
-          "evidence": "柳河铺在北，隔着两千里。这个名字陆小满没听过，师父二十年里没提过一次，喝醉了也没提过。"
-        }
-      ],
-      "status": "plant",
-      "chapter": 1,
-      "evidence": "柳河铺在北，隔着两千里。这个名字陆小满没听过，师父二十年里没提过一次，喝醉了也没提过。"
-    },
     "F1_REVEAL": {
       "history": [
         {
           "chapter": 1,
           "action": "develop",
-          "evidence": "刻字的人知道柳河铺。刻完，把表送进了他师父常来的铺子，挑了三更天，挑了他当值。"
+          "evidence": "师父是自愿走的。这个念头冒出来的时候，他把手攥紧了，黄铜的棱角硌进掌心。"
         }
       ],
       "status": "develop",
       "chapter": 1,
-      "evidence": "刻字的人知道柳河铺。刻完，把表送进了他师父常来的铺子，挑了三更天，挑了他当值。"
+      "evidence": "师父是自愿走的。这个念头冒出来的时候，他把手攥紧了，黄铜的棱角硌进掌心。"
     }
   },
   "timeline": [
@@ -87,16 +47,11 @@
       "chapter": 1,
       "draft": "v002",
       "ops": [
-        "set_inventory",
         "set_location",
-        "learn",
-        "advance_hook",
-        "learn",
-        "advance_hook",
-        "add_relationship",
-        "set_false_belief"
+        "set_inventory",
+        "advance_hook"
       ],
-      "committed_at": "2026-11-05T12:00:00"
+      "committed_at": "2026-11-05T13:01:52"
     }
   ],
   "exemptions": []
