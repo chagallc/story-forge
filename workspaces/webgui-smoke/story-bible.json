@@ -1,6 +1,6 @@
 {
-  "schema_version": 3,
-  "revision": 10,
+  "schema_version": 4,
+  "revision": 11,
   "book": {
     "title": "雾锁九门（WebGUI 冒烟）",
     "genre": "都市悬疑",
@@ -86,7 +86,22 @@
     ],
     "total_chapters": 6,
     "locked_through": 1,
-    "planned_through": 6
+    "planned_through": 6,
+    "compass": {
+      "ending_direction": "真相埋在三十年前师父学徒的旧铺号",
+      "reader_promise": "每章都有一次计划被推翻的爽感",
+      "active_long_line_ids": []
+    },
+    "volumes": [
+      {
+        "id": "V1",
+        "status": "active",
+        "chapters": [
+          1,
+          6
+        ]
+      }
+    ]
   },
   "ledger": [
     {
@@ -110,7 +125,7 @@
   "chapters": {
     "1": {
       "branches_path": "discussions/ch01.branches.json",
-      "status": "committed",
+      "status": "drafted",
       "selected_branch": "A",
       "discussion": "discussions/ch01.jsonl",
       "card_path": "chapters/ch01/card.json",

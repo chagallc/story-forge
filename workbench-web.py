@@ -337,7 +337,7 @@ class Handler(BaseHTTPRequestHandler):
                 ch = safe_chapter(rest[1])
                 return self._route_chapter(method, book, ch, rest[2:])
             # 章级动作：/api/book/<name>/{discuss|lock|write|commit|exempt}/<n>
-            if rest[:1] in (["discuss"], ["lock"], ["write"], ["commit"], ["exempt"]) \
+            if rest[:1] in (["discuss"], ["lock"], ["write"], ["commit"], ["revise"], ["exempt"]) \
                     and len(rest) >= 2:
                 ch = safe_chapter(rest[1])
                 action = rest[0]
@@ -351,6 +351,8 @@ class Handler(BaseHTTPRequestHandler):
                     return self.api_write(book, ch)
                 if action == "commit":
                     return self.api_commit(book, ch)
+                if action == "revise":
+                    return self.api_revise(book, ch)
                 return self.api_exempt(book, ch)
             raise ApiError(404, "not found")
         raise ApiError(404, "not found")
@@ -530,6 +532,7 @@ class Handler(BaseHTTPRequestHandler):
             text = wb.write_prose(job, log=log)
             with ws_lock(book):
                 fd = wb.write_finalize_draft(job, text, log=log)
+            audit_r = wb.run_audit(book, bible, ch, text)
             finalized = True
             # —— 互斥外：delta LLM ——
             dx = wb.write_delta_core(book, job["bible"], ch, fd["version"], text, log=log)
@@ -547,11 +550,52 @@ class Handler(BaseHTTPRequestHandler):
         # 写报告落盘（drafts/vNNN.report.json）：drafts 历史里可回看丢弃 op/警告
         report = {"chapter": ch, "draft": fd["version"], "lint_report": fd["report"],
                   "dropped_ops": dx["dropped_ops"], "warnings": dx["warnings"],
-                  "kept_ops": dx["kept_ops"]}
+                  "kept_ops": dx["kept_ops"],
+                  "audit": audit_r}
         wb._write_json(os.path.join(wb.drafts_dir(book, ch), f"{fd['version']}.report.json"), report)
         self._send_json(200, {"ok": True, "version": fd["version"],
                               "draft_path": os.path.relpath(fd["draft_path"], wb.ws_dir(book)),
                               "lint_report": fd["report"], "report": report})
+
+    def api_revise(self, book, ch):
+        """微调剧情：{intent, base_version?} → 定向修订出新 draft 版本 + 合理性审核。"""
+        import time as _t
+        body = self._read_json_body()
+        intent = str(body.get("intent") or "").strip()
+        if not intent:
+            raise ApiError(400, "缺 intent（微调意图）")
+        base_version = body.get("base_version")
+        lock_path = wb.os.path.join(wb.ws_dir(book), f".write-lock-ch{ch:02d}")
+        if wb.os.path.exists(lock_path) and (_t.time() - wb.os.path.getmtime(lock_path)) < 3600:
+            raise ApiError(423, "另一个写入进程占用该章（写锁未过期）")
+        open(lock_path, "w").close()
+        log = []
+        try:
+            result = wb.revise_core(book, ch, intent, base_version=base_version, log=log)
+        except wb.Refused as e:
+            if wb.os.path.exists(lock_path):
+                try:
+                    wb.os.remove(lock_path)
+                except OSError:
+                    pass
+            raise refuse_to_api(e)
+        except Exception:
+            if wb.os.path.exists(lock_path):
+                try:
+                    wb.os.remove(lock_path)
+                except OSError:
+                    pass
+            raise
+        self._send_json(200, {
+            "ok": True, "version": result["version"],
+            "base_version": result["base_version"], "intent": result["intent"],
+            "draft_path": wb.os.path.relpath(result["draft_path"], wb.ws_dir(book)),
+            "lint_report": result["lint_report"],
+            "audit": result.get("audit"),
+            "delta": {"kept_ops": result.get("kept_ops"),
+                      "dropped_ops": result.get("dropped_ops"),
+                      "warnings": result.get("warnings")},
+            "log": log})
 
     def api_commit(self, book, ch):
         body = self._read_json_body()

@@ -1,0 +1,32 @@
+{
+  "chapter": 1,
+  "draft": "v008",
+  "base_state_revision": 1,
+  "ops": [
+    {
+      "op": "set_location",
+      "character_id": "char_01",
+      "value": "九门典当行",
+      "evidence": "九门典当行的柜台有半人高，陆小满趴在后面打瞌睡"
+    },
+    {
+      "op": "set_inventory",
+      "character_id": "char_01",
+      "value": "银壳怀表（背面刻「临水镇」及本铺戳记，藏于柜底抽屉/格子，附伪造当票）",
+      "evidence": "他把这张票和真当票对折在一起，塞进柜底最深的格子。"
+    },
+    {
+      "op": "add_relationship",
+      "a": "char_01",
+      "b": "贺三刀",
+      "type": "初识的跑当人/师父旧识",
+      "evidence": "「贺三刀。」男人自己报了名号，「九门外跑当的，你师父的老相识。」"
+    },
+    {
+      "op": "set_false_belief",
+      "character_id": "char_01",
+      "value": "表上有事，师父是被卷进去的，不是自己走的。",
+      "evidence": "物件不干净。他在心里说。表上有事，师父是被卷进去的。不是自己走的。这表就是证据。"
+    }
+  ]
+}
