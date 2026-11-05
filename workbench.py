@@ -24,6 +24,7 @@ build/spec.json 引擎投影，可随时删除重建，禁止手改。chapters/c
 正史边界：write 只产草稿与状态变更提案（delta.json），commit 才写 canon.md 并推进 state。
 """
 import json
+import time
 import os
 import re
 import sys
@@ -275,8 +276,12 @@ def load_card(book, ch, meta):
 def client_for(bible, role="writer", book=""):
     cfg = load_config(os.path.join(ROOT, "experiments", "exp003"))
     role_cfg = dict(cfg[role])
+    # 每书模型覆盖：bible.book.writer_model / reader_model 优先（多书并行时各自指定）
+    override_key = f"{role}_model"
+    if bible.get("book", {}).get(override_key):
+        role_cfg["model"] = bible["book"][override_key]
     if bible.get("book", {}).get("language") == "en":
-        role_cfg["model"] = "gpt-5.6-terra"
+        role_cfg["model"] = bible["book"].get(override_key, "gpt-5.6-terra")
         role_cfg["api_style"] = "codex"
         role_cfg.pop("extra_body", None)
     return make_client(role_cfg, os.path.join(ws_dir(book), "usage-workbench.jsonl"))
@@ -935,6 +940,13 @@ def cmd_write(args):
                 print(f"  - {x}")
             sys.exit(1)
 
+    # 同章并发写保护：锁文件 1 小时内视为有效（多书并行安全，同书同章互斥）
+    lock_path = os.path.join(ws_dir(book), f".write-lock-ch{ch:02d}")
+    if os.path.exists(lock_path) and (time.time() - os.path.getmtime(lock_path)) < 3600:
+        print(f"警告：第 {ch} 章可能有另一个写入进程在跑（锁 {int(time.time() - os.path.getmtime(lock_path))} 秒前更新）。确认无并发后删除该锁文件重试。")
+        sys.exit(1)
+    open(lock_path, "w").close()
+
     spec = bible_to_spec(book, bible)
     state = load_state(book, bible)
     client = client_for(bible, "writer", book)
@@ -977,6 +989,8 @@ def cmd_write(args):
     draft_path = os.path.join(drafts, f"{version}.md")
     with open(draft_path, "w", encoding="utf-8") as f:
         f.write(text)
+    if os.path.exists(lock_path):
+        os.remove(lock_path)
     lint_path = os.path.join(drafts, f"{version}.lint.json")
     _write_json(lint_path, {
         "chapter": ch, "draft": version, "flags": lint["flags"],
@@ -1168,14 +1182,50 @@ def cmd_status(args):
               f" {(eng.get('plan', '') or '')[:30]}{extra}")
 
 
+def cmd_books(args):
+    """多书总览：列出所有 workspace 的进度。"""
+    import time as _t
+    if not os.path.isdir(WS_ROOT):
+        print("尚无 workspace。先用 new 建书。")
+        return
+    rows = []
+    for name in sorted(os.listdir(WS_ROOT)):
+        bp = bible_path(name)
+        if not os.path.isfile(bp):
+            continue
+        try:
+            b = json.load(open(bp, encoding="utf-8"))
+        except json.JSONDecodeError:
+            rows.append((name, "?", "?", "bible 损坏", 0, 0, 0))
+            continue
+        chs = b.get("chapters", {})
+        written = sum(1 for m in chs.values() if m.get("status") in ("written", "drafted", "committed"))
+        locked = sum(1 for m in chs.values() if m.get("status") == "locked")
+        total = b.get("arc", {}).get("total_chapters", 0)
+        lang = b.get("book", {}).get("language", "zh")
+        model = b.get("book", {}).get("writer_model") or ("gpt-5.6-terra" if lang == "en" else "glm-5.3-flash")
+        rows.append((name, b.get("book", {}).get("title", ""), lang, model, written, locked, total))
+    print(f"{'书名':<18} {'标题':<14} {'语':<3} {'writer模型':<16} {'已写':>4} {'已锁':>4} /{'规划':>4}")
+    for name, title, lang, model, w, l, t in rows:
+        print(f"{name:<18} {title:<14} {lang:<3} {model:<16} {w:>4} {l:>4} /{t:>4}")
+    # 活跃写锁提示
+    import glob as _g
+    locks = _g.glob(os.path.join(WS_ROOT, "*", ".write-lock-*"))
+    for lk in locks:
+        age = int(_t.time() - os.path.getmtime(lk))
+        if age < 3600:
+            print(f"  [活跃写锁] {lk}  ({age}s)")
+
+
+
 def main():
     cmds = {"new": cmd_new, "char": cmd_char, "discuss": cmd_discuss,
             "lock": cmd_lock, "write": cmd_write, "commit": cmd_commit,
-            "exempt": cmd_exempt, "status": cmd_status}
+            "exempt": cmd_exempt, "books": cmd_books, "status": cmd_status}
     if len(sys.argv) < 2 or sys.argv[1] not in cmds:
         print(__doc__)
         return
-    if sys.argv[1] != "new" and len(sys.argv) < 3:
+    if sys.argv[1] not in ("new", "books") and len(sys.argv) < 3:
         print("缺书名参数。示例：python workbench.py status <书名>")
         return
     cmds[sys.argv[1]](sys.argv[2:])

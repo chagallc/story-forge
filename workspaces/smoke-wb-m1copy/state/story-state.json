@@ -5,41 +5,41 @@
     "char_01": {
       "knowledge": {
         "knows": [
-          "F1_REVEAL",
-          "F1"
+          "F1",
+          "F1_REVEAL"
         ],
         "unknown_to_them": [],
-        "false_beliefs": []
+        "false_beliefs": [
+          "贺三刀注意到的是墙角死当篓最下层的包袱（那里没有表）"
+        ]
       },
-      "location": "九门典当行柜台",
+      "location": "师父的当铺（铺内柜台/天井）",
       "injuries": [],
       "inventory": [
-        "怀表（永济号，自赎所得）"
+        "黄铜怀表（背面刻'柳河铺'，指针停在十一点四十）"
       ],
-      "relationships": {}
+      "relationships": {
+        "char_02": {
+          "type": "怀疑戒备（行会理事对学徒，暗含施压）",
+          "chapter": 1,
+          "evidence": "贺三刀那种人，一个字都不用说，账本上记一笔就够了。"
+        }
+      }
     },
     "char_02": {
       "knowledge": {
         "knows": [],
         "unknown_to_them": [],
-        "false_beliefs": [
-          "陆小满昨晚收的死当只是一块普通旧表，他不知道永济号的秘密"
-        ]
+        "false_beliefs": []
       },
       "location": "",
       "injuries": [],
       "inventory": [],
-      "relationships": {
-        "char_01": {
-          "type": "行会理事对学徒施压（限期三日交出怀表）",
-          "chapter": 1,
-          "evidence": "我想着，三天，三天内给我个准话。"
-        }
-      }
+      "relationships": {}
     }
   },
   "facts": {
-    "F1_REVEAL": {
+    "F1": {
       "learned_by": [
         "char_01"
       ],
@@ -47,7 +47,7 @@
         1
       ]
     },
-    "F1": {
+    "F1_REVEAL": {
       "learned_by": [
         "char_01"
       ],
@@ -62,24 +62,24 @@
         {
           "chapter": 1,
           "action": "plant",
-          "evidence": "他把表揣进怀里，刚回柜台"
+          "evidence": "柳河铺在北，隔着两千里。这个名字陆小满没听过，师父二十年里没提过一次，喝醉了也没提过。"
         }
       ],
       "status": "plant",
       "chapter": 1,
-      "evidence": "他把表揣进怀里，刚回柜台"
+      "evidence": "柳河铺在北，隔着两千里。这个名字陆小满没听过，师父二十年里没提过一次，喝醉了也没提过。"
     },
     "F1_REVEAL": {
       "history": [
         {
           "chapter": 1,
           "action": "develop",
-          "evidence": "他翻开背面。\n\n三个字，刻在铜壳上，笔画很深，是老手刻的。"
+          "evidence": "刻字的人知道柳河铺。刻完，把表送进了他师父常来的铺子，挑了三更天，挑了他当值。"
         }
       ],
       "status": "develop",
       "chapter": 1,
-      "evidence": "他翻开背面。\n\n三个字，刻在铜壳上，笔画很深，是老手刻的。"
+      "evidence": "刻字的人知道柳河铺。刻完，把表送进了他师父常来的铺子，挑了三更天，挑了他当值。"
     }
   },
   "timeline": [
@@ -87,16 +87,16 @@
       "chapter": 1,
       "draft": "v002",
       "ops": [
-        "advance_hook",
-        "advance_hook",
-        "learn",
-        "learn",
         "set_inventory",
         "set_location",
+        "learn",
+        "advance_hook",
+        "learn",
+        "advance_hook",
         "add_relationship",
         "set_false_belief"
       ],
-      "committed_at": "2026-11-05T08:48:32"
+      "committed_at": "2026-11-05T12:00:00"
     }
   ],
   "exemptions": []

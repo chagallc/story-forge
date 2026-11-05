@@ -4,35 +4,41 @@
   "base_state_revision": 0,
   "ops": [
     {
-      "op": "learn",
+      "op": "set_location",
       "character_id": "char_01",
-      "fact_id": "F1",
-      "evidence": "师父失踪四十一天。行里人说是卷款跑了，账上少了三百块。"
-    },
-    {
-      "op": "set_inventory",
-      "character_id": "char_01",
-      "value": "师父的黄铜怀表（停摆，壳面刻有「临江巷」）",
-      "evidence": "他把表放进去，锁了。"
+      "value": "当铺",
+      "evidence": "陆小满站在柜台后面。齐进店是三天前。贺三刀今晚来。"
     },
     {
       "op": "set_location",
+      "character_id": "char_02",
+      "value": "当铺（已离开，往南去）",
+      "evidence": "门关上了。脚步声下了台阶，往南去了。"
+    },
+    {
+      "op": "learn",
       "character_id": "char_01",
-      "value": "九门典当行",
-      "evidence": "戌时刚过，柜上的气死风灯就暗了半截。陆小满拨了拨灯芯，把今日的死当簿摊开，一笔一笔誊抄。"
+      "fact_id": "F1",
+      "evidence": "背面有一行錾刻，笔画深，填过金又磨掉了大半。「临江号」三个字，剩个「江」字最清楚。"
+    },
+    {
+      "op": "advance_hook",
+      "hook_id": "F1",
+      "action": "develop",
+      "evidence": "临江号。光绪年立，民国二十六年歇业。歇业那一栏后头，还有一个手写的小注，墨已经发灰。"
     },
     {
       "op": "add_relationship",
-      "a": "char_01",
-      "b": "char_02",
-      "type": "理事与学徒（表面熟络，实则戒备）",
-      "evidence": "「理事。」陆小满垂手，「您慢用，我去添水。」"
+      "a": "char_02",
+      "b": "char_01",
+      "type": "行会理事与当铺学徒，以利诱施压",
+      "evidence": "「行里的意思，九门并进来，统一账制，统一收当。」贺三刀端起茶，吹了吹，「你照旧坐柜，工钱由行会出，比现在厚。」"
     },
     {
       "op": "set_false_belief",
       "character_id": "char_02",
-      "value": "贺三刀以为陆小满只是照章收了死当，不知道怀表被压进了私账暗格",
-      "evidence": "他掀开死当簿，簿子没被动过。他开暗格，怀表还在。"
+      "value": "陆小满没有从师父那里得到任何交代",
+      "evidence": "陆小满的手在柜台下面，捏着抹布。「没有。」"
     }
   ]
 }

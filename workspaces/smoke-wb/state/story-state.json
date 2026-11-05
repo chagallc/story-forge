@@ -13,29 +13,27 @@
       },
       "location": "典当行阁楼",
       "injuries": [],
-      "inventory": [
-        "师父的黄铜怀表（停摆，壳面刻有「临江巷」）"
-      ],
-      "relationships": {
-        "char_02": {
-          "type": "理事与学徒（表面熟络，实则戒备）",
-          "chapter": 1,
-          "evidence": "「理事。」陆小满垂手，「您慢用，我去添水。」"
-        }
-      }
+      "inventory": [],
+      "relationships": {}
     },
     "char_02": {
       "knowledge": {
         "knows": [],
         "unknown_to_them": [],
         "false_beliefs": [
-          "贺三刀以为陆小满只是照章收了死当，不知道怀表被压进了私账暗格"
+          "陆小满没有从师父那里得到任何交代"
         ]
       },
-      "location": "",
+      "location": "当铺（已离开，往南去）",
       "injuries": [],
       "inventory": [],
-      "relationships": {}
+      "relationships": {
+        "char_01": {
+          "type": "行会理事与当铺学徒，以利诱施压",
+          "chapter": 1,
+          "evidence": "「行里的意思，九门并进来，统一账制，统一收当。」贺三刀端起茶，吹了吹，「你照旧坐柜，工钱由行会出，比现在厚。」"
+        }
+      }
     }
   },
   "facts": {
@@ -56,19 +54,33 @@
       ]
     }
   },
-  "hooks": {},
+  "hooks": {
+    "F1": {
+      "history": [
+        {
+          "chapter": 1,
+          "action": "develop",
+          "evidence": "临江号。光绪年立，民国二十六年歇业。歇业那一栏后头，还有一个手写的小注，墨已经发灰。"
+        }
+      ],
+      "status": "develop",
+      "chapter": 1,
+      "evidence": "临江号。光绪年立，民国二十六年歇业。歇业那一栏后头，还有一个手写的小注，墨已经发灰。"
+    }
+  },
   "timeline": [
     {
       "chapter": 1,
       "draft": "v001",
       "ops": [
-        "learn",
-        "set_inventory",
         "set_location",
+        "set_location",
+        "learn",
+        "advance_hook",
         "add_relationship",
         "set_false_belief"
       ],
-      "committed_at": "2026-11-05T08:47:41"
+      "committed_at": "2026-11-05T11:58:46"
     },
     {
       "chapter": 2,
@@ -77,7 +89,7 @@
         "learn",
         "set_location"
       ],
-      "committed_at": "2026-11-05T08:47:41"
+      "committed_at": "2026-11-05T11:58:47"
     }
   ],
   "exemptions": [
@@ -91,7 +103,7 @@
       "source_text_hash": "bbd367c84faaa968fb44a2b0b2101a40acf6b9c1",
       "reason": "结构刻意短句，保留",
       "created_by": "author",
-      "created_at": "2026-11-05T08:47:41"
+      "created_at": "2026-11-05T11:58:47"
     }
   ]
 }

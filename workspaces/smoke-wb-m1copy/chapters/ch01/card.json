@@ -16,7 +16,7 @@
     "cost": "留下把柄"
   },
   "intended_consequence": "拿到第一条线索",
-  "recorded_consequence": "钩子 F1 plant；钩子 F1_REVEAL develop；char_01 获知 F1_REVEAL；char_01 获知 F1；char_01 物品变动：怀表（永济号，自赎所得）；char_01 行至 九门典当行柜台；char_02 → char_01：行会理事对学徒施压（限期三日交出怀表）；char_02 误信：陆小满昨晚收的死当只是一块普通旧表，他不知道永济号的秘密",
+  "recorded_consequence": "char_01 物品变动：黄铜怀表（背面刻'柳河铺'，指针停在十一点四十）；char_01 行至 师父的当铺（铺内柜台/天井）；char_01 获知 F1；钩子 F1 plant；char_01 获知 F1_REVEAL；钩子 F1_REVEAL develop；char_01 → char_02：怀疑戒备（行会理事对学徒，暗含施压）；char_01 误信：贺三刀注意到的是墙角死当篓最下层的包袱（那里没有表）",
   "reader_promise": {
     "type": "信息",
     "content": "地名指向旧铺号"

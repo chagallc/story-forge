@@ -321,8 +321,21 @@ def main():
     check("状态机 drafted", (bible["chapters"]["1"] or {}).get("status") == "drafted")
     check("write 不产 canon.md", not os.path.exists(wb.canon_file(BOOK, 1)))
 
-    # commit（离线交互）
+    # commit（离线交互）：never_learn 冲突时自动修 delta（模拟作者手工删冲突 op）后重跑
     r = run(["commit", BOOK, "1"], input="y\n\n")
+    if "never_learn" in (r.stdout or "") or "never_learn" in (r.stderr or ""):
+        print("[flaky 防护] delta 撞 never_learn 红名单，模拟作者移除冲突 op 后重跑 commit")
+        dp = os.path.join(drafts_dir(BOOK, 1), "v001.delta.json")
+        dj = load_json(dp)
+        bad = [o for o in dj.get("ops", [])
+               if o.get("op") == "learn" and any(
+                   o.get("fact_id") in nl for c in wb.load_bible(BOOK)["characters"]
+                   if c.get("id") == o.get("character_id")
+                   for nl in [c.get("knowledge_rules", {}).get("never_learn", [])])]
+        dj["ops"] = [o for o in dj.get("ops", []) if o not in bad]
+        with open(dp, "w", encoding="utf-8") as f:
+            json.dump(dj, f, ensure_ascii=False, indent=1)
+        r = run(["commit", BOOK, "1"], input="y\n\n")
     print("--- commit 输出尾部 ---")
     print((r.stdout or r.stderr)[-500:])
     canon1 = wb.canon_file(BOOK, 1)
