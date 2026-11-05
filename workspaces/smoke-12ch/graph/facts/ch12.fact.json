@@ -1,0 +1,22 @@
+{
+  "chapter": 12,
+  "canon_revision": 13,
+  "extractor_model": "?",
+  "extracted_at": "2026-11-05T14:15:22",
+  "events": [
+    {
+      "id": "ev_012_01",
+      "description": "重抽恢复",
+      "participants": [
+        "char_01"
+      ],
+      "location": "九门典当行",
+      "modality": "actual",
+      "evidence": "怀表在柜面上躺着。",
+      "caused_by": []
+    }
+  ],
+  "state_changes_observed": [],
+  "hooks_touched": [],
+  "unresolved_questions": []
+}

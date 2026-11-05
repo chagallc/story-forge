@@ -1,0 +1,61 @@
+{
+  "chapter": 1,
+  "canon_revision": 1,
+  "extractor_model": "qwen3.8-flash",
+  "extracted_at": "2026-11-05T14:15:20",
+  "events": [
+    {
+      "id": "ev_001_01",
+      "description": "陆小满在雨夜典当怀表，贺三刀指出物件不干净且无当票",
+      "participants": [
+        "char_01"
+      ],
+      "location": "柜上",
+      "modality": "actual",
+      "evidence": "「这物件不干净。」\n陆小满不接话。\n怀表在柜面上躺着。",
+      "caused_by": []
+    },
+    {
+      "id": "ev_001_02",
+      "description": "贺三刀以行会规矩为由拒绝死当，约定三天后处理",
+      "participants": [
+        "char_01"
+      ],
+      "location": "柜上",
+      "modality": "actual",
+      "evidence": "「死当也是当。」\n陆小满低着头。\n「行会的规矩，你不是不知道。」\n「我知道。」",
+      "caused_by": []
+    },
+    {
+      "id": "ev_001_03",
+      "description": "陆小满决定当晚调查地名",
+      "participants": [
+        "char_01"
+      ],
+      "location": "未知",
+      "modality": "actual",
+      "evidence": "他决定今晚就把地名查清楚。",
+      "caused_by": []
+    }
+  ],
+  "state_changes_observed": [
+    {
+      "character_id": "char_01",
+      "kind": "inventory",
+      "value": "失去怀表（暂存于柜面/被拒收）",
+      "evidence": "怀表在柜面上躺着。"
+    },
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "知晓需调查地名",
+      "evidence": "他决定今晚就把地名查清楚。"
+    }
+  ],
+  "hooks_touched": [],
+  "unresolved_questions": [
+    "怀表为何被称为“不干净”？",
+    "陆小满要查的“地名”具体指什么？",
+    "三天后贺三刀如何处理该怀表？"
+  ]
+}

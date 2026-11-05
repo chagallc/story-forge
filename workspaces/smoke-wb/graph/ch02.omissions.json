@@ -1,0 +1,20 @@
+{
+  "chapter": 2,
+  "delta_draft": "v001",
+  "note": "待审补丁建议：正文观察到但 delta 未登记的状态变化。人工审核后可把 suggested_op 手工并入对应 drafts/vNNN.delta.json 并重跑 commit 流程；本文件绝不自动改正史。",
+  "omissions": [
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "决定今晚把地名查清楚",
+      "evidence": "他决定今晚就把地名查清楚。",
+      "suggested_op": {
+        "op": "learn",
+        "evidence": "他决定今晚就把地名查清楚。",
+        "character_id": "char_01",
+        "fact_id": "决定今晚把地名查清楚"
+      }
+    }
+  ],
+  "generated_at": "2026-11-05T14:13:41"
+}

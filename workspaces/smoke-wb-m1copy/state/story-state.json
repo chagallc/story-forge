@@ -5,40 +5,49 @@
     "char_01": {
       "knowledge": {
         "knows": [
-          "F1"
+          "F1",
+          "F1_REVEAL"
         ],
-        "unknown_to_them": [],
-        "false_beliefs": [
-          "蓑衣人与贺三刀的关系需隐瞒，三天内贺理事会来，收表的话别提蓑衣人"
-        ]
-      },
-      "location": "九门当铺",
-      "injuries": [],
-      "inventory": [
-        "银壳怀表"
-      ],
-      "relationships": {}
-    },
-    "char_02": {
-      "knowledge": {
-        "knows": [],
         "unknown_to_them": [],
         "false_beliefs": []
       },
       "location": "",
       "injuries": [],
-      "inventory": [],
+      "inventory": [
+        "六十一块钱"
+      ],
       "relationships": {
-        "char_01": {
-          "type": "上门讨茶的相熟人",
+        "char_02": {
+          "type": "行会理事与学徒（对立施压）",
           "chapter": 1,
-          "evidence": "“小满，”门外是贺三刀的声音，笑着，带着雨气，“喝茶喝茶，这么晚了，讨杯热茶。”"
+          "evidence": "贺三刀的声音。行会老理事，笑面，账算得极清的那种人。"
         }
       }
+    },
+    "char_02": {
+      "knowledge": {
+        "knows": [],
+        "unknown_to_them": [],
+        "false_beliefs": [
+          "以为陆小满会把怀表交给行会（只要并局诱之以利就能拿走表）"
+        ]
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {}
     }
   },
   "facts": {
     "F1": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        1
+      ]
+    },
+    "F1_REVEAL": {
       "learned_by": [
         "char_01"
       ],
@@ -52,25 +61,30 @@
       "history": [
         {
           "chapter": 1,
-          "action": "develop",
-          "evidence": "“不用登记。”那人抬手把怀表往前推了半寸，“你师父姓周，对吧。表是他的。”"
+          "action": "plant",
+          "evidence": "绸子里躺着一块怀表，银壳，链子断了一截"
         }
       ],
-      "status": "develop",
+      "status": "plant",
       "chapter": 1,
-      "evidence": "“不用登记。”那人抬手把怀表往前推了半寸，“你师父姓周，对吧。表是他的。”"
+      "evidence": "绸子里躺着一块怀表，银壳，链子断了一截"
     },
     "F1_REVEAL": {
       "history": [
         {
           "chapter": 1,
           "action": "plant",
-          "evidence": "他师父是保定人，保定城里的老周家，族谱他抄过，没有这三个字。"
+          "evidence": "壳底有刻字，划痕里嵌着黑泥，他用袖口擦了擦"
+        },
+        {
+          "chapter": 1,
+          "action": "develop",
+          "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。"
         }
       ],
-      "status": "plant",
+      "status": "develop",
       "chapter": 1,
-      "evidence": "他师父是保定人，保定城里的老周家，族谱他抄过，没有这三个字。"
+      "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。"
     }
   },
   "timeline": [
@@ -78,15 +92,16 @@
       "chapter": 1,
       "draft": "v002",
       "ops": [
-        "set_location",
+        "advance_hook",
+        "advance_hook",
+        "learn",
         "learn",
         "advance_hook",
+        "add_relationship",
         "set_inventory",
-        "advance_hook",
-        "set_false_belief",
-        "add_relationship"
+        "set_false_belief"
       ],
-      "committed_at": "2026-11-05T13:31:36"
+      "committed_at": "2026-11-05T14:14:54"
     }
   ],
   "exemptions": []

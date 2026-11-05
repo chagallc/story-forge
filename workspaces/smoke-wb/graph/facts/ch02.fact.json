@@ -1,0 +1,69 @@
+{
+  "chapter": 2,
+  "canon_revision": 2,
+  "extractor_model": "qwen3.8-flash",
+  "extracted_at": "2026-11-05T14:13:41",
+  "events": [
+    {
+      "id": "ev_002_01",
+      "description": "陆小满在雨夜向贺三刀展示一枚无当票的死当怀表",
+      "participants": [
+        "char_01",
+        "char_02"
+      ],
+      "location": "柜上",
+      "modality": "actual",
+      "evidence": "怀表在柜面上躺着。",
+      "caused_by": []
+    },
+    {
+      "id": "ev_002_02",
+      "description": "贺三刀指出物件不干净并质疑没有当票",
+      "participants": [
+        "char_02",
+        "char_01"
+      ],
+      "location": "柜上",
+      "modality": "actual",
+      "evidence": "「这物件不干净。」",
+      "caused_by": []
+    },
+    {
+      "id": "ev_002_03",
+      "description": "贺三刀同意按死当规矩处理，约定三天后由陆小满来收",
+      "participants": [
+        "char_02",
+        "char_01"
+      ],
+      "location": "柜上",
+      "modality": "actual",
+      "evidence": "「三天。三天后来收。」",
+      "caused_by": []
+    },
+    {
+      "id": "ev_002_04",
+      "description": "陆小满决定当晚查清地名",
+      "participants": [
+        "char_01"
+      ],
+      "location": "柜上",
+      "modality": "actual",
+      "evidence": "他决定今晚就把地名查清楚。",
+      "caused_by": []
+    }
+  ],
+  "state_changes_observed": [
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "决定今晚把地名查清楚",
+      "evidence": "他决定今晚就把地名查清楚。"
+    }
+  ],
+  "hooks_touched": [],
+  "unresolved_questions": [
+    "怀表的具体来历是什么？",
+    "陆小满要查的‘地名’具体指哪里？",
+    "三天后会发生什么？"
+  ]
+}

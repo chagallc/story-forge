@@ -1,0 +1,339 @@
+{
+  "id": "雾锁九门（连载回归）",
+  "language": "zh",
+  "title": "雾锁九门（连载回归）",
+  "premise": "12 章离线回归",
+  "characters": [
+    {
+      "id": "char_01",
+      "name": "陆小满",
+      "card": "24岁，九门典当行学徒，眼力毒，嘴更快。",
+      "anchors": [
+        "守规矩",
+        "重师徒"
+      ],
+      "want": "赎回师父留下的怀表，弄清他失踪那晚去了哪",
+      "need": "承认师父可能自己有秘密，而非只有受害者叙事",
+      "wound": "孤儿，师父是唯一给过他姓氏的人",
+      "value": "当铺规矩：死当不问来路——但他今天想破例",
+      "fear": "师父是自愿消失的，根本没打算带上他",
+      "contradiction": "守规矩的学徒要做一行里最破规矩的事",
+      "voice": {
+        "catchphrases": [
+          "按规矩说",
+          "这物件不干净"
+        ],
+        "speech_habits": [
+          "短句",
+          "先报价后说话"
+        ],
+        "forbidden": [
+          "不说完整性解释句"
+        ],
+        "sample_line": "按规矩说，死当不问来路。",
+        "mes_example": [
+          "「按规矩说，死当不问来路。」陆小满把当票推回去。",
+          "「这物件不干净。」他隔着柜台看那块表。"
+        ]
+      },
+      "knowledge_rules": {
+        "learn": [
+          {
+            "fact_id": "F1_HOOK",
+            "when": "亲自看见怀表背面刻痕"
+          }
+        ],
+        "never_learn": [
+          "F1_REVEAL"
+        ]
+      },
+      "lorebook": [
+        {
+          "fact_id": "F1_HOOK",
+          "keywords": [
+            "怀表",
+            "刻痕"
+          ],
+          "content_ref": "ledger:F1.hook"
+        }
+      ]
+    },
+    {
+      "id": "char_02",
+      "name": "贺三刀",
+      "card": "55岁，行会老理事，笑面，账算得极清。",
+      "anchors": [
+        "行会秩序"
+      ],
+      "want": "把九门典当行并进行会统一管理",
+      "need": "挽回三十年前他亲手做砸的一桩局",
+      "wound": "当年他师父也是这样消失的，他选择了闭嘴",
+      "value": "行会秩序高于个人恩怨",
+      "fear": "陆小满查到当年的局和他有关",
+      "contradiction": "最讲规矩的人靠破坏规矩起家",
+      "voice": {
+        "catchphrases": [
+          "喝茶喝茶"
+        ],
+        "speech_habits": [
+          "绕着说",
+          "从不先出价"
+        ],
+        "sample_line": "喝茶喝茶，急什么。"
+      },
+      "knowledge_rules": {
+        "learn": [],
+        "never_learn": []
+      }
+    }
+  ],
+  "beats": [
+    "（工作台模式：见 engine.cells）"
+  ],
+  "ledger": [
+    {
+      "id": "F1",
+      "plant_chapter": 1,
+      "reveal_chapter": 3,
+      "hook": "怀表背面刻着一个不属于师父籍贯的地名，只给特写不解释",
+      "reveal_plan": "地名是师父三十年前当学徒的旧铺号，贺三刀当年就在那里",
+      "canary": "泉 lock"
+    },
+    {
+      "id": "F1_REVEAL",
+      "plant_chapter": 3,
+      "reveal_chapter": 6,
+      "hook": "（底牌登记用）贺三刀与旧铺号的关系",
+      "reveal_plan": "贺三刀当年就在旧铺号当学徒",
+      "canary": "旧铺"
+    }
+  ],
+  "engine": {
+    "template": "悬疑假设弧",
+    "arc": [],
+    "envelope": [],
+    "cells": [
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 1
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 2
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 3
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 4
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 5
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 6
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 7
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 8
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 9
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 10
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 11
+      },
+      {
+        "arc_label": "连载推进",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，凑钱赎表计划被搅乱",
+            "cost": "私查留把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 12
+      }
+    ]
+  },
+  "_generated": {
+    "from": "story-bible.json",
+    "bible_revision": 26,
+    "generated_at": "2026-11-05T14:15:22"
+  }
+}

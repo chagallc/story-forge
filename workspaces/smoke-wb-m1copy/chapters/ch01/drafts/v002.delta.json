@@ -4,47 +4,53 @@
   "base_state_revision": 0,
   "ops": [
     {
-      "op": "set_location",
-      "character_id": "char_01",
-      "value": "九门当铺",
-      "evidence": "雨从酉时下到现在，柜台的铜盘上积了一层水汽。"
-    },
-    {
-      "op": "learn",
-      "character_id": "char_01",
-      "fact_id": "F1",
-      "evidence": "师父失踪四十一天了。行会报过官，官差查了十天，卷宗上写“行踪不明，暂无可循之线”。"
-    },
-    {
       "op": "advance_hook",
       "hook_id": "F1",
-      "action": "develop",
-      "evidence": "“不用登记。”那人抬手把怀表往前推了半寸，“你师父姓周，对吧。表是他的。”"
-    },
-    {
-      "op": "set_inventory",
-      "character_id": "char_01",
-      "value": "银壳怀表",
-      "evidence": "陆小满把怀表揣进贴身的口袋"
+      "action": "plant",
+      "evidence": "绸子里躺着一块怀表，银壳，链子断了一截"
     },
     {
       "op": "advance_hook",
       "hook_id": "F1_REVEAL",
       "action": "plant",
-      "evidence": "他师父是保定人，保定城里的老周家，族谱他抄过，没有这三个字。"
+      "evidence": "壳底有刻字，划痕里嵌着黑泥，他用袖口擦了擦"
     },
     {
-      "op": "set_false_belief",
+      "op": "learn",
       "character_id": "char_01",
-      "value": "蓑衣人与贺三刀的关系需隐瞒，三天内贺理事会来，收表的话别提蓑衣人",
-      "evidence": "门帘落下之前，那人留了一句：“三天之内，贺理事会来。你收这表的话，别提我。”"
+      "fact_id": "F1",
+      "evidence": "表停在某个位置是不会走的。这块表在走。"
+    },
+    {
+      "op": "learn",
+      "character_id": "char_01",
+      "fact_id": "F1_REVEAL",
+      "evidence": "五个字：云州，永泰昌。"
+    },
+    {
+      "op": "advance_hook",
+      "hook_id": "F1_REVEAL",
+      "action": "develop",
+      "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。"
     },
     {
       "op": "add_relationship",
-      "a": "char_02",
-      "b": "char_01",
-      "type": "上门讨茶的相熟人",
-      "evidence": "“小满，”门外是贺三刀的声音，笑着，带着雨气，“喝茶喝茶，这么晚了，讨杯热茶。”"
+      "a": "char_01",
+      "b": "char_02",
+      "type": "行会理事与学徒（对立施压）",
+      "evidence": "贺三刀的声音。行会老理事，笑面，账算得极清的那种人。"
+    },
+    {
+      "op": "set_inventory",
+      "character_id": "char_01",
+      "value": "六十一块钱",
+      "evidence": "连今天的四十二块，一共六十一块。"
+    },
+    {
+      "op": "set_false_belief",
+      "character_id": "char_02",
+      "value": "以为陆小满会把怀表交给行会（只要并局诱之以利就能拿走表）",
+      "evidence": "表，我必提走。你掂量掂量，并局的事，也可想想。"
     }
   ]
 }

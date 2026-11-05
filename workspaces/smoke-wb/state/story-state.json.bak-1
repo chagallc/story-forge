@@ -8,28 +8,18 @@
         "unknown_to_them": [],
         "false_beliefs": []
       },
-      "location": "九门典当行",
+      "location": "",
       "injuries": [],
-      "inventory": [
-        "刻有柳泉巷的怀表（蓝布包着，藏在柜台底下）"
-      ],
-      "relationships": {
-        "char_02": {
-          "type": "行会理事与当铺伙计（监视与被监视）",
-          "chapter": 1,
-          "evidence": "行会老理事，五十多的人，肩背挺得像根房梁。他不等让就进来了"
-        }
-      }
+      "inventory": [],
+      "relationships": {}
     },
     "char_02": {
       "knowledge": {
         "knows": [],
         "unknown_to_them": [],
-        "false_beliefs": [
-          "陆小满接的那单死当是合规的普通死当"
-        ]
+        "false_beliefs": []
       },
-      "location": "",
+      "location": "陆小满的当铺内屋",
       "injuries": [],
       "inventory": [],
       "relationships": {}
@@ -37,17 +27,17 @@
   },
   "facts": {},
   "hooks": {
-    "F1": {
+    "F1_REVEAL": {
       "history": [
         {
           "chapter": 1,
-          "action": "plant",
-          "evidence": "今晚柜台上多了一样东西，用蓝布包着，下午送来的，死当，当票存根压在账本下面。"
+          "action": "develop",
+          "evidence": "表壳背面刻着三个字，刀工很深，笔画边缘的包浆被手汗磨亮了，是常年被拇指摩挲的位置。师父的表。"
         }
       ],
-      "status": "plant",
+      "status": "develop",
       "chapter": 1,
-      "evidence": "今晚柜台上多了一样东西，用蓝布包着，下午送来的，死当，当票存根压在账本下面。"
+      "evidence": "表壳背面刻着三个字，刀工很深，笔画边缘的包浆被手汗磨亮了，是常年被拇指摩挲的位置。师父的表。"
     }
   },
   "timeline": [
@@ -56,12 +46,9 @@
       "draft": "v001",
       "ops": [
         "set_location",
-        "set_inventory",
-        "advance_hook",
-        "add_relationship",
-        "set_false_belief"
+        "advance_hook"
       ],
-      "committed_at": "2026-11-05T13:30:44"
+      "committed_at": "2026-11-05T14:13:17"
     }
   ],
   "exemptions": []

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""story-forge 写作工作台 v2：人机协作章节工作流（M2：正史提交/角色认知/上下文投影/豁免状态）。
+"""story-forge 写作工作台 v2：人机协作章节工作流（M3A：滚动连载 + 最小故事图谱）。
 
 用法：
-  python workbench.py new <书名>             # 建 workspace（交互式，bible schema v3）
+  python workbench.py new <书名>             # 建 workspace（交互式，bible schema v4）
   python workbench.py char <书名> add        # 加人物卡（四分区：动机栈+声口+知识边界+lorebook）
   python workbench.py char <书名> list       # 人物列表
   python workbench.py discuss <书名> <章号>   # 两阶段讨论：3 条轻量分支选择 → 围绕选中分支 REPL
@@ -11,20 +11,28 @@
                                              #  前文只读 canon，绝不读 drafts）
   python workbench.py commit <书名> <章号>   # 人工提交正史：canon.md + state 原子推进 + recorded_consequence 回填
                                              #  （--revised <文件> 用作者修订版作为 canon 内容）
+                                             #  成功后自动抽取章级事实（失败不阻塞）
+  python workbench.py plan <书名> [--extend N]  # 滚动规划：canon 摘要+compass+未闭合钩子 → AI 提议锚点，
+                                             #  作者逐条确认；纪律 planned-locked ≤ 8；自动追加 skeleton 卷
+  python workbench.py map <书名> [--as-of N]  # 最小地图：facts 重放 → graph.json + map.html
+                                             #  （Cytoscape 双视图/章节滑块/点击看 evidence）
   python workbench.py exempt <书名> <章号> <规则> <理由>  # 对最近 lint 的 finding 建豁免（指纹绑定正文 hash）
+  python workbench.py books                  # 多书总览
   python workbench.py status <书名>          # 全书状态板
   python workbench.py books                 # 多书总览
 
   python workbench-web.py                   # 本地 Web 界面（127.0.0.1:17890，与 CLI 共用下方 _core 函数）
 
-设计：docs/plans/M2-workorder.md（P2 canon/drafts 分家 + P3 人物四分区 + P4 HOT/WARM/COLD
-投影 + P6 豁免即状态）/ docs/plans/M1-workorder.md / docs/decisions/0003 / 0005。
+设计：docs/plans/M3A-workorder.md（P7s 滚动规划 + P-G1 ChapterFact 管线 + P-G2 最小地图）
+/ docs/plans/M2-workorder.md / docs/plans/M1-workorder.md / docs/decisions/0003 / 0005。
 
-数据权威（三层）：story-bible.json 作者创意与静态设定，唯一人工写入口（schema v3）；
+数据权威（三层）：story-bible.json 作者创意与静态设定，唯一人工写入口（schema v4）；
 state/story-state.json 已提交正史状态，唯一动态状态权威，只允许 src/harness/state.py 修改；
 build/spec.json 引擎投影，可随时删除重建，禁止手改。chapters/chNN/card.json 作者确认后的
 章节卡文件（card_path 存在时以文件为准）。
 正史边界：write 只产草稿与状态变更提案（delta.json），commit 才写 canon.md 并推进 state。
+图谱边界（M3A）：graph/ 是纯派生层——facts 不可变 append-only，遗漏只产警告与待审补丁文件，
+图谱绝不写 state；graph/ 损坏不影响 commit/write/status，重抽即可恢复。
 """
 import json
 import time
@@ -39,13 +47,17 @@ sys.path.insert(0, ROOT)
 from src.harness.agents import build_writer_messages, WRITER_SYSTEM  # noqa: E402
 from src.harness.config import load_config  # noqa: E402
 from src.harness.context import SafeLedger, build_context  # noqa: E402
+from src.harness import graph as gh  # noqa: E402
 from src.harness.llm import make_client  # noqa: E402
 from src.harness.schema import validate_card  # noqa: E402
 from src.harness.state import OP_SPECS, StoryState, text_sha1  # noqa: E402
 from src.harness.style_lint import lint_chapter  # noqa: E402
 
 WS_ROOT = os.path.join(ROOT, "workspaces")
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
+ROLLING_WINDOW = 8       # 滚动纪律：planned_through - locked_through ≤ 8（不为远处写细纲）
+PLAN_BATCH_DEFAULT = 4   # plan 默认提议章数
+VOLUME_SIZE = 12         # 卷固定 12 章（工单示例 V1[1,12] / V2[13,24]）
 
 
 class Refused(Exception):
@@ -224,19 +236,70 @@ def _migrate_to_v3(bible, book=None):
     bible["schema_version"] = 3
 
 
+def _ensure_volumes(arc):
+    """卷初始化/补齐：V1 active 覆盖 1..min(total,12)，其余按 12 章 skeleton 顺延。
+
+    已有 volumes 时增量扩展：覆盖不到 planned_through/total 的部分自动追加 skeleton 卷。
+    """
+    total = int(arc.get("total_chapters", 12) or 12)
+    end = max(total, int(arc.get("planned_through", total) or total))
+    if not arc.get("volumes"):
+        arc["volumes"] = []
+        start, vid = 1, 1
+        while start <= end:
+            arc["volumes"].append({"id": f"V{vid}", "status": "active" if vid == 1 else "skeleton",
+                                   "chapters": [start, min(start + VOLUME_SIZE - 1, end)]})
+            start += VOLUME_SIZE
+            vid += 1
+        return
+    start = arc["volumes"][-1]["chapters"][1] + 1
+    vid = len(arc["volumes"]) + 1
+    while start <= end:
+        arc["volumes"].append({"id": f"V{vid}", "status": "skeleton",
+                               "chapters": [start, min(start + VOLUME_SIZE - 1, end)]})
+        start += VOLUME_SIZE
+        vid += 1
+
+
+def _migrate_to_v4(bible, book=None):
+    """M2 格式（v3）→ v4：arc 升级（volumes/compass 镜像/滚动纪律收敛）。
+
+    - arc.compass：工单 v4 结构要求 compass 入 arc；顶层 bible.compass 保持权威
+      （M1/M2 代码与既有数据都读它），v4 迁移时镜像一份进 arc.compass，两者由 save 同步
+    - planned_through 收敛到滚动纪律：planned - locked ≤ 8（旧书 planned=total 的
+      一次性收敛，plan 之后按纪律推进）
+    - volumes[] 初始化（V1 active + 后续 skeleton）
+    """
+    arc = bible.setdefault("arc", {})
+    locked = int(arc.get("locked_through", 0) or 0)
+    planned = int(arc.get("planned_through", arc.get("total_chapters", 12)) or 12)
+    if "compass" not in arc:
+        arc["compass"] = json.loads(json.dumps(bible.get("compass") or {}))
+    if planned - locked > ROLLING_WINDOW:
+        arc["planned_through"] = locked + ROLLING_WINDOW
+    _ensure_volumes(arc)
+    bible["schema_version"] = 4
+
+
 def _ensure_defaults(bible):
     """补 v2 起的默认字段（幂等，保存前防御性调用）。"""
     bible.setdefault("revision", 0)
-    bible.setdefault("compass", {"ending_direction": "", "reader_promise": "",
-                                 "active_long_line_ids": []})
+    compass = bible.setdefault("compass", {"ending_direction": "", "reader_promise": "",
+                                           "active_long_line_ids": []})
     arc = bible.setdefault("arc", {})
     arc.setdefault("locked_through", 0)
-    arc.setdefault("planned_through", arc.get("total_chapters", 12))
+    total = int(arc.get("total_chapters", 12) or 12)
+    # v4：planned 是「细纲前沿」，默认不超过滚动纪律窗口；compass 镜像进 arc（工单 v4 结构，
+    # 顶层 bible.compass 为权威，每次保存刷新镜像）
+    if "planned_through" not in arc:
+        arc["planned_through"] = min(total, int(arc.get("locked_through", 0)) + ROLLING_WINDOW)
+    arc["compass"] = dict(compass)
+    _ensure_volumes(arc)
     bible.setdefault("shadows", [])
 
 
 def migrate_bible(bible, book=None):
-    """迁移到当前 schema：v1（无标记）→ v2 → v3，链式执行，幂等。"""
+    """迁移到当前 schema：v1（无标记）→ v2 → v3 → v4，链式执行，幂等。"""
     ver = bible.get("schema_version")
     if ver == SCHEMA_VERSION:
         return bible
@@ -244,6 +307,8 @@ def migrate_bible(bible, book=None):
         _migrate_to_v2(bible)
     if bible.get("schema_version") == 2:
         _migrate_to_v3(bible, book)
+    if bible.get("schema_version") == 3:
+        _migrate_to_v4(bible, book)
     bible["schema_version"] = SCHEMA_VERSION
     return bible
 
@@ -349,7 +414,8 @@ def create_book_core(book, *, title, genre="", language="zh", platform="",
         },
         "arc": {"template": template,
                 "anchors": [], "total_chapters": int(total_chapters) or 12,
-                "locked_through": 0, "planned_through": int(total_chapters) or 12},
+                "locked_through": 0,
+                "planned_through": min(int(total_chapters) or 12, ROLLING_WINDOW)},  # v4：细纲前沿受滚动纪律约束
         "ledger": [],
         "shadows": [],
         "chapters": {},
@@ -1393,6 +1459,9 @@ def commit_execute(preview, recorded_consequence=None):
             if os.path.exists(p):
                 _write_json(p, card)
         meta["card"] = card
+    # M3A：commit = 锁定事件（含旧格式直通章），推进 locked_through 供滚动规划判界
+    arc = bible.setdefault("arc", {})
+    arc["locked_through"] = max(int(arc.get("locked_through", 0) or 0), ch)
     meta["status"] = "committed"
     save_bible(book, bible)
     return {"canon_path": canon_path, "prev_revision": prev_revision,
@@ -1448,6 +1517,12 @@ def cmd_commit(args):
     print(f"state 已推进：revision={result['revision']}，as_of_chapter={result['as_of_chapter']}，"
           f"备份=state/story-state.json.bak-{result['prev_revision']}")
     print(f"recorded_consequence 已回填：{result['recorded_consequence']}")
+    # P-G1：commit 成功后自动抽取章级事实（图谱是派生层，任何失败只警告不阻塞）
+    try:
+        run_fact_extraction(book, preview["bible"], ch, preview["draft_text"], preview["delta"], preview["state"].revision)
+    except Exception as e:  # noqa: BLE001
+        print(f"[graph] 警告：事实抽取失败（不阻塞 commit，可重抽恢复）：{type(e).__name__}: {e}")
+
 
 
 # ---------------- exempt：豁免即状态（P6） ----------------
@@ -1486,6 +1561,276 @@ def cmd_exempt(args):
         sys.exit(1)
     print(f"豁免已登记：{ex['id']} rule={rule} scope=ch{ch}")
     print(f"fingerprint={ex['fingerprint']}（绑定正文 hash，正文变化后自动失效）")
+
+
+# ---------------- plan：滚动规划（P7s） ----------------
+
+def _canon_summaries_for_plan(book, bible, max_full=6):
+    """committed 章节的 canon 摘要：最近 max_full 章给尾部摘要，更早的只给弧线标签。"""
+    labels, recent = [], []
+    for k, meta in sorted(bible["chapters"].items(), key=lambda kv: int(kv[0])):
+        if meta.get("status") != "committed":
+            continue
+        ch = int(k)
+        card, _ = load_card(book, ch, meta)
+        label = (card or {}).get("engine", {}).get("arc_label", "")
+        labels.append(f"第{ch}章：{label}" if label else f"第{ch}章")
+        recent.append(ch)
+    summaries = []
+    for ch in recent[-max_full:]:
+        cf = canon_file(book, ch)
+        text = ""
+        if os.path.exists(cf):
+            with open(cf, encoding="utf-8") as f:
+                text = f.read().strip()
+        summaries.append(f"【第{ch}章 结尾】…{text[-200:]}" if len(text) > 200
+                         else f"【第{ch}章】{text}")
+    return "\n".join(labels), "\n\n".join(summaries)
+
+
+def _open_hooks_for_plan(bible, book):
+    lines = []
+    for e in bible.get("ledger", []):
+        lines.append(f"- [{e['id']}] 第{e['plant_chapter']}章埋设、第{e['reveal_chapter']}章回收：{e.get('hook', '')}")
+    sp = state_path(book)
+    if os.path.exists(sp):
+        st = StoryState(sp)
+        for hid, h in (st.data.get("hooks") or {}).items():
+            if h.get("status") != "payoff":
+                lines.append(f"- [{hid}] state 状态 {h.get('status')}（第{h.get('chapter')}章）")
+    return "\n".join(lines) or "（无未闭合钩子）"
+
+
+def _plan_prompt(bible, arc, start, n, labels_line, summaries, hooks_line):
+    compass = bible.get("compass") or {}
+    existing = "\n".join(map(str, arc.get("anchors", [])[-8:])) or "（无）"
+    return (
+        f"你是这部连载的联合编剧。全书 {arc.get('total_chapters', 12)} 章，弧线模板：{arc.get('template')}。\n"
+        f"终局方向：{compass.get('ending_direction', '')}｜读者核心承诺：{compass.get('reader_promise', '')}\n"
+        f"已有弧线锚点（最近）：\n{existing}\n"
+        f"已提交正文章节：\n{labels_line or '（暂无）'}\n"
+        f"最近正文章节结尾：\n{summaries or '（暂无）'}\n"
+        f"未闭合钩子：\n{hooks_line}\n\n"
+        f"请为第 {start}~{start + n - 1} 章提议锚点（滚动规划：只看这一批，不为更远处写细纲）。"
+        f"严格输出 JSON 数组（不要任何其他文字），每章一条：\n"
+        f'[{{"chapter": {start}, "arc_label": "弧线位置标签", '
+        f'"amplitude": "XL|L|M|S|B", "direction": "本章一句话方向"}}]\n'
+        f"规则：锚点要与已有锚点/正文章节连续推进，服务终局方向与读者承诺；"
+        f"amplitude 按张力节奏分配（呼吸拍 B 不可少）；钩子该回收的章要安排回收。")
+
+
+def cmd_plan(args):
+    book = args[0]
+    extend_n = None
+    if "--extend" in args:
+        i = args.index("--extend")
+        if i + 1 >= len(args):
+            print("--extend 需要章数参数，如 --extend 4")
+            sys.exit(1)
+        extend_n = int(args[i + 1])
+
+    bible = load_bible(book)
+    arc = bible["arc"]
+    total = int(arc.get("total_chapters", 12) or 12)
+    locked = int(arc.get("locked_through", 0) or 0)
+    planned = int(arc.get("planned_through", 0) or 0)
+
+    # 条件：规划耗尽（planned == locked）或显式 --extend N
+    if planned > locked and extend_n is None:
+        print(f"规划未耗尽：planned_through={planned} > locked_through={locked}。"
+              f"滚动纪律下不为远处写细纲；确需提前展开用 --extend N。")
+        sys.exit(1)
+
+    # 写超前于规划（locked > planned，作者直写未 plan）时，从正史前沿之后展开
+    start = max(planned, locked) + 1
+    n = extend_n if extend_n is not None else PLAN_BATCH_DEFAULT
+    # 滚动纪律：planned - locked ≤ 8，超出部分截断（打印警告，不打断作者）
+    cap = locked + ROLLING_WINDOW
+    if start + n - 1 > cap:
+        n_eff = max(0, cap - start + 1)
+        print(f"[plan] 滚动纪律：planned_through 不得超过 locked_through+{ROLLING_WINDOW}"
+              f"（={cap}）。本批从 {start} 截断为 {n_eff} 章。")
+        n = n_eff
+    if n <= 0:
+        print(f"已到滚动纪律上限（planned={planned}，locked={locked}）。先推进 locked 再 plan。")
+        sys.exit(1)
+    if start + n - 1 > total:
+        n = max(0, total - start + 1)
+        if n <= 0:
+            print(f"已达全书规划章数（total={total}）。如需延长全书请调整 arc.total_chapters。")
+            sys.exit(1)
+
+    # 素材：canon 摘要 + compass + 未闭合 hook + 弧位置
+    labels_line, summaries = _canon_summaries_for_plan(book, bible)
+    hooks_line = _open_hooks_for_plan(bible, book)
+    prompt = _plan_prompt(bible, arc, start, n, labels_line, summaries, hooks_line)
+
+    client = client_for(bible, "writer", book)  # 锚点提议用主力 writer 模型
+    raw = client.chat([{"role": "user", "content": prompt}], tag=f"plan-{start:02d}-{n:02d}")
+    try:
+        anchors = _extract_json(raw, "array")
+    except ValueError:
+        print("锚点提议解析失败（非 JSON 数组）：", raw[:200])
+        sys.exit(1)
+    if not isinstance(anchors, list) or not anchors:
+        print("锚点提议为空。")
+        sys.exit(1)
+
+    # 作者逐条确认或修改
+    print(f"\n=== 滚动规划：第 {start}~{start + len(anchors) - 1} 章锚点提议 ===")
+    confirmed = []
+    for a in anchors:
+        if not isinstance(a, dict):
+            continue
+        ch_no = int(a.get("chapter") or (start + len(confirmed)))
+        label = str(a.get("arc_label") or "").strip() or "未命名锚点"
+        amp = str(a.get("amplitude") or "M").strip().upper()
+        if amp not in ("XL", "L", "M", "S", "B"):
+            print(f"  [plan] 第{ch_no}章 amplitude {amp!r} 不在枚举，按 M 处理")
+            amp = "M"
+        direction = str(a.get("direction") or "").strip()
+        print(f"\n第{ch_no}章 [{amp}] {label}\n  方向：{direction}")
+        ans = input("确认？(y=确认 / 直接输入修改后的一句方向 / s=跳过): ").strip()
+        if ans.lower() == "s":
+            print("  跳过。")
+            continue
+        if ans and ans.lower() != "y":
+            direction = ans  # 作者口述修改
+        confirmed.append({"chapter": ch_no, "arc_label": label, "amplitude": amp,
+                          "direction": direction})
+    if not confirmed:
+        print("没有确认任何锚点，planned_through 不推进。")
+        return
+    # 防线：即使 LLM/作者多给了锚点，planned 也绝不越过纪律窗口
+    dropped = [a for a in confirmed if a["chapter"] > cap]
+    if dropped:
+        print(f"[plan] 滚动纪律：丢弃超出 locked+{ROLLING_WINDOW} 的锚点："
+              + "、".join(f"第{a['chapter']}章" for a in dropped))
+        confirmed = [a for a in confirmed if a["chapter"] <= cap]
+        if not confirmed:
+            print("没有窗口内的锚点，planned_through 不推进。")
+            return
+
+    # 写入 arc.anchors + 推进 planned_through + 卷边界处理
+    new_planned = planned
+    for a in confirmed:
+        tag = f"{a['arc_label']}@第{a['chapter']}章（{a['amplitude']}）｜{a['direction']}"
+        if tag not in arc["anchors"]:
+            arc["anchors"].append(tag)
+        new_planned = max(new_planned, a["chapter"])
+    arc["planned_through"] = max(planned, new_planned)
+    _ensure_volumes(arc)
+    for v in arc.get("volumes", []):  # 新规划落入的 skeleton 卷转 active
+        vs, ve = v.get("chapters", [0, 0])
+        if v.get("status") == "skeleton" and vs <= arc["planned_through"] and ve >= start:
+            v["status"] = "active"
+    save_bible(book, bible)
+    print(f"\n规划完成：planned_through {planned} → {arc['planned_through']}"
+          f"（locked={locked}，窗口 {arc['planned_through'] - locked}/{ROLLING_WINDOW}）")
+    print(f"新增锚点 {len(confirmed)} 条；卷状态："
+          + "，".join(f"{v['id']}[{v['chapters'][0]}-{v['chapters'][1]}]{v['status']}"
+                      for v in arc.get("volumes", [])))
+    print(f"下一步：python workbench.py discuss {book} <新章号>")
+
+
+# ---------------- map：最小地图（P-G2） ----------------
+
+def cmd_map(args):
+    book = args[0]
+    as_of = None
+    if "--as-of" in args:
+        i = args.index("--as-of")
+        if i + 1 >= len(args):
+            print("--as-of 需要章号参数")
+            sys.exit(1)
+        as_of = int(args[i + 1])
+    bible = load_bible(book)  # 旧格式自动迁移（图谱只读 bible，不改 state）
+    facts = gh.load_all_latest_facts(ws_dir(book), as_of=as_of)
+    g = gh.replay_graph(bible, facts, as_of=as_of)
+
+    out_dir = gh.graph_dir(ws_dir(book))
+    os.makedirs(out_dir, exist_ok=True)
+    graph_path = os.path.join(out_dir, "graph.json")
+    meta = dict(g["meta"])
+    meta.update({"book": book, "title": bible["book"].get("title", book),
+                 "source": "graph/facts/* 重放（派生投影，非第二正史）"})
+    g_out = {"meta": meta, "nodes": g["nodes"], "edges": g["edges"]}
+    _write_json(graph_path, g_out)
+
+    vendor = gh.vendor_js_text(ROOT)
+    mode = "cytoscape(vendor)" if vendor else "mermaid(降级)"
+    html = gh.render_map_html(g_out, meta["title"], vendor_js=vendor)
+    html_path = os.path.join(out_dir, "map.html")
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"地图已生成（{mode}）：")
+    print(f"  {graph_path}（nodes={len(g['nodes'])}, edges={len(g['edges'])}"
+          f", chapters={g['meta']['chapters'] or '[]'}）")
+    print(f"  {html_path}")
+    if as_of is not None:
+        print(f"  as-of 第{as_of}章时刻")
+
+
+# ---------------- 事实抽取：commit 后自动触发（P-G1，失败不阻塞） ----------------
+
+def extraction_client_for(bible, book):
+    """抽取客户端：qwen3.8-flash（reader 通道，与 writer 异构）；bible.book.extraction_model 可覆盖。"""
+    client = client_for(bible, "reader", book)
+    override = (bible.get("book") or {}).get("extraction_model")
+    if override and hasattr(client, "model"):
+        client.model = override
+    return client
+
+
+
+def run_fact_extraction(book, bible, ch, canon_text, delta, state_revision):
+    """抽取 + 保存 + 遗漏检测。抛异常由调用方捕获（不阻塞 commit）。"""
+    client = extraction_client_for(bible, book)
+    model = getattr(client, "model", "?")
+    raw = client.chat([{"role": "user", "content": gh.build_extraction_prompt(
+        bible, ch, canon_text, state_revision, delta.get("draft", "?"))}],
+        tag=f"fact-ch{ch:02d}")
+    fact_raw = _extract_json(raw, "object")
+    fact, warnings = gh.normalize_fact(fact_raw, bible, canon_text, ch, state_revision, model)
+    for w in warnings:
+        print(f"[graph] 警告：{w}")
+    path, entry = gh.save_fact(ws_dir(book), fact)
+    print(f"[graph] 事实已抽取：{path}（版本 {len(entry['versions'])}，"
+          f"events={len(fact['events'])}, state_changes={len(fact['state_changes_observed'])}）")
+    # 遗漏检测：正文观察到、delta 未登记 → 警告 + 待审补丁文件（绝不改 state）
+    omissions = gh.detect_omissions(fact, delta)
+    if omissions:
+        opath = gh.save_omissions(ws_dir(book), ch, omissions, delta.get("draft", "?"))
+        print(f"[graph] 遗漏警告：{len(omissions)} 项状态变化在 delta 中无对应 op → {opath}")
+        for o in omissions:
+            print(f"  - {o['character_id']}.{o['kind']}：{o.get('value', '')}"
+                  f"（建议 op：{json.dumps(o['suggested_op'], ensure_ascii=False)[:120]}）")
+    return fact
+
+
+def run_fact_extraction(book, bible, ch, canon_text, delta, state_revision):
+    """抽取 + 保存 + 遗漏检测。抛异常由调用方捕获（不阻塞 commit）。"""
+    client = extraction_client_for(bible, book)
+    model = getattr(client, "model", "?")
+    raw = client.chat([{"role": "user", "content": gh.build_extraction_prompt(
+        bible, ch, canon_text, state_revision, delta.get("draft", "?"))}],
+        tag=f"fact-ch{ch:02d}")
+    fact_raw = _extract_json(raw, "object")
+    fact, warnings = gh.normalize_fact(fact_raw, bible, canon_text, ch, state_revision, model)
+    for w in warnings:
+        print(f"[graph] 警告：{w}")
+    path, entry = gh.save_fact(ws_dir(book), fact)
+    print(f"[graph] 事实已抽取：{path}（版本 {len(entry['versions'])}，"
+          f"events={len(fact['events'])}, state_changes={len(fact['state_changes_observed'])}）")
+    # 遗漏检测：正文观察到、delta 未登记 → 警告 + 待审补丁文件（绝不改 state）
+    omissions = gh.detect_omissions(fact, delta)
+    if omissions:
+        opath = gh.save_omissions(ws_dir(book), ch, omissions, delta.get("draft", "?"))
+        print(f"[graph] 遗漏警告：{len(omissions)} 项状态变化在 delta 中无对应 op → {opath}")
+        for o in omissions:
+            print(f"  - {o['character_id']}.{o['kind']}：{o.get('value', '')}"
+                  f"（建议 op：{json.dumps(o['suggested_op'], ensure_ascii=False)[:120]}）")
+    return fact
 
 
 # ---------------- status ----------------
@@ -1574,6 +1919,7 @@ def books_overview():
 def main():
     cmds = {"new": cmd_new, "char": cmd_char, "discuss": cmd_discuss,
             "lock": cmd_lock, "write": cmd_write, "commit": cmd_commit,
+            "plan": cmd_plan, "map": cmd_map,
             "exempt": cmd_exempt, "books": cmd_books, "status": cmd_status}
     if len(sys.argv) < 2 or sys.argv[1] not in cmds:
         print(__doc__)

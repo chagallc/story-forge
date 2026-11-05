@@ -1,38 +1,19 @@
 {
-  "chapter": 1,
-  "draft": "v001",
-  "base_state_revision": 0,
-  "ops": [
-    {
-      "op": "set_location",
-      "character_id": "char_01",
-      "value": "九门典当行",
-      "evidence": "九门典当行夜里不点大灯。他值夜，铺子里就他和一柜子死当"
-    },
-    {
-      "op": "set_inventory",
-      "character_id": "char_01",
-      "value": "刻有柳泉巷的怀表（蓝布包着，藏在柜台底下）",
-      "evidence": "一块怀表。黄铜壳子，链子断了一环。"
-    },
-    {
-      "op": "advance_hook",
-      "hook_id": "F1",
-      "action": "plant",
-      "evidence": "今晚柜台上多了一样东西，用蓝布包着，下午送来的，死当，当票存根压在账本下面。"
-    },
-    {
-      "op": "add_relationship",
-      "a": "char_01",
-      "b": "char_02",
-      "type": "行会理事与当铺伙计（监视与被监视）",
-      "evidence": "行会老理事，五十多的人，肩背挺得像根房梁。他不等让就进来了"
-    },
-    {
-      "op": "set_false_belief",
-      "character_id": "char_02",
-      "value": "陆小满接的那单死当是合规的普通死当",
-      "evidence": "「那单死当，收得合规吧？」"
-    }
-  ]
+ "chapter": 1,
+ "draft": "v001",
+ "base_state_revision": 0,
+ "ops": [
+  {
+   "op": "set_location",
+   "character_id": "char_02",
+   "value": "陆小满的当铺内屋",
+   "evidence": "贺三刀进了柜台里屋，自己找凳子坐下，拍开茶叶罐"
+  },
+  {
+   "op": "advance_hook",
+   "hook_id": "F1_REVEAL",
+   "action": "develop",
+   "evidence": "表壳背面刻着三个字，刀工很深，笔画边缘的包浆被手汗磨亮了，是常年被拇指摩挲的位置。师父的表。"
+  }
+ ]
 }

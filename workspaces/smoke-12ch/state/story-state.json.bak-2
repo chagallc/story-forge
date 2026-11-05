@@ -1,0 +1,49 @@
+{
+  "revision": 2,
+  "as_of_chapter": 2,
+  "characters": {
+    "char_01": {
+      "knowledge": {
+        "knows": [],
+        "unknown_to_them": [],
+        "false_beliefs": []
+      },
+      "location": "九门典当行",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {}
+    },
+    "char_02": {
+      "knowledge": {
+        "knows": [],
+        "unknown_to_them": [],
+        "false_beliefs": []
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {}
+    }
+  },
+  "facts": {},
+  "hooks": {},
+  "timeline": [
+    {
+      "chapter": 1,
+      "draft": "v001",
+      "ops": [
+        "set_location"
+      ],
+      "committed_at": "2026-11-05T14:15:20"
+    },
+    {
+      "chapter": 2,
+      "draft": "v001",
+      "ops": [
+        "set_location"
+      ],
+      "committed_at": "2026-11-05T14:15:20"
+    }
+  ],
+  "exemptions": []
+}

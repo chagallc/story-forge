@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "revision": 6,
   "book": {
     "title": "雾锁九门",
@@ -92,7 +92,22 @@
     ],
     "total_chapters": 12,
     "locked_through": 1,
-    "planned_through": 12
+    "planned_through": 9,
+    "compass": {
+      "ending_direction": "旧铺号",
+      "reader_promise": "计划被推翻",
+      "active_long_line_ids": []
+    },
+    "volumes": [
+      {
+        "id": "V1",
+        "status": "active",
+        "chapters": [
+          1,
+          12
+        ]
+      }
+    ]
   },
   "ledger": [
     {
@@ -135,7 +150,7 @@
           "cost": "留下把柄"
         },
         "intended_consequence": "拿到第一条线索",
-        "recorded_consequence": "char_01 行至 九门当铺；char_01 获知 F1；钩子 F1 develop；char_01 物品变动：银壳怀表；钩子 F1_REVEAL plant；char_01 误信：蓑衣人与贺三刀的关系需隐瞒，三天内贺理事会来，收表的话别提蓑衣人；char_02 → char_01：上门讨茶的相熟人",
+        "recorded_consequence": "钩子 F1 plant；钩子 F1_REVEAL plant；char_01 获知 F1；char_01 获知 F1_REVEAL；钩子 F1_REVEAL develop；char_01 → char_02：行会理事与学徒（对立施压）；char_01 物品变动：六十一块钱；char_02 误信：以为陆小满会把怀表交给行会（只要并局诱之以利就能拿走表）",
         "reader_promise": {
           "type": "信息",
           "content": "地名指向旧铺号"

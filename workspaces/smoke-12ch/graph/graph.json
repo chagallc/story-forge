@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "node_count": 4,
+    "edge_count": 2,
+    "as_of": null,
+    "chapters": [
+      12
+    ],
+    "generated_at": "2026-11-05T14:15:22",
+    "book": "smoke-12ch",
+    "title": "雾锁九门（连载回归）",
+    "source": "graph/facts/* 重放（派生投影，非第二正史）"
+  },
+  "nodes": [
+    {
+      "id": "ch:12",
+      "type": "Chapter",
+      "label": "第12章",
+      "chapter": 12
+    },
+    {
+      "id": "ev:ev_012_01",
+      "type": "Event",
+      "label": "重抽恢复",
+      "chapter": 12,
+      "evidence": "怀表在柜面上躺着。",
+      "description": "重抽恢复"
+    },
+    {
+      "id": "char:char_01",
+      "type": "Character",
+      "label": "陆小满",
+      "character_id": "char_01"
+    },
+    {
+      "id": "loc:九门典当行",
+      "type": "Location",
+      "label": "九门典当行"
+    }
+  ],
+  "edges": [
+    {
+      "source": "char:char_01",
+      "target": "ev:ev_012_01",
+      "type": "PARTICIPATES_IN",
+      "chapter": 12,
+      "role": "出场"
+    },
+    {
+      "source": "ev:ev_012_01",
+      "target": "loc:九门典当行",
+      "type": "OCCURS_AT",
+      "chapter": 12
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "chapter": 1,
+  "delta_draft": "v002",
+  "note": "待审补丁建议：正文观察到但 delta 未登记的状态变化。人工审核后可把 suggested_op 手工并入对应 drafts/vNNN.delta.json 并重跑 commit 流程；本文件绝不自动改正史。",
+  "omissions": [
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "得知怀表刻有'云州，永泰昌'且师父从未去过云州",
+      "evidence": "五个字：云州，永泰昌。\n\n师父是本地人，本地人管这地方叫汶水，云州是八百里外的地名。师父这辈子没出过远门，这话他自己说过不下十遍。",
+      "suggested_op": {
+        "op": "learn",
+        "evidence": "五个字：云州，永泰昌。\n\n师父是本地人，本地人管这地方叫汶水，云州是八百里外的地名。师父这辈子没出过远门，这话他自己说过不下十遍。",
+        "character_id": "char_01",
+        "fact_id": "得知怀表刻有'云州，永泰昌'且师父从未去过云州"
+      }
+    },
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "得知永泰昌位于汶水城南旧牌楼底下",
+      "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。",
+      "suggested_op": {
+        "op": "learn",
+        "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。",
+        "character_id": "char_01",
+        "fact_id": "得知永泰昌位于汶水城南旧牌楼底下"
+      }
+    },
+    {
+      "character_id": "char_01",
+      "kind": "false_belief",
+      "value": "认为贺三刀提及的'师父失踪算不得死'可能掩盖真相或另有隐情（基于对表的异常关注）",
+      "evidence": "陆小满捏着表坐了很久。然后他起身，从账本上撕下一页，把五个字抄上去，抄了两遍，一张塞进鞋垫底下，一张塞进嘴里嚼了嚼，吐进炉膛。",
+      "suggested_op": {
+        "op": "set_false_belief",
+        "evidence": "陆小满捏着表坐了很久。然后他起身，从账本上撕下一页，把五个字抄上去，抄了两遍，一张塞进鞋垫底下，一张塞进嘴里嚼了嚼，吐进炉膛。",
+        "character_id": "char_01",
+        "value": "认为贺三刀提及的'师父失踪算不得死'可能掩盖真相或另有隐情（基于对表的异常关注）"
+      }
+    }
+  ],
+  "generated_at": "2026-11-05T14:15:11"
+}
