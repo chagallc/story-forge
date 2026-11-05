@@ -1,0 +1,124 @@
+{
+  "id": "雾锁九门",
+  "language": "zh",
+  "title": "雾锁九门",
+  "premise": "M1 格式迁移验证",
+  "characters": [
+    {
+      "name": "陆小满",
+      "card": "24岁，九门典当行学徒，眼力毒，嘴更快。",
+      "want": "赎回师父留下的怀表，弄清他失踪那晚去了哪",
+      "need": "承认师父可能自己有秘密，而非只有受害者叙事",
+      "wound": "孤儿，师父是唯一给过他姓氏的人",
+      "value": "当铺规矩：死当不问来路——但他今天想破例",
+      "fear": "师父是自愿消失的，根本没打算带上他",
+      "contradiction": "守规矩的学徒要做一行里最破规矩的事",
+      "voice": {
+        "catchphrases": [
+          "按规矩说",
+          "这物件不干净"
+        ],
+        "speech_habits": [
+          "短句",
+          "先报价后说话"
+        ],
+        "sample_line": "按规矩说，死当不问来路。",
+        "forbidden": [],
+        "mes_example": []
+      },
+      "id": "char_01",
+      "anchors": [],
+      "knowledge_rules": {
+        "learn": [],
+        "never_learn": []
+      },
+      "lorebook": []
+    },
+    {
+      "name": "贺三刀",
+      "card": "55岁，行会老理事，笑面，账算得极清。",
+      "want": "把九门典当行并进行会统一管理",
+      "need": "挽回三十年前他亲手做砸的一桩局",
+      "wound": "当年他师父也是这样消失的，他选择了闭嘴",
+      "value": "行会秩序高于个人恩怨",
+      "fear": "陆小满查到当年的局和他有关",
+      "contradiction": "最讲规矩的人靠破坏规矩起家",
+      "voice": {
+        "catchphrases": [
+          "喝茶喝茶"
+        ],
+        "speech_habits": [
+          "绕着说",
+          "从不先出价"
+        ],
+        "sample_line": "喝茶喝茶，急什么。",
+        "forbidden": [],
+        "mes_example": []
+      },
+      "id": "char_02",
+      "anchors": [],
+      "knowledge_rules": {
+        "learn": [],
+        "never_learn": []
+      },
+      "lorebook": []
+    }
+  ],
+  "beats": [
+    "（工作台模式：见 engine.cells）"
+  ],
+  "ledger": [
+    {
+      "id": "F1",
+      "plant_chapter": 1,
+      "reveal_chapter": 3,
+      "hook": "怀表背面刻着一个不属于师父籍贯的地名，只给特写不解释",
+      "reveal_plan": "地名是师父三十年前当学徒的旧铺号，贺三刀当年就在那里",
+      "canary": "泉 lock"
+    },
+    {
+      "id": "F1_REVEAL",
+      "plant_chapter": 3,
+      "reveal_chapter": 6,
+      "hook": "（底牌登记用）贺三刀与旧铺号的关系",
+      "reveal_plan": "贺三刀当年就在旧铺号当学徒",
+      "canary": "旧铺"
+    }
+  ],
+  "engine": {
+    "template": "悬疑假设弧",
+    "arc": [],
+    "envelope": [],
+    "cells": [
+      {
+        "arc_label": "开局：扰动落地",
+        "amplitude": "L",
+        "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表背面刻着不属于师父的地名",
+        "crisis": "收下死当就得罪行会，不接就丢了查师父的唯一线索",
+        "improvisation": "表面答应并行条款，私下记下地名准备暗查",
+        "pressure": [
+          {
+            "char": "char_01",
+            "motive": "fear",
+            "force": "怀表停在师父失踪那晚，怕师父自愿消失",
+            "cost": "私查留把柄"
+          },
+          {
+            "char": "char_02",
+            "motive": "contradiction",
+            "force": "用规矩话术破坏规矩推行并局",
+            "cost": "深夜登门留下把柄"
+          }
+        ],
+        "end_hook": "新信息型",
+        "chapter": 1
+      }
+    ]
+  },
+  "_generated": {
+    "from": "story-bible.json",
+    "bible_revision": 4,
+    "generated_at": "2026-11-05T08:47:41"
+  }
+}

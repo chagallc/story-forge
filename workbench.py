@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
-"""story-forge 写作工作台 v2：人机协作章节工作流（M1：章节卡与多线推演）。
+"""story-forge 写作工作台 v2：人机协作章节工作流（M2：正史提交/角色认知/上下文投影/豁免状态）。
 
 用法：
-  python workbench.py new <书名>             # 建 workspace（交互式，bible schema v2）
-  python workbench.py char <书名> add        # 加人物卡（动机栈+声口）
+  python workbench.py new <书名>             # 建 workspace（交互式，bible schema v3）
+  python workbench.py char <书名> add        # 加人物卡（四分区：动机栈+声口+知识边界+lorebook）
   python workbench.py char <书名> list       # 人物列表
   python workbench.py discuss <书名> <章号>   # 两阶段讨论：3 条轻量分支选择 → 围绕选中分支 REPL
   python workbench.py lock <书名> <章号>     # 讨论结论固化为章节卡 card.json（校验+作者确认）
-  python workbench.py write <书名> <章号>    # 落笔（硬门禁：无校验通过的 card.json 拒绝；出 drafts/vNNN.md）
+  python workbench.py write <书名> <章号>    # 落笔（硬门禁；出 drafts/vNNN.md + delta.json + lint.json；
+                                             #  前文只读 canon，绝不读 drafts）
+  python workbench.py commit <书名> <章号>   # 人工提交正史：canon.md + state 原子推进 + recorded_consequence 回填
+                                             #  （--revised <文件> 用作者修订版作为 canon 内容）
+  python workbench.py exempt <书名> <章号> <规则> <理由>  # 对最近 lint 的 finding 建豁免（指纹绑定正文 hash）
   python workbench.py status <书名>          # 全书状态板
 
-设计：docs/plans/M1-workorder.md / docs/plans/v2-整合方案.md（裁决一：章节卡分层嵌 cell）
-/ docs/decisions/0003（动机压力层）/ 0005（开场契约）。
+设计：docs/plans/M2-workorder.md（P2 canon/drafts 分家 + P3 人物四分区 + P4 HOT/WARM/COLD
+投影 + P6 豁免即状态）/ docs/plans/M1-workorder.md / docs/decisions/0003 / 0005。
 
-数据权威（M1 落地部分）：story-bible.json 唯一人工写入口（schema v2）；
-chapters/chNN/card.json 作者确认后的章节卡文件（card_path 存在时以文件为准）；
-build/spec.json 为 bible_to_spec 派生物（标注 _generated，可随时删除重建，禁止手改）。
-旧格式兼容：加载无 schema_version 的 bible 自动迁移（meta.cell 包装为 card.engine，
-旧 cell 行为等价直通，不经章节卡校验）。
+数据权威（三层）：story-bible.json 作者创意与静态设定，唯一人工写入口（schema v3）；
+state/story-state.json 已提交正史状态，唯一动态状态权威，只允许 src/harness/state.py 修改；
+build/spec.json 引擎投影，可随时删除重建，禁止手改。chapters/chNN/card.json 作者确认后的
+章节卡文件（card_path 存在时以文件为准）。
+正史边界：write 只产草稿与状态变更提案（delta.json），commit 才写 canon.md 并推进 state。
 """
 import json
 import os
@@ -28,15 +32,16 @@ from datetime import datetime
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 
-from src.harness.agents import build_writer_messages  # noqa: E402
+from src.harness.agents import build_writer_messages, WRITER_SYSTEM  # noqa: E402
 from src.harness.config import load_config  # noqa: E402
-from src.harness.ledger import Ledger  # noqa: E402
+from src.harness.context import SafeLedger, build_context  # noqa: E402
 from src.harness.llm import make_client  # noqa: E402
 from src.harness.schema import validate_card  # noqa: E402
+from src.harness.state import OP_SPECS, StoryState, text_sha1  # noqa: E402
 from src.harness.style_lint import lint_chapter  # noqa: E402
 
 WS_ROOT = os.path.join(ROOT, "workspaces")
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def ws_dir(book):
@@ -67,6 +72,22 @@ def branches_file(book, ch):
     return os.path.join(ws_dir(book), "discussions", f"ch{ch:02d}.branches.json")
 
 
+def state_dir(book):
+    return os.path.join(ws_dir(book), "state")
+
+
+def state_path(book):
+    return os.path.join(state_dir(book), "story-state.json")
+
+
+def canon_file(book, ch):
+    return os.path.join(chapter_dir(book, ch), "canon.md")
+
+
+def revisions_dir(book, ch):
+    return os.path.join(chapter_dir(book, ch), "revisions")
+
+
 def rel_path(book, path):
     """workspace 内相对路径（正斜杠，入 bible 元数据用）。"""
     return os.path.relpath(path, ws_dir(book)).replace(os.sep, "/")
@@ -77,10 +98,107 @@ def _write_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-# ---------------- P0：bible schema v2 与旧格式迁移 ----------------
+# ---------------- 人物 id（P3 四分区） ----------------
+
+def char_id_map(bible):
+    """name → id 映射（显示名 → 稳定引用键）。"""
+    return {c["name"]: c["id"] for c in bible.get("characters", [])
+            if isinstance(c, dict) and c.get("name") and c.get("id")}
+
+
+def next_char_id(bible):
+    nums = [int(m.group(1)) for c in bible.get("characters", [])
+            if isinstance(c, dict) and (m := re.fullmatch(r"char_(\d+)", str(c.get("id", ""))))]
+    return f"char_{max(nums, default=0) + 1:02d}"
+
+
+def rewrite_card_char_ids(card, id_map):
+    """把卡里的 pov.character / pressure[].char 从 name 归一为 id（原地改，返回是否改动）。"""
+    changed = False
+    pov = card.get("pov") or {}
+    ref = pov.get("character")
+    if ref in id_map:
+        pov["character"] = id_map[ref]
+        changed = True
+    for p in (card.get("engine") or {}).get("pressure") or []:
+        ref = p.get("char")
+        if ref in id_map:
+            p["char"] = id_map[ref]
+            changed = True
+    return changed
+
+
+# ---------------- P0/P3：bible schema 迁移（v1 → v2 → v3） ----------------
+
+def _migrate_to_v2(bible):
+    """旧版（无 schema_version）→ v2：补默认字段，meta.cell 包装为 card。
+
+    旧 cell 原样放进 card.engine（cell 自身的 chapter 键移到 card.chapter 层），
+    meta.cell 保留——带 cell 的章节在 write/spec 路径走「旧格式直通」，行为与 v1 等价。
+    """
+    _ensure_defaults(bible)
+    for ch, meta in (bible.get("chapters") or {}).items():
+        if not isinstance(meta, dict) or not meta.get("cell") or meta.get("card"):
+            continue
+        cell = meta["cell"]
+        # 深拷贝：包装卡与 cell 必须互不影响（后续 id 迁移只改卡，cell 保持 v1 原样）
+        meta["card"] = {
+            "chapter": int(ch),
+            "engine": json.loads(json.dumps(
+                {k: v for k, v in cell.items() if k != "chapter"})),
+            "legacy": True,
+        }
+    bible["schema_version"] = 2
+
+
+def _migrate_to_v3(bible, book=None):
+    """M1 格式（v2）→ v3：人物四分区 + name→id 全线迁移。
+
+    - characters[] 补 id（char_{NN} 按序生成）/anchors/voice.forbidden/voice.mes_example/
+      knowledge_rules/lorebook 默认字段
+    - meta.card 与 card.json 文件里的 pov.character / pressure[].char 从 name 改写为 id
+    - M1 状态机 written → drafted（M2 起正史以 commit 为准）
+    - book.context_projection 默认 false（= M1 行为）
+    """
+    (bible.get("book") or {}).setdefault("context_projection", False)
+    id_map = {}
+    used = {c.get("id") for c in bible.get("characters", [])
+            if isinstance(c, dict) and c.get("id")}
+    n = 1
+    for c in bible.get("characters", []):
+        if not isinstance(c, dict):
+            continue
+        if not c.get("id"):
+            while f"char_{n:02d}" in used:
+                n += 1
+            c["id"] = f"char_{n:02d}"
+            used.add(c["id"])
+            n += 1
+        if c.get("name"):
+            id_map[c["name"]] = c["id"]
+        c.setdefault("anchors", [])
+        voice = c.setdefault("voice", {})
+        voice.setdefault("forbidden", [])
+        voice.setdefault("mes_example", [])
+        c.setdefault("knowledge_rules", {"learn": [], "never_learn": []})
+        c.setdefault("lorebook", [])
+    for ch, meta in (bible.get("chapters") or {}).items():
+        if not isinstance(meta, dict):
+            continue
+        if meta.get("status") == "written":
+            meta["status"] = "drafted"
+        card = meta.get("card")
+        if card and id_map and rewrite_card_char_ids(card, id_map):
+            cp = meta.get("card_path")
+            if cp and not meta.get("cell"):  # 文件权威：card.json 同步改写（legacy 直通章不动文件）
+                p = cp if os.path.isabs(cp) else os.path.join(ws_dir(book), cp)
+                if os.path.exists(p):
+                    _write_json(p, card)
+    bible["schema_version"] = 3
+
 
 def _ensure_defaults(bible):
-    """补 v2 默认字段（幂等，保存前防御性调用）。"""
+    """补 v2 起的默认字段（幂等，保存前防御性调用）。"""
     bible.setdefault("revision", 0)
     bible.setdefault("compass", {"ending_direction": "", "reader_promise": "",
                                  "active_long_line_ids": []})
@@ -90,24 +208,15 @@ def _ensure_defaults(bible):
     bible.setdefault("shadows", [])
 
 
-def migrate_bible(bible):
-    """旧版（无 schema_version）→ v2：补默认字段，meta.cell 包装为 card。
-
-    旧 cell 原样放进 card.engine（cell 自身的 chapter 键移到 card.chapter 层），
-    meta.cell 保留——带 cell 的章节在 write/spec 路径走「旧格式直通」，行为与 v1 等价。
-    """
-    if bible.get("schema_version") == SCHEMA_VERSION:
+def migrate_bible(bible, book=None):
+    """迁移到当前 schema：v1（无标记）→ v2 → v3，链式执行，幂等。"""
+    ver = bible.get("schema_version")
+    if ver == SCHEMA_VERSION:
         return bible
-    _ensure_defaults(bible)
-    for ch, meta in (bible.get("chapters") or {}).items():
-        if not isinstance(meta, dict) or not meta.get("cell") or meta.get("card"):
-            continue
-        cell = meta["cell"]
-        meta["card"] = {
-            "chapter": int(ch),
-            "engine": {k: v for k, v in cell.items() if k != "chapter"},
-            "legacy": True,
-        }
+    if ver is None:
+        _migrate_to_v2(bible)
+    if bible.get("schema_version") == 2:
+        _migrate_to_v3(bible, book)
     bible["schema_version"] = SCHEMA_VERSION
     return bible
 
@@ -116,9 +225,10 @@ def load_bible(book):
     with open(bible_path(book), encoding="utf-8") as f:
         bible = json.load(f)
     if bible.get("schema_version") != SCHEMA_VERSION:
-        migrate_bible(bible)
+        from_ver = bible.get("schema_version", "v1(无标记)")
+        migrate_bible(bible, book)
         _write_json(bible_path(book), bible)  # 迁移结果立即落盘（一次性升级）
-        print(f"migrated bible to schema v{SCHEMA_VERSION}: {bible_path(book)}")
+        print(f"migrated bible (from {from_ver}) to schema v{SCHEMA_VERSION}: {bible_path(book)}")
     return bible
 
 
@@ -199,6 +309,7 @@ def cmd_new(args):
             "language": language,
             "platform": platform,
             "logline": logline,
+            "context_projection": False,  # P4 投影开关：默认 false = M1 全文历史行为
         },
         "opening_contract": {
             "want_visible_by": 1500,
@@ -244,26 +355,63 @@ def cmd_char(args):
     sub = args[1] if len(args) > 1 else "list"
     if sub == "add":
         name = input("姓名: ").strip()
-        c = {"name": name}
+        c = {"id": next_char_id(bible), "name": name}
         for key, prompt in CHAR_FIELDS:
             c[key] = input(f"{prompt}: ").strip() or None
         c = {k: v for k, v in c.items() if v}
+        c["anchors"] = [x.strip() for x in
+                        input("人格锚点（不可变，1-3 条，逗号分隔，可空）: ").split(",") if x.strip()]
         c["voice"] = {
             "catchphrases": [x.strip() for x in input("口头禅/标志行为（逗号分隔，可空）: ").split(",") if x.strip()],
             "speech_habits": [x.strip() for x in input("说话习惯（逗号分隔，可空）: ").split(",") if x.strip()],
+            "forbidden": [x.strip() for x in input("禁说/禁止行为（逗号分隔，可空）: ").split(",") if x.strip()],
             "sample_line": input("一句代表性台词（可空）: ").strip() or None,
+            "mes_example": _input_lines("完整对话样本（逐条输入，空行结束，建议 3-5 条）"),
         }
         c["voice"] = {k: v for k, v in c["voice"].items() if v}
+        learn_raw = input("知识边界 learn（格式 fact_id:when，多条逗号分隔，可空）: ").strip()
+        never_raw = input("知识边界 never_learn（fact_id，逗号分隔，可空）: ").strip()
+        c["knowledge_rules"] = {
+            "learn": [{"fact_id": p.split(":", 1)[0].strip(), "when": (p.split(":", 1) + [""])[1].strip()}
+                      for p in learn_raw.split(",") if p.strip()],
+            "never_learn": [x.strip() for x in never_raw.split(",") if x.strip()],
+        }
+        c["knowledge_rules"] = {k: v for k, v in c["knowledge_rules"].items() if v}
+        lore_raw = input("lorebook（格式 fact_id:关键词1|关键词2:content_ref，多条逗号分隔，可空）: ").strip()
+        c["lorebook"] = []
+        for p in lore_raw.split(","):
+            parts = [x.strip() for x in p.strip().split(":")]
+            if p.strip() and len(parts) == 3:
+                c["lorebook"].append({"fact_id": parts[0],
+                                      "keywords": [k for k in parts[1].split("|") if k],
+                                      "content_ref": parts[2]})
+        if not c["lorebook"]:
+            c.pop("lorebook")
         bible["characters"].append(c)
         save_bible(book, bible)
+        print(f"人物已添加：{c.get('id')} = {name}")
     elif sub == "list":
         for c in bible["characters"]:
-            print(f"- {c['name']}：{c.get('card','')}")
+            print(f"- {c.get('id', '-')}（{c['name']}）：{c.get('card','')}")
             print(f"  want={c.get('want','-')} | fear={c.get('fear','-')}")
+            kr = c.get("knowledge_rules") or {}
+            if kr.get("never_learn"):
+                print(f"  never_learn: {kr['never_learn']}")
             if c.get("voice", {}).get("catchphrases"):
                 print(f"  口头禅: {c['voice']['catchphrases']}")
     else:
         print("用法: char <书名> add|list")
+
+
+def _input_lines(prompt):
+    """多行输入：逐条读取，空行结束。"""
+    print(prompt + "（空行结束）")
+    out = []
+    while True:
+        line = input("  > ").strip()
+        if not line:
+            return out
+        out.append(line)
 
 
 # ---------------- 讨论：两阶段（P1/P5 多线推演） ----------------
@@ -462,7 +610,7 @@ CARD_JSON_SPEC_ZH = (
     '  "chapter": 章号(int),\n'
     '  "chapter_type": "单字母章型标记（自定，如 A=推进章）",\n'
     '  "base_state_revision": 0（系统会覆写，填 0 即可）,\n'
-    '  "pov": {"character": "必须是人物名单之一", "tense": "past 或 present"},\n'
+    '  "pov": {"character": "必须是人物 id", "tense": "past 或 present"},\n'
     '  "time_place": "本章时间地点，一句话",\n'
     '  "opening_state": "本章开场的状态（承接上章结尾）",\n'
     '  "objective": "主角本章要什么",\n'
@@ -480,7 +628,7 @@ CARD_JSON_SPEC_ZH = (
     '    "arc_label": "弧线位置标签", "amplitude": "XL|L|M|S|B",\n'
     '    "plan": "主角计划", "disruption": "颠覆（新信息推翻计划）",\n'
     '    "crisis": "危机（失败代价具象化）", "improvisation": "临场应变（用新信息重构计划）",\n'
-    '    "pressure": [{"char": "人物名单之一", "motive": "want|need|wound|value|fear|contradiction",\n'
+    '    "pressure": [{"char": "人物 id", "motive": "want|need|wound|value|fear|contradiction",\n'
     '                  "force": "受压内容（必须与 plan/disruption 共享关键名词，同源）", "cost": "行动的可见代价"}],\n'
     '    "end_hook": "{end_hooks}"\n'
     '  }\n'
@@ -495,7 +643,8 @@ CARD_SPEC_EN = {"end_hooks": "new-information|dilemma|about-to-act|quiet-close",
 
 
 def _card_prompt(bible, ch, dialogue, branch, lang):
-    names = [c["name"] for c in bible["characters"]]
+    ref_desc = "、".join(f"{c.get('id', '?')}（{c['name']}）"
+                         for c in bible["characters"] if isinstance(c, dict))
     ledger_ids = [e["id"] for e in bible.get("ledger", [])]
     contract = bible.get("opening_contract", {})
     min_ratio = contract.get("dialogue_ratio_min", 0.4)
@@ -508,7 +657,8 @@ def _card_prompt(bible, ch, dialogue, branch, lang):
         head = (f"Below is the co-writing discussion for chapter {ch} (and the author-selected branch, "
                 f"if any). Distill it into ONE chapter card as strict JSON (no other text). "
                 f"Field spec:\n{spec}\n"
-                f"Additional rules: chapter={ch}; pov.character and pressure[].char must be one of {names}; "
+                f"Additional rules: chapter={ch}; pov.character and pressure[].char must be the "
+                f"character ID (not the name), from: {ref_desc}; "
                 f"engine.end_hook must be one of: new-information|dilemma|about-to-act|quiet-close; "
                 f"reader_promise.type must be one of: info|emotion|event|visual; "
                 f"dialogue_budget.min_ratio >= {min_ratio}; "
@@ -517,7 +667,8 @@ def _card_prompt(bible, ch, dialogue, branch, lang):
     else:
         head = (f"以下是第 {ch} 章的联合编剧讨论记录（可能附作者选定的分支）。把已达成的方向提炼为"
                 f"一张完整章节卡，输出严格 JSON（不要任何其他文字）。字段规格：\n{spec}\n"
-                f"附加规则：chapter={ch}；pov.character 与 pressure[].char 限 {names}；"
+                f"附加规则：chapter={ch}；pov.character 与 pressure[].char 必须填人物 id（不要填名字），"
+                f"可选：{ref_desc}；"
                 f"reader_promise.type 限 信息|情绪|事件|画面；dialogue_budget.min_ratio >= {min_ratio}"
                 f"（开场契约）；allowed_fact_ids / active_hook_ids 只能从这些暗账 id 里选：{ledger_ids or '[]'}"
                 f"（无合适的就给 []）。\n\n选定的分支：\n{branch_txt}\n\n讨论记录：\n{dialogue}")
@@ -570,6 +721,7 @@ def cmd_lock(args):
             card["chapter"] = ch
             card["base_state_revision"] = int(bible.get("revision", 0))  # 代码权威，覆写 LLM 值
             card.setdefault("recorded_consequence", None)
+            rewrite_card_char_ids(card, char_id_map(bible))  # LLM 若填了名字，归一为 id
             violations = validate_card(card, bible, expected_chapter=ch)
             if not violations:
                 break
@@ -608,22 +760,7 @@ def cmd_lock(args):
     print(f"\n第 {ch} 章章节卡已锁定：{cf}\n下一步：python workbench.py write {book} {ch}")
 
 
-# ---------------- write：落笔（硬门禁 + drafts/vNNN.md） ----------------
-
-class _LedgerSafe(Ledger):
-    """workbench 写作路径的空暗账兜底。
-
-    Ledger.directive_for 对空 entries 会 max() 空序列崩溃（v1 起就存在，
-    new 建的书默认 ledger: []）。Ledger 类本身不许动，这里仅在 workbench
-    侧兜底：entries 为空时返回无指令行；非空时行为与 Ledger 完全一致，
-    防火墙语义不变（空账本无底牌可泄）。
-    """
-
-    def directive_for(self, chapter: int) -> str:
-        if not self.entries:
-            return "- 本章无特殊指令，按大纲推进。"
-        return super().directive_for(chapter)
-
+# ---------------- write：落笔（硬门禁 + draft/delta/lint 三件套） ----------------
 
 def bible_to_spec(book, bible):
     """把 story-bible 转成引擎 spec（复用 E 臂管线）。
@@ -655,25 +792,127 @@ def bible_to_spec(book, bible):
     return spec
 
 
-def latest_text(book, ch):
-    """前文读取：优先该章最新 draft，回退旧格式 chNN.md（旧 workspace 兼容）。"""
+def load_state(book, bible=None):
+    st = StoryState(state_path(book))
+    if bible:
+        st.ensure_characters([c.get("id") for c in bible.get("characters", [])
+                              if isinstance(c, dict) and c.get("id")])
+    return st
+
+
+def latest_draft(book, ch):
+    """最新草稿：返回 (版本号如 'v001', 路径, 正文) 或 None（含旧格式 chNN.md 回退，版本号标 'legacy'）。"""
     d = drafts_dir(book, ch)
     if os.path.isdir(d):
         versions = sorted(f for f in os.listdir(d) if re.fullmatch(r"v\d+\.md", f))
         if versions:
-            with open(os.path.join(d, versions[-1]), encoding="utf-8") as f:
-                return f.read()
+            p = os.path.join(d, versions[-1])
+            with open(p, encoding="utf-8") as f:
+                return versions[-1][:-3], p, f.read()
     legacy = os.path.join(chapters_dir(book), f"ch{ch:02d}.md")
     if os.path.exists(legacy):
         with open(legacy, encoding="utf-8") as f:
-            return f.read()
-    return ""
+            return "legacy", legacy, f.read()
+    return None
 
 
 def next_draft_no(drafts):
     nos = [int(m.group(1)) for f in os.listdir(drafts)
            if (m := re.fullmatch(r"v(\d+)\.md", f))]
     return max(nos, default=0) + 1
+
+
+def prev_canon_texts(book, ch):
+    """前文来源（正史截断核心）：只读第 1~N-1 章 canon.md，绝不读 drafts。
+
+    迁移期回退：该章没有 canon 时回退最新 draft/旧 chNN.md 并标注来源
+    （M1 格式工作区续写兼容，见 M2-CHANGES 决策 1）；投影模式下同样回退但显式标注。
+    返回 (canon_texts: {ch: text}, prev_source: {ch: tag})。
+    """
+    canon_texts, prev_source = {}, {}
+    for p in range(1, ch):
+        cf = canon_file(book, p)
+        if os.path.exists(cf):
+            with open(cf, encoding="utf-8") as f:
+                canon_texts[p] = f.read()
+            prev_source[p] = "canon"
+            continue
+        ld = latest_draft(book, p)
+        if ld:
+            canon_texts[p] = ld[2]
+            prev_source[p] = "draft(迁移回退)" if ld[0] != "legacy" else "chNN.md(旧格式回退)"
+    return canon_texts, prev_source
+
+
+DELTA_OPS_SPEC_ZH = (
+    'op 白名单与格式（每条必带 evidence，且 evidence 必须是正文原文的连续子串，逐字复制）：\n'
+    '- {"op": "learn", "character_id": "人物id", "fact_id": "事实/暗账id", "evidence": "…"}\n'
+    '- {"op": "set_location", "character_id": "人物id", "value": "地点", "evidence": "…"}\n'
+    '- {"op": "set_inventory", "character_id": "人物id", "value": "物品", "evidence": "…"}\n'
+    '- {"op": "advance_hook", "hook_id": "暗账id", "action": "plant|develop|payoff", "evidence": "…"}\n'
+    '- {"op": "add_relationship", "a": "人物id", "b": "人物id", "type": "关系", "evidence": "…"}\n'
+    '- {"op": "set_false_belief", "character_id": "人物id", "value": "错误信念一句", "evidence": "…"}')
+
+
+def _delta_prompt(bible, ch, version, draft_text, state_revision):
+    ref_desc = "、".join(f"{c.get('id', '?')}（{c['name']}）"
+                         for c in bible["characters"] if isinstance(c, dict))
+    ledger_ids = [e["id"] for e in bible.get("ledger", [])]
+    return (f"以下是刚写完的第 {ch} 章草稿（版本 {version}）。请提炼本章实际发生的状态变更提案，"
+            f"输出严格 JSON（不要任何其他文字）：\n"
+            f'{{"chapter": {ch}, "draft": "{version}", "base_state_revision": {state_revision}, '
+            f'"ops": [...]}}\n\n{DELTA_OPS_SPEC_ZH}\n'
+            f"规则：character_id 必须用人物 id（不要用名字），可选：{ref_desc}；"
+            f"fact_id/hook_id 只能从这些暗账 id 里选：{ledger_ids or '[]'}；"
+            f"只登记正文里确实发生的变更；没有就给空数组。\n\n正文：\n{draft_text}")
+
+
+def _normalize_delta_ops(raw_ops, bible, draft_text):
+    """write 侧 op 预清洗：name→id 改写、白名单/必填/evidence 校验，非法 op 丢弃并警告。"""
+    id_by_name = char_id_map(bible)
+    kept, dropped = [], []
+    for i, op in enumerate(raw_ops if isinstance(raw_ops, list) else []):
+        if not isinstance(op, dict):
+            dropped.append(f"ops[{i}] 非对象")
+            continue
+        op = dict(op)
+        name = op.get("op")
+        if name not in OP_SPECS:
+            dropped.append(f"ops[{i}] 非白名单 op：{name!r}")
+            continue
+        for key in ("character_id", "a", "b"):
+            if op.get(key) in id_by_name:
+                op[key] = id_by_name[op[key]]
+        required, _ = OP_SPECS[name]
+        missing = [f for f in required if not str(op.get(f) or "").strip()]
+        if missing:
+            dropped.append(f"ops[{i}] {name} 缺少必填字段 {missing}")
+            continue
+        if op.get("evidence") not in (draft_text or ""):
+            dropped.append(f"ops[{i}] {name} 的 evidence 不是正文子串：『{str(op.get('evidence'))[:30]}…』")
+            continue
+        kept.append(op)
+    return kept, dropped
+
+
+def _derive_consequence(delta):
+    """从 delta 的 ops 提炼一句正文实际结局（recorded_consequence 回填用）。"""
+    parts = []
+    for op in delta.get("ops", []):
+        n = op.get("op")
+        if n == "advance_hook":
+            parts.append(f"钩子 {op['hook_id']} {op['action']}")
+        elif n == "learn":
+            parts.append(f"{op['character_id']} 获知 {op['fact_id']}")
+        elif n == "set_location":
+            parts.append(f"{op['character_id']} 行至 {op['value']}")
+        elif n == "set_false_belief":
+            parts.append(f"{op['character_id']} 误信：{op['value']}")
+        elif n == "add_relationship":
+            parts.append(f"{op['a']} → {op['b']}：{op['type']}")
+        elif n == "set_inventory":
+            parts.append(f"{op['character_id']} 物品变动：{op['value']}")
+    return "；".join(parts) if parts else "（本章无状态变更）"
 
 
 def cmd_write(args):
@@ -697,28 +936,205 @@ def cmd_write(args):
             sys.exit(1)
 
     spec = bible_to_spec(book, bible)
+    state = load_state(book, bible)
     client = client_for(bible, "writer", book)
-    ledger = _LedgerSafe(spec)
+    lang = spec.get("language", "zh")
+    projection = bool((bible.get("book") or {}).get("context_projection"))
+    id_name_map = {c["id"]: c["name"] for c in bible.get("characters", [])
+                   if isinstance(c, dict) and c.get("id") and c.get("name")}
 
-    prev = [t for t in (latest_text(book, p) for p in range(1, ch)) if t]
-    msgs = build_writer_messages("E", spec, ledger, prev, ch)
+    # 前文：只读 canon（P2 正史截断核心），迁移期无 canon 才回退 draft 并标注
+    canon_texts, prev_source = prev_canon_texts(book, ch)
+    if projection:
+        # P4：HOT/WARM/COLD 投影（shadows/COLD 绝不注入）
+        config = {"id_name_map": id_name_map, "canon_texts": canon_texts,
+                  "prev_source": prev_source, "card": None if source == "legacy" else card}
+        ctx = build_context(bible, state, spec, ch, config)
+        msgs = [{"role": "system", "content": WRITER_SYSTEM[lang]},
+                {"role": "user", "content": "\n\n".join(ctx["hot"] + ctx["warm"])}]
+    else:
+        # 投影关：M1 全文历史行为（前文来源已切到 canon 优先，见决策 1）
+        prev = [canon_texts[p] for p in sorted(canon_texts)]
+        msgs = build_writer_messages("E", spec, SafeLedger(spec), prev, ch)
+        if id_name_map:
+            msgs[1]["content"] += ("\n\n人物 id 对照（状态提案/章节卡里的 char 引用用 id）："
+                                   + "，".join(f"{cid}={name}" for cid, name in id_name_map.items()))
+
     print(f"writing chapter {ch} ...")
     text = client.chat(msgs, tag=f"wb-ch{ch:02d}")
 
-    # lint + 可选润色
-    lint = lint_chapter(text, spec.get("language", "zh"))
-    print("lint flags:", lint["flags"] or ["clean"])
+    # lint 存档（P6 豁免的正文 hash 绑定此文件）
+    lint = lint_chapter(text, lang)
+    kept_flags, exempted_flags = state.filter_flags(lint["flags"], ch, text_sha1(text))
+    report = kept_flags or ["clean"]
+    if exempted_flags:
+        report.append(f"（{len(exempted_flags)} 项已豁免：{'、'.join(exempted_flags)}）")
+    print("lint flags:", report)
 
     drafts = drafts_dir(book, ch)
     os.makedirs(drafts, exist_ok=True)
-    draft_path = os.path.join(drafts, f"v{next_draft_no(drafts):03d}.md")
+    version = f"v{next_draft_no(drafts):03d}"
+    draft_path = os.path.join(drafts, f"{version}.md")
     with open(draft_path, "w", encoding="utf-8") as f:
         f.write(text)
-    bible["chapters"][str(ch)]["status"] = "written"
+    lint_path = os.path.join(drafts, f"{version}.lint.json")
+    _write_json(lint_path, {
+        "chapter": ch, "draft": version, "flags": lint["flags"],
+        "checks": lint.get("checks", {}), "evidence": lint.get("evidence", {}),
+        "source_text_sha1": text_sha1(text),
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+    })
+
+    # 状态变更提案（STATE_DELTA）：单独一次 LLM 调用，op 预清洗后落盘
+    print("提炼状态变更提案（delta）...")
+    delta_raw = client.chat([{"role": "user", "content": _delta_prompt(
+        bible, ch, version, text, state.revision)}], tag=f"delta-ch{ch:02d}")
+    try:
+        delta = _extract_json(delta_raw, "object")
+    except ValueError:
+        delta = {}
+        print("[delta] 提案解析失败，落盘空 delta（可手工补 ops 后 commit）")
+    kept_ops, dropped_ops = _normalize_delta_ops(delta.get("ops"), bible, text)
+    for d in dropped_ops:
+        print(f"[delta] 丢弃 op：{d}")
+    delta = {"chapter": ch, "draft": version, "base_state_revision": state.revision, "ops": kept_ops}
+    delta_path = os.path.join(drafts, f"{version}.delta.json")
+    _write_json(delta_path, delta)
+    # never_learn 冲突在 commit 时硬拒绝；写阶段只提前提示
+    kr = {c.get("id"): (c.get("knowledge_rules") or {}) for c in bible.get("characters", [])
+          if isinstance(c, dict) and c.get("id")}
+    for op in kept_ops:
+        c = op.get("op") == "learn" and kr.get(op.get("character_id")) or None
+        if c and op.get("fact_id") in (c.get("never_learn") or []):
+            print(f"[delta] 警告：learn {op['fact_id']} 与 {op['character_id']} 的 never_learn 冲突，commit 将硬拒绝")
+
+    bible["chapters"][str(ch)]["status"] = "drafted"
     save_bible(book, bible)
     print(f"\n落笔完成：{draft_path}（{len(text)} chars）")
-    if spec.get("language", "zh") == "zh":
-        print(f"金丝雀检查：{[e['canary'] for e in ledger.entries if e['canary'] in text and ch < e['reveal_chapter'] and ch != e['plant_chapter']] or '无泄漏'}")
+    print(f"状态提案：{delta_path}（base_state_revision={state.revision}，{len(kept_ops)} ops）")
+    print(f"lint 存档：{lint_path}")
+    ledger_entries = SafeLedger(spec).entries
+    if lang == "zh":
+        print(f"金丝雀检查：{[e['canary'] for e in ledger_entries if e['canary'] in text and ch < e['reveal_chapter'] and ch != e['plant_chapter']] or '无泄漏'}")
+    print(f"下一步：python workbench.py commit {book} {ch}")
+
+
+# ---------------- commit：人工提交正史（P2） ----------------
+
+def cmd_commit(args):
+    book, ch = args[0], int(args[1])
+    revised = None
+    if "--revised" in args:
+        i = args.index("--revised")
+        if i + 1 >= len(args):
+            print("--revised 需要文件参数。")
+            sys.exit(1)
+        revised = args[i + 1]
+
+    bible = load_bible(book)
+    meta = bible["chapters"].get(str(ch)) or {}
+    card, source = load_card(book, ch, meta)
+    ld = latest_draft(book, ch)
+    if not ld:
+        print("该章没有草稿。先 write。")
+        sys.exit(1)
+    version, draft_path, draft_text = ld
+    delta_path = os.path.join(drafts_dir(book, ch), f"{version}.delta.json")
+    if not os.path.exists(delta_path):
+        print(f"缺少状态提案：{delta_path}（write 生成，或手工补该文件后重跑）")
+        sys.exit(1)
+    with open(delta_path, encoding="utf-8") as f:
+        delta = json.load(f)
+    if revised:
+        with open(revised, encoding="utf-8") as f:
+            draft_text = f.read()  # evidence 校验同时针对修订版
+        print(f"使用修订版作为 canon 内容：{revised}")
+
+    state = load_state(book, bible)
+    knowledge_rules = {c["id"]: (c.get("knowledge_rules") or {})
+                       for c in bible.get("characters", [])
+                       if isinstance(c, dict) and c.get("id")}
+    violations = state.validate_delta(delta, draft_text, knowledge_rules)
+    if violations:
+        print("commit 拒绝：delta 校验未通过（可手工修 delta.json 后重跑）。违规清单：")
+        for x in violations:
+            print(f"  - {x}")
+        sys.exit(1)
+
+    ops = delta.get("ops", [])
+    print(f"将推进的状态变更（{len(ops)} ops，state.revision {state.revision} → {state.revision + 1}）：")
+    for op in ops:
+        print(f"  - {op.get('op')}: {json.dumps({k: v for k, v in op.items() if k != 'evidence'}, ensure_ascii=False)}")
+    derived = _derive_consequence(delta)
+    print(f"recorded_consequence 提炼：{derived}")
+    ok = input("确认提交正史？(y=确认 / 其他=放弃): ").strip().lower()
+    if ok != "y":
+        print("放弃（草稿与 delta 保留，state 未推进）。")
+        return
+    rc = input("recorded_consequence 回填（回车=采用上面提炼句）: ").strip() or derived
+
+    os.makedirs(revisions_dir(book, ch), exist_ok=True)  # M3 修订历史目录约定
+    canon_path = canon_file(book, ch)
+    if os.path.exists(canon_path):
+        print(f"警告：canon.md 已存在，将被覆盖：{canon_path}")
+    with open(canon_path, "w", encoding="utf-8") as f:
+        f.write(draft_text)
+
+    prev_revision = state.revision
+    violations = state.commit_delta(delta, draft_text, knowledge_rules)
+    if violations:  # 理论不可达（上面已校验）；防御
+        print("commit 失败（state 未推进）：")
+        for x in violations:
+            print(f"  - {x}")
+        sys.exit(1)
+
+    if card is not None and source != "legacy":
+        card["recorded_consequence"] = rc
+        cp = meta.get("card_path")
+        if cp:
+            p = cp if os.path.isabs(cp) else os.path.join(ws_dir(book), cp)
+            if os.path.exists(p):
+                _write_json(p, card)
+        meta["card"] = card
+    else:
+        print("（旧格式直通章：无章节卡，跳过 recorded_consequence 回填）")
+    meta["status"] = "committed"
+    save_bible(book, bible)
+    print(f"\n正史已提交：{canon_path}")
+    print(f"state 已推进：revision={state.revision}，as_of_chapter={state.data['as_of_chapter']}，"
+          f"备份=state/story-state.json.bak-{prev_revision}")
+    print(f"recorded_consequence 已回填：{rc}")
+
+
+# ---------------- exempt：豁免即状态（P6） ----------------
+
+def cmd_exempt(args):
+    if len(args) < 3:
+        print("用法: exempt <书名> <章号> <规则> <理由>")
+        sys.exit(1)
+    book, ch, rule = args[0], int(args[1]), args[2]
+    reason = args[3] if len(args) > 3 else ""
+    ld = latest_draft(book, ch)
+    if not ld:
+        print("该章没有草稿。先 write。")
+        sys.exit(1)
+    version = ld[0]
+    lint_path = os.path.join(drafts_dir(book, ch), f"{version}.lint.json")
+    if not os.path.exists(lint_path):
+        print(f"该章最近没有 lint 存档：{lint_path}（先 write）")
+        sys.exit(1)
+    with open(lint_path, encoding="utf-8") as f:
+        lint = json.load(f)
+    flags = lint.get("flags") or []
+    state = StoryState(state_path(book))
+    matched = [f for f in flags if state._rule_short(f) == state._rule_short(rule)]
+    if not matched:
+        print(f"最近 lint 没有规则「{rule}」的 finding。现有 flags：{flags or ['clean']}")
+        sys.exit(1)
+    ex = state.add_exemption(rule, ch, lint.get("source_text_sha1", ""), reason)
+    state.save()
+    print(f"豁免已登记：{ex['id']} rule={rule} scope=ch{ch}")
+    print(f"fingerprint={ex['fingerprint']}（绑定正文 hash，正文变化后自动失效）")
 
 
 # ---------------- status ----------------
@@ -728,13 +1144,19 @@ def cmd_status(args):
     bible = load_bible(book)  # 旧格式自动迁移
     total = bible["arc"].get("total_chapters", 12)
     print(f"《{bible['book']['title']}》 {bible['book'].get('genre')} | {bible['book'].get('platform')} | {bible['book'].get('language')}")
-    print(f"人物 {len(bible['characters'])} | 暗账 {len(bible.get('ledger', []))} 条 | 弧线 {bible['arc'].get('template')}")
+    print(f"人物 {len(bible['characters'])} | 暗账 {len(bible.get('ledger', []))} 条 | 弧线 {bible['arc'].get('template')}"
+          f" | 投影={'开' if (bible.get('book') or {}).get('context_projection') else '关'}")
     compass = bible.get("compass") or {}
     if compass.get("ending_direction") or compass.get("reader_promise"):
         print(f"终局方向：{compass.get('ending_direction') or '-'} | 读者承诺：{compass.get('reader_promise') or '-'}")
     print(f"进度：locked_through={bible['arc'].get('locked_through', 0)}"
           f" / planned_through={bible['arc'].get('planned_through', '-')} / revision={bible.get('revision', 0)}")
-    marks = {"empty": "·", "branching": "◦", "discussed": "◇", "locked": "◆", "written": "★"}
+    if os.path.exists(state_path(book)):
+        st = StoryState(state_path(book))
+        print(f"正史：state.revision={st.revision} / as_of_chapter={st.data.get('as_of_chapter', 0)}"
+              f" / 豁免 {len(st.data.get('exemptions', []))} 条")
+    marks = {"empty": "·", "branching": "◦", "discussed": "◇", "locked": "◆",
+             "drafted": "▧", "committed": "★"}
     for ch in range(1, total + 1):
         meta = bible["chapters"].get(str(ch)) or {}
         status = meta.get("status", "empty")
@@ -748,7 +1170,8 @@ def cmd_status(args):
 
 def main():
     cmds = {"new": cmd_new, "char": cmd_char, "discuss": cmd_discuss,
-            "lock": cmd_lock, "write": cmd_write, "status": cmd_status}
+            "lock": cmd_lock, "write": cmd_write, "commit": cmd_commit,
+            "exempt": cmd_exempt, "status": cmd_status}
     if len(sys.argv) < 2 or sys.argv[1] not in cmds:
         print(__doc__)
         return

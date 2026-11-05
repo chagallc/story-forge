@@ -1,0 +1,103 @@
+{
+  "revision": 1,
+  "as_of_chapter": 1,
+  "characters": {
+    "char_01": {
+      "knowledge": {
+        "knows": [
+          "F1_REVEAL",
+          "F1"
+        ],
+        "unknown_to_them": [],
+        "false_beliefs": []
+      },
+      "location": "九门典当行柜台",
+      "injuries": [],
+      "inventory": [
+        "怀表（永济号，自赎所得）"
+      ],
+      "relationships": {}
+    },
+    "char_02": {
+      "knowledge": {
+        "knows": [],
+        "unknown_to_them": [],
+        "false_beliefs": [
+          "陆小满昨晚收的死当只是一块普通旧表，他不知道永济号的秘密"
+        ]
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {
+        "char_01": {
+          "type": "行会理事对学徒施压（限期三日交出怀表）",
+          "chapter": 1,
+          "evidence": "我想着，三天，三天内给我个准话。"
+        }
+      }
+    }
+  },
+  "facts": {
+    "F1_REVEAL": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        1
+      ]
+    },
+    "F1": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        1
+      ]
+    }
+  },
+  "hooks": {
+    "F1": {
+      "history": [
+        {
+          "chapter": 1,
+          "action": "plant",
+          "evidence": "他把表揣进怀里，刚回柜台"
+        }
+      ],
+      "status": "plant",
+      "chapter": 1,
+      "evidence": "他把表揣进怀里，刚回柜台"
+    },
+    "F1_REVEAL": {
+      "history": [
+        {
+          "chapter": 1,
+          "action": "develop",
+          "evidence": "他翻开背面。\n\n三个字，刻在铜壳上，笔画很深，是老手刻的。"
+        }
+      ],
+      "status": "develop",
+      "chapter": 1,
+      "evidence": "他翻开背面。\n\n三个字，刻在铜壳上，笔画很深，是老手刻的。"
+    }
+  },
+  "timeline": [
+    {
+      "chapter": 1,
+      "draft": "v002",
+      "ops": [
+        "advance_hook",
+        "advance_hook",
+        "learn",
+        "learn",
+        "set_inventory",
+        "set_location",
+        "add_relationship",
+        "set_false_belief"
+      ],
+      "committed_at": "2026-11-05T08:48:32"
+    }
+  ],
+  "exemptions": []
+}

@@ -1,0 +1,60 @@
+{
+  "chapter": 1,
+  "chapter_type": "A",
+  "base_state_revision": 4,
+  "pov": {
+    "character": "char_01",
+    "tense": "past"
+  },
+  "time_place": "当夜，九门典当行",
+  "opening_state": "怀表落在柜上",
+  "objective": "查清地名来历",
+  "obstacle": "行会并局施压",
+  "choice": {
+    "selected": "私查地名",
+    "irreversible": true,
+    "cost": "留下把柄"
+  },
+  "intended_consequence": "拿到第一条线索",
+  "recorded_consequence": "钩子 F1 plant；钩子 F1_REVEAL develop；char_01 获知 F1_REVEAL；char_01 获知 F1；char_01 物品变动：怀表（永济号，自赎所得）；char_01 行至 九门典当行柜台；char_02 → char_01：行会理事对学徒施压（限期三日交出怀表）；char_02 误信：陆小满昨晚收的死当只是一块普通旧表，他不知道永济号的秘密",
+  "reader_promise": {
+    "type": "信息",
+    "content": "地名指向旧铺号"
+  },
+  "ending_state": "怀表停在失踪那晚的时刻",
+  "allowed_fact_ids": [
+    "F1"
+  ],
+  "prohibited_developments": [
+    "不揭示地名含义"
+  ],
+  "active_hook_ids": [
+    "F1"
+  ],
+  "dialogue_budget": {
+    "min_ratio": 0.4
+  },
+  "engine": {
+    "arc_label": "开局：扰动落地",
+    "amplitude": "L",
+    "plan": "陆小满按规矩收下死当怀表，凑钱赎表",
+    "disruption": "贺三刀夜访施压并行，怀表背面刻着不属于师父的地名",
+    "crisis": "收下死当就得罪行会，不接就丢了查师父的唯一线索",
+    "improvisation": "表面答应并行条款，私下记下地名准备暗查",
+    "pressure": [
+      {
+        "char": "char_01",
+        "motive": "fear",
+        "force": "怀表停在师父失踪那晚，怕师父自愿消失",
+        "cost": "私查留把柄"
+      },
+      {
+        "char": "char_02",
+        "motive": "contradiction",
+        "force": "用规矩话术破坏规矩推行并局",
+        "cost": "深夜登门留下把柄"
+      }
+    ],
+    "end_hook": "新信息型"
+  }
+}

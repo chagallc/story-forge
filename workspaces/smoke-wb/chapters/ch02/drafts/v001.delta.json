@@ -1,0 +1,19 @@
+{
+  "chapter": 2,
+  "draft": "v001",
+  "base_state_revision": 1,
+  "ops": [
+    {
+      "op": "learn",
+      "character_id": "char_01",
+      "fact_id": "F1_HOOK",
+      "evidence": "陆小满把怀表贴在耳边，表芯的声音像有人在敲门。"
+    },
+    {
+      "op": "set_location",
+      "character_id": "char_01",
+      "value": "典当行阁楼",
+      "evidence": "他决定今晚就把地名查清楚。"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "revision": 2,
+  "as_of_chapter": 2,
+  "characters": {
+    "char_01": {
+      "knowledge": {
+        "knows": [
+          "F1",
+          "F1_HOOK"
+        ],
+        "unknown_to_them": [],
+        "false_beliefs": []
+      },
+      "location": "典当行阁楼",
+      "injuries": [],
+      "inventory": [
+        "师父的黄铜怀表（停摆，壳面刻有「临江巷」）"
+      ],
+      "relationships": {
+        "char_02": {
+          "type": "理事与学徒（表面熟络，实则戒备）",
+          "chapter": 1,
+          "evidence": "「理事。」陆小满垂手，「您慢用，我去添水。」"
+        }
+      }
+    },
+    "char_02": {
+      "knowledge": {
+        "knows": [],
+        "unknown_to_them": [],
+        "false_beliefs": [
+          "贺三刀以为陆小满只是照章收了死当，不知道怀表被压进了私账暗格"
+        ]
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {}
+    }
+  },
+  "facts": {
+    "F1": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        1
+      ]
+    },
+    "F1_HOOK": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        2
+      ]
+    }
+  },
+  "hooks": {},
+  "timeline": [
+    {
+      "chapter": 1,
+      "draft": "v001",
+      "ops": [
+        "learn",
+        "set_inventory",
+        "set_location",
+        "add_relationship",
+        "set_false_belief"
+      ],
+      "committed_at": "2026-11-05T08:47:41"
+    },
+    {
+      "chapter": 2,
+      "draft": "v001",
+      "ops": [
+        "learn",
+        "set_location"
+      ],
+      "committed_at": "2026-11-05T08:47:41"
+    }
+  ],
+  "exemptions": [
+    {
+      "id": "EX001",
+      "rule": "分节碎",
+      "fingerprint": "3ca5008a4708cd8a",
+      "scope": {
+        "chapter": 2
+      },
+      "source_text_hash": "bbd367c84faaa968fb44a2b0b2101a40acf6b9c1",
+      "reason": "结构刻意短句，保留",
+      "created_by": "author",
+      "created_at": "2026-11-05T08:47:41"
+    }
+  ]
+}

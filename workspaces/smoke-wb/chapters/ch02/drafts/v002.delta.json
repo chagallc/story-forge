@@ -1,0 +1,13 @@
+{
+  "chapter": 2,
+  "draft": "v002",
+  "base_state_revision": 2,
+  "ops": [
+    {
+      "op": "learn",
+      "character_id": "char_01",
+      "fact_id": "F1_REVEAL",
+      "evidence": "他决定今晚就把地名查清楚。"
+    }
+  ]
+}
