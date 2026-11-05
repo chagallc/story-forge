@@ -74,13 +74,29 @@ def _nonempty_str(val) -> bool:
     return isinstance(val, str) and bool(val.strip())
 
 
+def char_refs(bible) -> set:
+    """人物合法引用集合：id 为主（M2 P3），name 作显示名兼容接受。"""
+    refs = set()
+    for c in bible.get("characters", []):
+        if isinstance(c, dict):
+            if c.get("id"):
+                refs.add(c["id"])
+            if c.get("name"):
+                refs.add(c["name"])
+    return refs
+
+
 def validate_card(card, bible, expected_chapter=None) -> list:
-    """校验章节卡，返回违规信息清单（zh 面向作者，空列表 = 通过）。"""
+    """校验章节卡，返回违规信息清单（zh 面向作者，空列表 = 通过）。
+
+    M2 P3：pov.character / pressure[].char 以人物 id 为准（name 兼容接受，
+    迁移与 lock 产出都会归一到 id）。
+    """
     if not isinstance(card, dict):
         return ["card 必须是 JSON 对象"]
     v = []
     lang = (bible.get("book") or {}).get("language", "zh")
-    names = {c.get("name") for c in bible.get("characters", []) if isinstance(c, dict)}
+    refs = char_refs(bible)
 
     # ---- chapter：int（工单硬性要求）----
     ch = card.get("chapter")
@@ -109,9 +125,9 @@ def validate_card(card, bible, expected_chapter=None) -> list:
             v.append("pov 必须是对象 {character, tense}")
         else:
             if not _nonempty_str(pov.get("character")):
-                v.append("pov.character 必须是非空字符串")
-            elif pov.get("character") not in names:
-                v.append(f"pov.character {pov.get('character')!r} 不在 bible.characters")
+                v.append("pov.character 必须是非空字符串（人物 id）")
+            elif pov.get("character") not in refs:
+                v.append(f"pov.character {pov.get('character')!r} 不在 bible.characters（id 或 name）")
             if pov.get("tense") not in TENSES:
                 v.append(f"pov.tense {pov.get('tense')!r} 不在枚举 {list(TENSES)}")
 
@@ -186,8 +202,8 @@ def validate_card(card, bible, expected_chapter=None) -> list:
                         if not isinstance(p, dict):
                             v.append(f"pressure[{i}] 必须是对象 {{char, motive, force, cost}}")
                             continue
-                        if p.get("char") not in names:
-                            v.append(f"pressure[{i}].char {p.get('char')!r} 不在 bible.characters")
+                        if p.get("char") not in refs:
+                            v.append(f"pressure[{i}].char {p.get('char')!r} 不在 bible.characters（id 或 name）")
                         if p.get("motive") not in MOTIVES:
                             v.append(f"pressure[{i}].motive {p.get('motive')!r} 不在枚举 {list(MOTIVES)}")
                         for k in ("force", "cost"):

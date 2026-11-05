@@ -1,0 +1,13 @@
+{
+  "chapter": 1,
+  "draft": "v001",
+  "base_state_revision": 0,
+  "ops": [
+    {
+      "op": "learn",
+      "character_id": "char_01",
+      "fact_id": "F1",
+      "evidence": "雨点砸在窗纸上。"
+    }
+  ]
+}

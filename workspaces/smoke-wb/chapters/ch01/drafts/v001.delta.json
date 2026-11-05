@@ -1,0 +1,38 @@
+{
+  "chapter": 1,
+  "draft": "v001",
+  "base_state_revision": 0,
+  "ops": [
+    {
+      "op": "learn",
+      "character_id": "char_01",
+      "fact_id": "F1",
+      "evidence": "师父失踪四十一天。行里人说是卷款跑了，账上少了三百块。"
+    },
+    {
+      "op": "set_inventory",
+      "character_id": "char_01",
+      "value": "师父的黄铜怀表（停摆，壳面刻有「临江巷」）",
+      "evidence": "他把表放进去，锁了。"
+    },
+    {
+      "op": "set_location",
+      "character_id": "char_01",
+      "value": "九门典当行",
+      "evidence": "戌时刚过，柜上的气死风灯就暗了半截。陆小满拨了拨灯芯，把今日的死当簿摊开，一笔一笔誊抄。"
+    },
+    {
+      "op": "add_relationship",
+      "a": "char_01",
+      "b": "char_02",
+      "type": "理事与学徒（表面熟络，实则戒备）",
+      "evidence": "「理事。」陆小满垂手，「您慢用，我去添水。」"
+    },
+    {
+      "op": "set_false_belief",
+      "character_id": "char_02",
+      "value": "贺三刀以为陆小满只是照章收了死当，不知道怀表被压进了私账暗格",
+      "evidence": "他掀开死当簿，簿子没被动过。他开暗格，怀表还在。"
+    }
+  ]
+}

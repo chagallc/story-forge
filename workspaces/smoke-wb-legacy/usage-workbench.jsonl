@@ -1,1 +1,0 @@
-{"tag": "wb-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 1279, "completion_tokens_details": {"reasoning_tokens": 0}, "prompt_tokens": 1301, "prompt_tokens_details": {"cached_tokens": 1280}, "total_tokens": 2580}}

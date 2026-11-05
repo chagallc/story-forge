@@ -1,0 +1,41 @@
+{
+  "revision": 1,
+  "as_of_chapter": 1,
+  "characters": {
+    "char_01": {
+      "knowledge": {
+        "knows": [
+          "F1"
+        ],
+        "unknown_to_them": [],
+        "false_beliefs": []
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {}
+    }
+  },
+  "facts": {
+    "F1": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        1
+      ]
+    }
+  },
+  "hooks": {},
+  "timeline": [
+    {
+      "chapter": 1,
+      "draft": "v001",
+      "ops": [
+        "learn"
+      ],
+      "committed_at": "2026-11-05T08:48:33"
+    }
+  ],
+  "exemptions": []
+}

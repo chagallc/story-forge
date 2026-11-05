@@ -1,0 +1,56 @@
+{
+  "chapter": 1,
+  "draft": "v002",
+  "base_state_revision": 0,
+  "ops": [
+    {
+      "op": "advance_hook",
+      "hook_id": "F1",
+      "action": "plant",
+      "evidence": "他把表揣进怀里，刚回柜台"
+    },
+    {
+      "op": "advance_hook",
+      "hook_id": "F1_REVEAL",
+      "action": "develop",
+      "evidence": "他翻开背面。\n\n三个字，刻在铜壳上，笔画很深，是老手刻的。"
+    },
+    {
+      "op": "learn",
+      "character_id": "char_01",
+      "fact_id": "F1_REVEAL",
+      "evidence": "表的指针停在子时三刻。陆小满记得那个日子，三个月前，师父就是那天夜里没回来的。"
+    },
+    {
+      "op": "learn",
+      "character_id": "char_01",
+      "fact_id": "F1",
+      "evidence": "可这表不能流出去，流出去，这条线索就断了。"
+    },
+    {
+      "op": "set_inventory",
+      "character_id": "char_01",
+      "value": "怀表（永济号，自赎所得）",
+      "evidence": "天亮之前，他把怀表赎了回来。用了自己全部的钱，还背上一条把柄。"
+    },
+    {
+      "op": "set_location",
+      "character_id": "char_01",
+      "value": "九门典当行柜台",
+      "evidence": "他把表揣进怀里，刚回柜台，门帘又动了。"
+    },
+    {
+      "op": "add_relationship",
+      "a": "char_02",
+      "b": "char_01",
+      "type": "行会理事对学徒施压（限期三日交出怀表）",
+      "evidence": "我想着，三天，三天内给我个准话。"
+    },
+    {
+      "op": "set_false_belief",
+      "character_id": "char_02",
+      "value": "陆小满昨晚收的死当只是一块普通旧表，他不知道永济号的秘密",
+      "evidence": "一块旧表，登记一下，走个手续。"
+    }
+  ]
+}

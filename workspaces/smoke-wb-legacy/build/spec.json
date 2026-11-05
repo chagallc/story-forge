@@ -2,48 +2,24 @@
   "id": "雾锁九门（旧格式）",
   "language": "zh",
   "title": "雾锁九门（旧格式）",
-  "premise": "同主书，用于旧格式迁移验证",
+  "premise": "迁移验证",
   "characters": [
     {
       "name": "陆小满",
-      "card": "24岁，九门典当行学徒，眼力毒，嘴更快。",
-      "want": "赎回师父留下的怀表，弄清他失踪那晚去了哪",
-      "need": "承认师父可能自己有秘密，而非只有受害者叙事",
-      "wound": "孤儿，师父是唯一给过他姓氏的人",
-      "value": "当铺规矩：死当不问来路——但他今天想破例",
-      "fear": "师父是自愿消失的，根本没打算带上他",
-      "contradiction": "守规矩的学徒要做一行里最破规矩的事",
+      "card": "学徒",
+      "want": "查师父",
+      "fear": "师父自愿消失",
+      "id": "char_01",
+      "anchors": [],
       "voice": {
-        "catchphrases": [
-          "按规矩说",
-          "这物件不干净"
-        ],
-        "speech_habits": [
-          "短句",
-          "先报价后说话"
-        ],
-        "sample_line": "按规矩说，死当不问来路。"
-      }
-    },
-    {
-      "name": "贺三刀",
-      "card": "55岁，行会老理事，笑面，账算得极清。",
-      "want": "把九门典当行并进行会统一管理",
-      "need": "挽回三十年前他亲手做砸的一桩局",
-      "wound": "当年他师父也是这样消失的，他选择了闭嘴",
-      "value": "行会秩序高于个人恩怨",
-      "fear": "陆小满查到当年的局和他有关",
-      "contradiction": "最讲规矩的人靠破坏规矩起家",
-      "voice": {
-        "catchphrases": [
-          "喝茶喝茶"
-        ],
-        "speech_habits": [
-          "绕着说",
-          "从不先出价"
-        ],
-        "sample_line": "喝茶喝茶，急什么。"
-      }
+        "forbidden": [],
+        "mes_example": []
+      },
+      "knowledge_rules": {
+        "learn": [],
+        "never_learn": []
+      },
+      "lorebook": []
     }
   ],
   "beats": [
@@ -66,24 +42,18 @@
     "cells": [
       {
         "chapter": 1,
-        "arc_label": "开局：扰动落地",
+        "arc_label": "开局",
         "amplitude": "L",
-        "plan": "陆小满按规矩收下死当怀表凑钱赎表，不惊动任何人",
-        "disruption": "贺三刀夜访施压并行，怀表背面刻着不属于师父的地名",
-        "crisis": "接下死当就得罪行会，不接就丢了查师父的唯一线索",
-        "improvisation": "陆小满表面答应并行条款，私下记下地名准备暗查",
+        "plan": "陆小满按规矩收下死当怀表凑钱赎表",
+        "disruption": "贺三刀夜访施压并行，怀表背面刻着陌生地名",
+        "crisis": "收下死当就得罪行会",
+        "improvisation": "表面答应私下暗查",
         "pressure": [
           {
             "char": "陆小满",
             "motive": "fear",
-            "force": "怀表停在师父失踪那晚，师父可能自愿消失",
-            "cost": "私查地名留下把柄"
-          },
-          {
-            "char": "贺三刀",
-            "motive": "contradiction",
-            "force": "用规矩话术破坏规矩推行并局",
-            "cost": "深夜登门留下把柄"
+            "force": "怀表停在师父失踪那晚，怕师父自愿消失",
+            "cost": "私查留把柄"
           }
         ],
         "end_hook": "新信息型"
@@ -93,6 +63,6 @@
   "_generated": {
     "from": "story-bible.json",
     "bible_revision": 0,
-    "generated_at": "2026-11-05T01:13:14"
+    "generated_at": "2026-11-05T08:48:32"
   }
 }

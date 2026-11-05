@@ -1,0 +1,66 @@
+{
+  "revision": 1,
+  "as_of_chapter": 1,
+  "characters": {
+    "char_01": {
+      "knowledge": {
+        "knows": [
+          "F1"
+        ],
+        "unknown_to_them": [],
+        "false_beliefs": []
+      },
+      "location": "九门典当行",
+      "injuries": [],
+      "inventory": [
+        "师父的黄铜怀表（停摆，壳面刻有「临江巷」）"
+      ],
+      "relationships": {
+        "char_02": {
+          "type": "理事与学徒（表面熟络，实则戒备）",
+          "chapter": 1,
+          "evidence": "「理事。」陆小满垂手，「您慢用，我去添水。」"
+        }
+      }
+    },
+    "char_02": {
+      "knowledge": {
+        "knows": [],
+        "unknown_to_them": [],
+        "false_beliefs": [
+          "贺三刀以为陆小满只是照章收了死当，不知道怀表被压进了私账暗格"
+        ]
+      },
+      "location": "",
+      "injuries": [],
+      "inventory": [],
+      "relationships": {}
+    }
+  },
+  "facts": {
+    "F1": {
+      "learned_by": [
+        "char_01"
+      ],
+      "chapters": [
+        1
+      ]
+    }
+  },
+  "hooks": {},
+  "timeline": [
+    {
+      "chapter": 1,
+      "draft": "v001",
+      "ops": [
+        "learn",
+        "set_inventory",
+        "set_location",
+        "add_relationship",
+        "set_false_belief"
+      ],
+      "committed_at": "2026-11-05T08:47:41"
+    }
+  ],
+  "exemptions": []
+}
