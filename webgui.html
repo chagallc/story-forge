@@ -423,7 +423,6 @@ function drawBook(name, data){
       <button class="btn sm" id="btn-gonewdisc">＋ 讨论新章</button>
       <button class="btn sm primary" id="btn-gonewchar">＋ 新人物</button>
       <button class="btn sm" id="btn-gocodiscuss">✎ 人物共创</button>
-      <button class="btn sm" id="btn-gocodiscuss">✎ 人物共创</button>
     </div>
   </div>
   <div class="cols">
@@ -475,7 +474,7 @@ function drawBook(name, data){
   document.getElementById("btn-gocanon").onclick =
     ()=>{ location.hash = `#/book/${encodeURIComponent(name)}/canon`; };
   document.getElementById("btn-gonewchar").onclick =
-  byId("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
+  document.getElementById("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
   document.getElementById("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
     ()=>{ location.hash = `#/book/${encodeURIComponent(name)}/char/new`; };
   document.getElementById("btn-gonewdisc").onclick = async ()=>{
@@ -1392,7 +1391,6 @@ function cdRenderSavePreview(book, chars) {
   };
 }
 // ============ 人物共创讨论板 ============
-let _cdBook = "";
 
 
 </script>
