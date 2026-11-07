@@ -98,14 +98,24 @@ def start_server():
                             cwd=ROOT, env=ENV,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             text=True, encoding="utf-8", errors="replace")
+    # 常驻排水线程：服务端每个请求/save_bible 都会写 stdout/stderr，若无人消费，
+    # 管道缓冲填满后服务端 print 阻塞 → 后续请求全部挂死（实测卡在重复删除 409 前）。
     lines = []
+
+    def _drain():
+        for line in proc.stdout:
+            lines.append(line.rstrip())
+            if len(lines) > 500:
+                del lines[:300]  # 只留尾部，防内存膨胀
+
+    import threading as _th
+    t = _th.Thread(target=_drain, daemon=True)
+    t.start()
     dl = time.time() + 20
     while time.time() < dl:
-        line = proc.stdout.readline()
-        if line:
-            lines.append(line.strip())
-            if "127.0.0.1" in line:
-                break
+        if any("127.0.0.1" in x for x in lines):
+            break
+        time.sleep(0.3)
     return proc, lines
 
 
@@ -333,17 +343,25 @@ def main():
 
         # ============ 9. commit（ops 预览 → 确认；never_learn flaky 防护） ============
         print("--- commit 预览 + 确认 ---")
-        st, body = req("POST", f"/api/book/{BOOK}/commit/1", {"confirmed": False})
-        check("commit 预览：ops 清单 + 提炼句", st == 200 and body.get("preview") is True
-              and isinstance(body.get("ops"), list) and "derived" in body, str(body)[:300])
-        st, body = req("POST", f"/api/book/{BOOK}/commit/1", {"confirmed": True})
-        if st != 200 and "never_learn" in json.dumps(body, ensure_ascii=False):
-            print("  [flaky 防护] delta 撞 never_learn 红名单，模拟作者修 delta 后重跑")
+
+        def _fix_never_learn_delta():
             dp = os.path.join(wb.drafts_dir(BOOK, 1), "v001.delta.json")
             dj = json.load(open(dp, encoding="utf-8"))
             dj["ops"] = [o for o in dj.get("ops", [])
                          if not (o.get("op") == "learn" and o.get("fact_id") == "F1_REVEAL")]
             json.dump(dj, open(dp, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
+        st, body = req("POST", f"/api/book/{BOOK}/commit/1", {"confirmed": False})
+        if st != 200 and "never_learn" in json.dumps(body, ensure_ascii=False):
+            print("  [flaky 防护] 预览阶段 delta 撞 never_learn 红名单，模拟作者修 delta 后重跑")
+            _fix_never_learn_delta()
+            st, body = req("POST", f"/api/book/{BOOK}/commit/1", {"confirmed": False})
+        check("commit 预览：ops 清单 + 提炼句", st == 200 and body.get("preview") is True
+              and isinstance(body.get("ops"), list) and "derived" in body, str(body)[:300])
+        st, body = req("POST", f"/api/book/{BOOK}/commit/1", {"confirmed": True})
+        if st != 200 and "never_learn" in json.dumps(body, ensure_ascii=False):
+            print("  [flaky 防护] delta 撞 never_learn 红名单，模拟作者修 delta 后重跑")
+            _fix_never_learn_delta()
             st, body = req("POST", f"/api/book/{BOOK}/commit/1", {"confirmed": True})
         check("commit 确认：canon 落盘 + state 推进", st == 200 and (body or {}).get("ok") is True
               and os.path.exists(wb.canon_file(BOOK, 1))
@@ -368,7 +386,75 @@ def main():
               and body["state"]["revision"] == 1 and body["state"]["as_of_chapter"] == 1
               and (body["characters"][0].get("knowledge") or {}).get("knows") is not None)
 
-        # ============ 11. exempt 负样本（离线确定性） ============
+        # ============ 11. 世界设定端点（M3B-G） ============
+        st, body = req("POST", f"/api/book/{BOOK}/world/meta",
+                       {"time_period": "九十年代末，南方小城", "setting": "老九门典当行街"})
+        check("POST /world/meta 更新 time_period/setting", st == 200 and body.get("ok") is True
+              and body["world"]["time_period"] == "九十年代末，南方小城")
+        st, body = req("GET", f"/api/book/{BOOK}/world")
+        check("GET /world 全量（world 六字段）", st == 200
+              and "time_period" in body and "era_materials" in body and "locations" in body
+              and "rules" in body and body.get("setting") == "老九门典当行街")
+        st, body = req("POST", f"/api/book/{BOOK}/world/material", {"entry": {
+            "category": "物品道具", "keywords": ["怀表", "刻痕"],
+            "content": "M3B-WEB-ERA-表壳内侧旋开处刻着修表匠铺号小字。", "chapter_range": None}})
+        web_mat_id = (body or {}).get("material", {}).get("id")
+        check("POST /world/material 新增（id 自动生成）", st == 200 and body.get("ok") is True
+              and (web_mat_id or "").startswith("mat_"))
+        st, body = req("GET", f"/api/book/{BOOK}")
+        mats = (body.get("world") or {}).get("era_materials") or []
+        check("验收#3：era_materials 写入后 GET /book/<name> 可见",
+              st == 200 and any(m.get("id") == web_mat_id for m in mats))
+        st, body = req("POST", f"/api/book/{BOOK}/world/material", {"entry": {
+            "id": web_mat_id, "category": "物品道具", "keywords": ["怀表"],
+            "content": "M3B-WEB-ERA-更新后的素材内容。"}})
+        check("POST /world/material 同 id 更新", st == 200
+              and (body or {}).get("material", {}).get("content") == "M3B-WEB-ERA-更新后的素材内容。")
+        st, body = req("POST", f"/api/book/{BOOK}/world/material/remove", {"id": web_mat_id})
+        check("POST /world/material/remove 删除成功", st == 200
+              and body.get("removed") == web_mat_id)
+        st, body = req("POST", f"/api/book/{BOOK}/world/material/remove", {"id": web_mat_id})
+        check("重复删除被拒 409", st == 409)
+        st, body = req("POST", f"/api/book/{BOOK}/world/propose", {"topic": ""})
+        check("propose 空 topic 被拒 409", st == 409)
+
+        # ============ 12. AI 素材提议（验收 #2：《大水将至》真实质量测试） ============
+        print("--- theflood-smoke：AI 提议（真实 reader 通道 LLM，约 1-2 分钟）---")
+        FLOOD = "theflood-smoke"
+        if os.path.isdir(wb.ws_dir(FLOOD)):
+            shutil.rmtree(wb.ws_dir(FLOOD))
+        st, body = req("POST", "/api/books", {
+            "name": FLOOD, "title": "大水将至", "genre": "怀旧都市悬疑加克苏鲁神话",
+            "language": "zh", "platform": "番茄/webnovel",
+            "logline": "1998年武汉盛夏，初中生李小凡的调查团发现民间组织囤积物资准备古怪祭祀，"
+                       "在抗洪防汛的大背景下追查，结尾发现仪式是为送戴厚眼镜的小男孩胡子回他的位面。",
+            "setting": "1998年武汉， ordinary 街区生活，偶有超自然暗示",
+            "template": "悬疑假设弧", "total_chapters": 12})
+        check("建《大水将至》测试书（theflood-smoke）", st == 200 and body.get("ok") is True)
+        st, body = req("POST", f"/api/book/{FLOOD}/world/meta", {"time_period": "1998年夏，武汉"})
+        check("theflood-smoke 设 time_period", st == 200)
+        st, body = req("POST", f"/api/book/{FLOOD}/world/propose",
+                       {"topic": "1998年武汉夏天 中学生的日常生活", "count": 10})
+        cands = (body or {}).get("candidates") or []
+        print(f"--- propose 返回 {len(cands)} 条候选（样例见下）---")
+        for c in cands[:5]:
+            print(f"  [{c.get('category')}] {'/'.join(c.get('keywords') or [])}: {c.get('content')}")
+        check("验收#2：propose 返回 ≥8 条候选", st == 200 and len(cands) >= 8,
+              f"st={st} n={len(cands)} {str(body)[:200]}")
+        check("候选质量：每条有具体 content（≥15字）/分类/关键词（非泛化说明的粗筛）",
+              all(len(str(c.get("content") or "")) >= 15 for c in cands)
+              and all((c.get("category") or "").strip() for c in cands)
+              and all(c.get("keywords") for c in cands),
+              json.dumps(cands[:3], ensure_ascii=False)[:300])
+        st, body = req("POST", f"/api/book/{FLOOD}/world/confirm", {"materials": cands[:2]})
+        check("confirm 批量写入（source=AI提议已确认）", st == 200
+              and len((body or {}).get("saved") or []) == 2
+              and all(x.get("source") == "AI提议已确认" for x in (body or {}).get("saved") or []))
+        st, body = req("GET", f"/api/book/{FLOOD}/world")
+        check("确认的素材入 bible.world.era_materials", st == 200
+              and len(body.get("era_materials") or []) == 2)
+
+        # ============ 13. exempt 负样本（离线确定性） ============
         st, body = req("POST", f"/api/book/{BOOK}/exempt/1",
                        {"rule": "绝不存在的规则X", "reason": "测试"})
         check("exempt 无 finding 被拒 409", st == 409 and "没有规则" in (body or {}).get("error", ""),

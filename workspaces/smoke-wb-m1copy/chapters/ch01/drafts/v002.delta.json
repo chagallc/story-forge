@@ -4,53 +4,35 @@
   "base_state_revision": 0,
   "ops": [
     {
-      "op": "advance_hook",
-      "hook_id": "F1",
-      "action": "plant",
-      "evidence": "绸子里躺着一块怀表，银壳，链子断了一截"
-    },
-    {
-      "op": "advance_hook",
-      "hook_id": "F1_REVEAL",
-      "action": "plant",
-      "evidence": "壳底有刻字，划痕里嵌着黑泥，他用袖口擦了擦"
+      "op": "set_location",
+      "character_id": "char_01",
+      "value": "九门典当行",
+      "evidence": "行会上个月已经来人盘过一次账，说九门典当行"
     },
     {
       "op": "learn",
       "character_id": "char_01",
       "fact_id": "F1",
-      "evidence": "表停在某个位置是不会走的。这块表在走。"
-    },
-    {
-      "op": "learn",
-      "character_id": "char_01",
-      "fact_id": "F1_REVEAL",
-      "evidence": "五个字：云州，永泰昌。"
+      "evidence": "他见过这种手抖。上个月贺三刀来盘账，签字画押的那一笔，拖的正是这么一道毛边。"
     },
     {
       "op": "advance_hook",
       "hook_id": "F1_REVEAL",
-      "action": "develop",
-      "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。"
+      "action": "plant",
+      "evidence": "刻痕的收笔处，有极细的一道划伤，像刻字的人手抖了一下，笔画拖出一道毛边。"
     },
     {
       "op": "add_relationship",
       "a": "char_01",
       "b": "char_02",
-      "type": "行会理事与学徒（对立施压）",
-      "evidence": "贺三刀的声音。行会老理事，笑面，账算得极清的那种人。"
-    },
-    {
-      "op": "set_inventory",
-      "character_id": "char_01",
-      "value": "六十一块钱",
-      "evidence": "连今天的四十二块，一共六十一块。"
+      "type": "戒备/对立的行会理事与当铺少东",
+      "evidence": "贺三刀跨出门槛，忽然回头，笑面还是笑面：“听说今天有人往你这儿送了块表？”"
     },
     {
       "op": "set_false_belief",
       "character_id": "char_02",
-      "value": "以为陆小满会把怀表交给行会（只要并局诱之以利就能拿走表）",
-      "evidence": "表，我必提走。你掂量掂量，并局的事，也可想想。"
+      "value": "他不知道陆小满已通过刻痕手抖认出表上刻字的人可能是他",
+      "evidence": "陆小满没答。\n\n“死了的师父，活着的表。”贺三刀慢慢说"
     }
   ]
 }

@@ -9,6 +9,7 @@
 
 import json
 import os
+import re
 from datetime import datetime
 
 CODISCUSS_SYSTEM = {
@@ -98,7 +99,20 @@ def codiscuss_brief(bible, brief_extra=""):
 
 def codiscuss_messages(bible, turns, brief_extra=""):
     lang = bible.get("book", {}).get("language", "zh")
-    msgs = [{"role": "system", "content": CODISCUSS_SYSTEM[lang]}]
+    system = CODISCUSS_SYSTEM[lang]
+    # M3B：共创 system 追加时代素材摘要（按 brief/设定相关性取 ≤8 条），提议人物时融入时代细节
+    try:
+        import workbench as _wb  # 延迟导入（workbench 不 import codiscuss，无环）
+        ctx = f"{brief_extra} {bible.get('world', {}).get('setting', '')} " \
+              f"{bible.get('world', {}).get('time_period', '')} " + \
+              " ".join(str(c.get("card") or "") for c in bible.get("characters", []))
+        era_block, _ = _wb.era_injection(bible, ctx, limit=8,
+                                         title="【时代素材（提议人物时可自然引用的真实细节）】")
+        if era_block:
+            system += "\n\n" + era_block
+    except Exception:  # noqa: BLE001  素材注入失败不阻塞共创
+        pass
+    msgs = [{"role": "system", "content": system}]
     if not turns:
         msgs.append({"role": "user", "content": codiscuss_brief(bible, brief_extra)})
     else:

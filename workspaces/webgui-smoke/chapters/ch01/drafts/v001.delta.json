@@ -4,16 +4,22 @@
   "base_state_revision": 0,
   "ops": [
     {
-      "op": "set_location",
-      "character_id": "char_01",
-      "value": "九门典当行",
-      "evidence": "九门典当行的柜台有半人高，陆小满趴在后面打瞌睡"
-    },
-    {
       "op": "set_inventory",
       "character_id": "char_01",
-      "value": "银壳怀表（背面刻有「临水镇」，带九门典当行铺号印戳记）",
-      "evidence": "布包里是一块怀表。银壳，走时不走时还看不出来"
+      "value": "银壳怀表（师父死当柜底所得，表底暗刻'落雁桥'）",
+      "evidence": "表贴身揣进怀里。铁壳凉，隔着布贴着心口"
+    },
+    {
+      "op": "set_false_belief",
+      "character_id": "char_01",
+      "value": "老贺不知道表底刻着'落雁桥'（陆小满谎报光面无戳）",
+      "evidence": "\"有。\"他俯身看，声音还稳着，\"光面，没有戳。\""
+    },
+    {
+      "op": "advance_hook",
+      "hook_id": "F1_REVEAL",
+      "action": "plant",
+      "evidence": "落雁桥这三个字，他在哪儿听过。"
     }
   ]
 }

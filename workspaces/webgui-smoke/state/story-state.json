@@ -6,27 +6,43 @@
       "knowledge": {
         "knows": [],
         "unknown_to_them": [],
-        "false_beliefs": []
+        "false_beliefs": [
+          "老贺不知道表底刻着'落雁桥'（陆小满谎报光面无戳）"
+        ]
       },
-      "location": "九门典当行",
+      "location": "",
       "injuries": [],
       "inventory": [
-        "银壳怀表（背面刻有「临水镇」，带九门典当行铺号印戳记）"
+        "银壳怀表（师父死当柜底所得，表底暗刻'落雁桥'）"
       ],
       "relationships": {}
     }
   },
   "facts": {},
-  "hooks": {},
+  "hooks": {
+    "F1_REVEAL": {
+      "history": [
+        {
+          "chapter": 1,
+          "action": "plant",
+          "evidence": "落雁桥这三个字，他在哪儿听过。"
+        }
+      ],
+      "status": "plant",
+      "chapter": 1,
+      "evidence": "落雁桥这三个字，他在哪儿听过。"
+    }
+  },
   "timeline": [
     {
       "chapter": 1,
       "draft": "v001",
       "ops": [
-        "set_location",
-        "set_inventory"
+        "set_inventory",
+        "set_false_belief",
+        "advance_hook"
       ],
-      "committed_at": "2026-11-05T13:27:33"
+      "committed_at": "2026-11-07T20:27:30"
     }
   ],
   "exemptions": []

@@ -1,0 +1,27 @@
+{
+  "schema_version": 5,
+  "revision": 1,
+  "book": {
+    "title": "雾锁九门（v4副本）",
+    "genre": "都市悬疑",
+    "language": "zh",
+    "platform": "qidian",
+    "logline": "v5 迁移验证"
+  },
+  "characters": [],
+  "world": {
+    "setting": "旧设定",
+    "glossary": [],
+    "time_period": "",
+    "era_materials": [],
+    "locations": [],
+    "rules": []
+  },
+  "arc": {
+    "template": "悬疑假设弧",
+    "anchors": [],
+    "total_chapters": 12
+  },
+  "ledger": [],
+  "chapters": {}
+}

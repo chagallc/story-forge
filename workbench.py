@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""story-forge 写作工作台 v2：人机协作章节工作流（M3A：滚动连载 + 最小故事图谱）。
+"""story-forge 写作工作台 v2：人机协作章节工作流（M3B：世界设定 + 时代素材收集）。
 
 用法：
-  python workbench.py new <书名>             # 建 workspace（交互式，bible schema v4）
+  python workbench.py new <书名>             # 建 workspace（交互式，bible schema v5）
   python workbench.py char <书名> add        # 加人物卡（四分区：动机栈+声口+知识边界+lorebook）
   python workbench.py char <书名> list       # 人物列表
+  python workbench.py world <书名> list      # 世界设定：时代/素材列表
+  python workbench.py world <书名> add       # 交互式添加时代素材（era_materials）
+  python workbench.py world <书名> remove <id>  # 删除素材
+  python workbench.py world <书名> set <time_period|setting> <值>  # 改时代/设定
   python workbench.py discuss <书名> <章号>   # 两阶段讨论：3 条轻量分支选择 → 围绕选中分支 REPL
   python workbench.py lock <书名> <章号>     # 讨论结论固化为章节卡 card.json（校验+作者确认）
   python workbench.py write <书名> <章号>    # 落笔（硬门禁；出 drafts/vNNN.md + delta.json + lint.json；
@@ -19,18 +23,20 @@
   python workbench.py exempt <书名> <章号> <规则> <理由>  # 对最近 lint 的 finding 建豁免（指纹绑定正文 hash）
   python workbench.py books                  # 多书总览
   python workbench.py status <书名>          # 全书状态板
-  python workbench.py books                 # 多书总览
 
   python workbench-web.py                   # 本地 Web 界面（127.0.0.1:17890，与 CLI 共用下方 _core 函数）
 
-设计：docs/plans/M3A-workorder.md（P7s 滚动规划 + P-G1 ChapterFact 管线 + P-G2 最小地图）
-/ docs/plans/M2-workorder.md / docs/plans/M1-workorder.md / docs/decisions/0003 / 0005。
+设计：docs/plans/M3B-G-workorder.md（世界设定 + 时代素材）/ docs/plans/M3A-workorder.md（P7s 滚动规划 +
+P-G1 ChapterFact 管线 + P-G2 最小地图）/ docs/plans/M2-workorder.md / docs/plans/M1-workorder.md
+/ docs/decisions/0003 / 0005。
 
-数据权威（三层）：story-bible.json 作者创意与静态设定，唯一人工写入口（schema v4）；
-state/story-state.json 已提交正史状态，唯一动态状态权威，只允许 src/harness/state.py 修改；
-build/spec.json 引擎投影，可随时删除重建，禁止手改。chapters/chNN/card.json 作者确认后的
-章节卡文件（card_path 存在时以文件为准）。
+数据权威（三层）：story-bible.json 作者创意与静态设定，唯一人工写入口（schema v5，world 含
+time_period/era_materials/locations/rules）；state/story-state.json 已提交正史状态，唯一动态状态
+权威，只允许 src/harness/state.py 修改；build/spec.json 引擎投影，可随时删除重建，禁止手改。
+chapters/chNN/card.json 作者确认后的章节卡文件（card_path 存在时以文件为准）。
 正史边界：write 只产草稿与状态变更提案（delta.json），commit 才写 canon.md 并推进 state。
+时代素材边界（M3B）：era_materials 是作者审核后的静态设定（AI 只提议不落盘）；讨论/落笔按
+相关性注入 prompt（关键词匹配 chapter 上下文；无匹配时注入前 N 条控 token）。
 图谱边界（M3A）：graph/ 是纯派生层——facts 不可变 append-only，遗漏只产警告与待审补丁文件，
 图谱绝不写 state；graph/ 损坏不影响 commit/write/status，重抽即可恢复。
 """
@@ -55,10 +61,14 @@ from src.harness.state import OP_SPECS, StoryState, text_sha1  # noqa: E402
 from src.harness.style_lint import lint_chapter  # noqa: E402
 
 WS_ROOT = os.path.join(ROOT, "workspaces")
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 ROLLING_WINDOW = 8       # 滚动纪律：planned_through - locked_through ≤ 8（不为远处写细纲）
 PLAN_BATCH_DEFAULT = 4   # plan 默认提议章数
 VOLUME_SIZE = 12         # 卷固定 12 章（工单示例 V1[1,12] / V2[13,24]）
+ERA_INJECT_LIMIT = 10    # 时代素材注入上限（控制 token；讨论板取 5-10 条）
+# 素材分类枚举（可扩展；不在枚举内的保存时归一为「其他」）
+ERA_CATEGORIES = ("历史事件", "地理环境", "流行文化", "生活细节", "物品道具",
+                  "人物背景素材", "规则与禁忌", "其他")
 
 
 class Refused(Exception):
@@ -282,6 +292,26 @@ def _migrate_to_v4(bible, book=None):
     bible["schema_version"] = 4
 
 
+def _ensure_world_fields(world):
+    """world 字段补默认（v5 起的结构；幂等，迁移与保存前防御性调用）。"""
+    world.setdefault("setting", "")
+    world.setdefault("glossary", [])
+    world.setdefault("time_period", "")
+    world.setdefault("era_materials", [])
+    world.setdefault("locations", [])
+    world.setdefault("rules", [])
+    return world
+
+
+def _migrate_to_v5(bible, book=None):
+    """M3A 格式（v4）→ v5：world 升级（time_period/era_materials/locations/rules）。
+
+    只补空字段，不改任何已有内容（旧 bible 的 setting/glossary 原样保留）。
+    """
+    _ensure_world_fields(bible.setdefault("world", {}))
+    bible["schema_version"] = 5
+
+
 def _ensure_defaults(bible):
     """补 v2 起的默认字段（幂等，保存前防御性调用）。"""
     bible.setdefault("revision", 0)
@@ -297,10 +327,11 @@ def _ensure_defaults(bible):
     arc["compass"] = dict(compass)
     _ensure_volumes(arc)
     bible.setdefault("shadows", [])
+    _ensure_world_fields(bible.setdefault("world", {}))  # v5：world 字段防御性补齐
 
 
 def migrate_bible(bible, book=None):
-    """迁移到当前 schema：v1（无标记）→ v2 → v3 → v4，链式执行，幂等。"""
+    """迁移到当前 schema：v1（无标记）→ v2 → v3 → v4 → v5，链式执行，幂等。"""
     ver = bible.get("schema_version")
     if ver == SCHEMA_VERSION:
         return bible
@@ -310,6 +341,8 @@ def migrate_bible(bible, book=None):
         _migrate_to_v3(bible, book)
     if bible.get("schema_version") == 3:
         _migrate_to_v4(bible, book)
+    if bible.get("schema_version") == 4:
+        _migrate_to_v5(bible, book)
     bible["schema_version"] = SCHEMA_VERSION
     return bible
 
@@ -407,7 +440,8 @@ def create_book_core(book, *, title, genre="", language="zh", platform="",
             "notes": "见 docs/decisions/0005",
         },
         "characters": [],
-        "world": {"setting": setting, "glossary": []},
+        "world": {"setting": setting, "glossary": [], "time_period": "",
+                  "era_materials": [], "locations": [], "rules": []},
         "compass": {
             "ending_direction": ending_direction,
             "reader_promise": reader_promise,
@@ -575,6 +609,346 @@ def _input_lines(prompt):
         out.append(line)
 
 
+# ---------------- 世界设定：时代素材（M3B-G） ----------------
+
+def _era_materials(bible):
+    return [m for m in ((bible.get("world") or {}).get("era_materials") or [])
+            if isinstance(m, dict)]
+
+
+def next_material_id(bible):
+    nums = [int(m.group(1)) for m0 in _era_materials(bible)
+            if (m := re.fullmatch(r"mat_(\d+)", str(m0.get("id", ""))))]
+    return f"mat_{max(nums, default=0) + 1:03d}"
+
+
+def next_location_id(bible):
+    locs = [x for x in ((bible.get("world") or {}).get("locations") or [])
+            if isinstance(x, dict)]
+    nums = [int(m.group(1)) for x in locs
+            if (m := re.fullmatch(r"loc_(\d+)", str(x.get("id", ""))))]
+    return f"loc_{max(nums, default=0) + 1:03d}"
+
+
+def _parse_chapter_range(raw):
+    """chapter_range 归一：null/""→None；[lo,hi]（可含 null）；"3-6"→[3,6]。非法 → None。"""
+    if raw in (None, "", [], "null"):
+        return None
+    if isinstance(raw, str):
+        m = re.fullmatch(r"(\d+)\s*[-~]\s*(\d+)?", raw.strip())
+        if m:
+            return [int(m.group(1)), int(m.group(2))] if m.group(2) else [int(m.group(1)), None]
+        return None
+    if isinstance(raw, (list, tuple)) and len(raw) == 2:
+        lo, hi = raw
+        out = [None, None]
+        if isinstance(lo, int) and not isinstance(lo, bool):
+            out[0] = lo
+        if isinstance(hi, int) and not isinstance(hi, bool):
+            out[1] = hi
+        return out if (out[0] is not None or out[1] is not None) else None
+    return None
+
+
+def normalize_material(entry, mat_id=None):
+    """素材条目规范化（CRUD 与 propose 共用）：category 归一枚举、keywords/content 非空。"""
+    e = dict(entry or {})
+    category = str(e.get("category") or "").strip()
+    if not category:
+        e["category"] = "其他"
+    elif category not in ERA_CATEGORIES:
+        # 枚举外：保守归「其他」，原词并入 keywords 供相关性匹配（工单允许枚举扩展，先不外溢）
+        e["category"] = "其他"
+        e["keywords"] = list(e.get("keywords") or []) + [category]
+    e["keywords"] = [str(k).strip() for k in (e.get("keywords") or []) if str(k).strip()]
+    e["content"] = str(e.get("content") or "").strip()
+    e["source"] = str(e.get("source") or "").strip()
+    e["chapter_range"] = _parse_chapter_range(e.get("chapter_range"))
+    if mat_id is not None:
+        e["id"] = mat_id
+    return e
+
+
+def save_material_core(book, bible, entry, source="", mat_id=None):
+    """新增/更新时代素材（CLI world add、Web 管理页、propose 批量确认共用）。
+
+    mat_id 给定且已存在 → 整体更新；否则新增（id 缺省自动生成）。content 必填。
+    返回规范化后的条目。
+    """
+    e = normalize_material(entry, mat_id=mat_id)
+    if not e["content"]:
+        raise Refused("素材内容（content）必填")
+    if source:
+        e["source"] = source
+    mats = (bible.setdefault("world", {}).setdefault("era_materials", []))
+    cid = str(e.get("id") or "").strip()
+    if cid:
+        idx = next((i for i, m in enumerate(mats) if str(m.get("id")) == cid), None)
+        if idx is None:
+            raise Refused(f"素材 id 不存在：{cid}")
+        mats[idx] = e
+    else:
+        e["id"] = next_material_id(bible)
+        mats.append(e)
+    save_bible(book, bible)
+    return e
+
+
+def remove_material_core(book, bible, mat_id):
+    mats = (bible.setdefault("world", {}).setdefault("era_materials", []))
+    idx = next((i for i, m in enumerate(mats) if str(m.get("id")) == str(mat_id)), None)
+    if idx is None:
+        raise Refused(f"素材 id 不存在：{mat_id}")
+    removed = mats.pop(idx)
+    save_bible(book, bible)
+    return removed
+
+
+def save_location_core(book, bible, entry, loc_id=None):
+    """新增/更新地点（world.locations）；name 必填。"""
+    e = dict(entry or {})
+    e["name"] = str(e.get("name") or "").strip()
+    e["description"] = str(e.get("description") or "").strip()
+    e["notes"] = str(e.get("notes") or "").strip()
+    if not e["name"]:
+        raise Refused("地点名称（name）必填")
+    locs = (bible.setdefault("world", {}).setdefault("locations", []))
+    cid = str(e.get("id") or loc_id or "").strip()
+    if cid:
+        idx = next((i for i, x in enumerate(locs) if str(x.get("id")) == cid), None)
+        if idx is None:
+            raise Refused(f"地点 id 不存在：{cid}")
+        e["id"] = cid
+        locs[idx] = e
+    else:
+        e["id"] = next_location_id(bible)
+        locs.append(e)
+    save_bible(book, bible)
+    return e
+
+
+def remove_location_core(book, bible, loc_id):
+    locs = (bible.setdefault("world", {}).setdefault("locations", []))
+    idx = next((i for i, x in enumerate(locs) if str(x.get("id")) == str(loc_id)), None)
+    if idx is None:
+        raise Refused(f"地点 id 不存在：{loc_id}")
+    removed = locs.pop(idx)
+    save_bible(book, bible)
+    return removed
+
+
+def _in_chapter_range(cr, ch):
+    """chapter_range 命中判断（None=恒命中；[lo,hi] 两端可空）。"""
+    if not cr:
+        return True
+    if isinstance(cr, (list, tuple)) and len(cr) == 2:
+        lo, hi = cr
+        if lo is not None and ch < int(lo):
+            return False
+        if hi is not None and ch > int(hi):
+            return False
+        return True
+    return True
+
+
+def _era_context_text(bible, card, source=""):
+    """章节相关性匹配语料：章节卡文本字段 + 引擎细胞 + 弧线标签 + 世界设定。"""
+    parts = []
+    if card and source != "legacy":
+        for k in ("time_place", "opening_state", "objective", "obstacle", "intended_consequence",
+                  "ending_state"):
+            parts.append(str(card.get(k) or ""))
+        ch_obj = card.get("choice") or {}
+        parts.append(str(ch_obj.get("selected") or ""))
+        eng = card.get("engine") or {}
+        for k in ("arc_label", "plan", "disruption", "crisis", "improvisation"):
+            parts.append(str(eng.get(k) or ""))
+        for p in eng.get("pressure") or []:
+            if isinstance(p, dict):
+                parts.append(str(p.get("force") or ""))
+                parts.append(str(p.get("cost") or ""))
+    world = bible.get("world") or {}
+    parts.append(str(world.get("setting") or ""))
+    parts.append(str(world.get("time_period") or ""))
+    return " ".join(x for x in parts if x)
+
+
+def select_era_materials(bible, context_text="", ch=None, limit=ERA_INJECT_LIMIT):
+    """按相关性挑素材（工单规则）：
+    1. chapter_range 不覆盖本章的条目直接排除；
+    2. keywords 与 context_text 子串匹配计分，命中者按分数取前 limit 条；
+    3. 无任何命中时回退为「全量注入前 limit 条」（保持确定性顺序，控 token）。
+    """
+    mats = [m for m in _era_materials(bible) if str(m.get("content") or "").strip()]
+    if not mats:
+        return []
+    if ch is not None:
+        mats = [m for m in mats if _in_chapter_range(m.get("chapter_range"), ch)]
+        if not mats:
+            return []
+    ctx = context_text or ""
+    scored = []
+    for i, m in enumerate(mats):
+        score = sum(1 for kw in (m.get("keywords") or [])
+                    if str(kw).strip() and str(kw).strip() in ctx)
+        scored.append((score, i, m))
+    matched = [(s, i, m) for s, i, m in scored if s > 0]
+    if matched:
+        matched.sort(key=lambda t: (-t[0], t[1]))
+        return [m for _, _, m in matched[:limit]]
+    scored.sort(key=lambda t: (t[1],))
+    return [m for _, _, m in scored[:limit]]
+
+
+def era_injection(bible, context_text="", ch=None, limit=ERA_INJECT_LIMIT, title=None):
+    """组装注入块。返回 (block, used_materials)；素材为空时 ("", [])。
+
+    块格式（工单样例）：
+      【时代素材（本章可用的真实细节）】
+      - [历史事件] 1998年长江全流域特大洪水……
+    """
+    mats = select_era_materials(bible, context_text, ch, limit)
+    if not mats:
+        return "", []
+    title = title or "【时代素材（本章可用的真实细节）】"
+    lines = [title]
+    for m in mats:
+        cat = str(m.get("category") or "其他").strip()
+        content = str(m.get("content") or "").strip()[:200]
+        lines.append(f"- [{cat}] {content}")
+    return "\n".join(lines), mats
+
+
+PROPOSE_PROMPT_ZH = (
+    "你是时代顾问，为小说收集「可以直接写进正文的具体素材」。\n\n"
+    "书：《{title}》 类型：{genre} 时代：{time_period} 平台：{platform}\n"
+    "世界观：{setting}\n一句话故事：{logline}\n"
+    "已有素材（不要重复、不要换汤不换药）：\n{existing}\n\n"
+    "收集主题：{topic}\n\n"
+    "请给出 {count} 条素材。严格输出 JSON 数组（不要任何其他文字），每条格式：\n"
+    '[{{"category": "历史事件|地理环境|流行文化|生活细节|物品道具|人物背景素材|规则与禁忌|其他", '
+    '"keywords": ["供相关性匹配的词 2-4 个"], '
+    '"content": "具体的时代细节", "chapter_range": null}}]\n\n'
+    "硬性要求：\n"
+    "1. 每条 content 必须是能直接写进正文的一句具体细节（具体名词/数字/价格/品牌/地名/动作/感官），"
+    "单独拿出来插入正文不违和；\n"
+    "2. 禁止泛化的时代背景说明。反例：「90年代中国物质相对匮乏」；"
+    "正例：「巷口小卖部冰柜里只有盐水和绿豆两个品种，白砂糖的贵五毛」；\n"
+    "3. 必须符合给定时代的真实史实与地域（{time_period}），拿不准的宁可不写；\n"
+    "4. category 从枚举里选；keywords 给正文里可能触发该细节的词。")
+
+
+def propose_materials_core(book, bible, topic, count=10, client=None):
+    """AI 素材提议（reader 通道，异构）。返回候选列表（**不落盘**，作者逐条确认后走
+    save_material_core(source="AI提议已确认")）。LLM 失败抛异常由调用方处理（Web 502，不阻塞）。"""
+    topic = str(topic or "").strip()
+    if not topic:
+        raise Refused("缺少收集主题（topic）")
+    count = max(1, min(int(count or 10), 30))
+    b = bible.get("book", {})
+    lang = b.get("language", "zh")
+    world = bible.get("world") or {}
+    client = client or client_for(bible, "reader", book)  # reader 通道（与 writer 异构）
+    existing = "\n".join(
+        f"- {m.get('id')} [{m.get('category', '')}] {'/'.join(m.get('keywords') or [])}: "
+        f"{str(m.get('content') or '')[:60]}"
+        for m in _era_materials(bible)[:30]) or "（无）"
+    if lang == "en":
+        prompt = (f"You are a period consultant collecting CONCRETE details that can drop straight "
+                  f"into prose.\n\nBook: {b.get('title')} | genre: {b.get('genre')} | period: "
+                  f"{world.get('time_period')}\nSetting: {world.get('setting')}\nLogline: "
+                  f"{b.get('logline')}\nExisting materials (do not repeat):\n{existing}\n\n"
+                  f"Collection topic: {topic}\n\nGive exactly {count} items. Reply with a strict "
+                  f'JSON array (nothing else), each: {{"category": "history|geography|pop-culture|'
+                  f'daily-life|props|character-background|rules|other", "keywords": ["2-4 matching '
+                  f'words"], "content": "one concrete era detail usable verbatim in prose", '
+                  f'"chapter_range": null}}\nHard rules: content must be a specific detail (nouns/'
+                  f'numbers/brands/prices/places), not background exposition; must be historically '
+                  f'plausible for the given period and locale; skip anything you are unsure of.')
+    else:
+        prompt = PROPOSE_PROMPT_ZH.format(
+            title=b.get("title", ""), genre=b.get("genre", ""),
+            time_period=world.get("time_period") or "（未设定，从主题推断）",
+            platform=b.get("platform", ""), setting=world.get("setting") or "-",
+            logline=(b.get("logline") or "")[:300], existing=existing,
+            topic=topic, count=count)
+    raw = client.chat([{"role": "user", "content": prompt}], tag="world-propose")
+    items = _extract_json(raw, "array")
+    if not isinstance(items, list):
+        raise ValueError("propose 输出不是数组")
+    out = []
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        e = normalize_material(it)
+        if not e["content"]:
+            continue
+        e["source"] = ""  # 候选未确认；确认时由 confirm 端点写 "AI提议已确认"
+        e["chapter_range"] = None  # 候选不携带章节窗
+        out.append(e)
+    return out[:count]
+
+
+def cmd_world(args):
+    book = args[0]
+    bible = load_bible(book)
+    sub = args[1] if len(args) > 1 else "list"
+    world = bible.get("world") or {}
+    if sub == "list":
+        print(f"时代：{world.get('time_period') or '-'}｜设定：{world.get('setting') or '-'}")
+        mats = _era_materials(bible)
+        print(f"时代素材 {len(mats)} 条：")
+        for m in mats:
+            rng = m.get("chapter_range")
+            rng_s = f"（适用第{rng[0] if rng else '-'}~{rng[1] if rng and len(rng) > 1 else '-'}章）" if rng else ""
+            src = f"｜来源:{m['source']}" if m.get("source") else ""
+            print(f"- {m.get('id', '?')} [{m.get('category', '其他')}] "
+                  f"{'/'.join(m.get('keywords') or []) or '-'}{rng_s}{src}")
+            print(f"    {str(m.get('content') or '')[:80]}")
+        locs = world.get("locations") or []
+        print(f"地点 {len(locs)} 条：")
+        for x in locs:
+            print(f"- {x.get('id', '?')} {x.get('name', '?')}：{str(x.get('description') or '')[:60]}")
+        rules = world.get("rules") or []
+        if rules:
+            print(f"规则与禁忌 {len(rules)} 条：")
+            for r in rules:
+                print(f"- {r}")
+    elif sub == "add":
+        category = input(f"分类（{'/'.join(ERA_CATEGORIES)}，回车=其他）: ").strip() or "其他"
+        keywords = [x.strip() for x in input("关键词（逗号分隔，供讨论/落笔相关性匹配）: ").split(",") if x.strip()]
+        content = input("素材内容（可直接写进正文的具体细节）: ").strip()
+        rng_raw = input("适用章节范围（如 3-6，回车=全书）: ").strip()
+        source = input("来源标注（回车=手动添加）: ").strip() or "手动添加"
+        try:
+            e = save_material_core(book, bible, {"category": category, "keywords": keywords,
+                                                 "content": content, "chapter_range": rng_raw},
+                                   source=source)
+        except Refused as ex:
+            print(ex.msg)
+            sys.exit(1)
+        print(f"素材已添加：{e['id']} [{e['category']}] {e['content'][:50]}")
+    elif sub == "remove":
+        if len(args) < 3:
+            print("用法: world <书名> remove <素材id>")
+            return
+        try:
+            removed = remove_material_core(book, bible, args[2])
+        except Refused as ex:
+            print(ex.msg)
+            sys.exit(1)
+        print(f"素材已删除：{removed.get('id')}（{str(removed.get('content') or '')[:40]}）")
+    elif sub == "set":
+        if len(args) < 4 or args[2] not in ("time_period", "setting"):
+            print("用法: world <书名> set <time_period|setting> <值>")
+            return
+        bible.setdefault("world", {})[args[2]] = args[3]
+        save_bible(book, bible)
+        print(f"已更新 world.{args[2]} = {args[3]}")
+    else:
+        print("用法: world <书名> list|add|remove <id>|set <time_period|setting> <值>")
+
+
 # ---------------- 讨论：两阶段（P1/P5 多线推演） ----------------
 
 def bible_summary(bible):
@@ -713,14 +1087,22 @@ def select_branch_core(book, bible, ch, sel):
 
 
 def _discussion_opener(bible, ch, sel, branch):
-    """阶段二开场：system + opener（CLI REPL 与 Web 会话共用同一组装）。"""
+    """阶段二开场：system + opener（CLI REPL 与 Web 会话共用同一组装）。
+
+    M3B：system 追加时代素材摘要（按分支/世界设定相关性取 ≤8 条），编剧提议时可自然引用。
+    """
     summary, lang = bible_summary(bible)
     beats = "；".join(branch["beats"])
+    era_ctx = json.dumps(branch, ensure_ascii=False) if branch else ""
+    era_block, _ = era_injection(bible, era_ctx, ch=ch, limit=8,
+                                 title="【时代素材（讨论时可自然引用的真实细节，不必全用）】")
     if lang == "en":
         system = ("You are the co-writer of this serialized novel. Your job in this session: discuss the "
                   "direction of one chapter with the author BEFORE any prose is written, building on the "
                   "branch the author selected. Push back when the author's idea breaks continuity or "
                   "weakens motive chains. Never write prose.")
+        if era_block:
+            system += "\n\n" + era_block
         opener = (f"Book state:\n{summary}\n\nThe author selected branch {sel} for Chapter {ch}:\n"
                   f"Summary: {branch['summary']}\nBeats: {beats}\nKey choice: {branch['choice']}\n"
                   f"Motive cost: {branch['motive_cost']}\n"
@@ -731,6 +1113,8 @@ def _discussion_opener(bible, ch, sel, branch):
         system = ("你是这部连载小说的联合编剧。本次会话任务：在动笔之前与作者讨论一章的剧情方向，"
                   "以作者选定的分支为基础深入。作者的想法如果破坏连续性或削弱动机链，你要直说并给出修正。"
                   "全程不写正文。")
+        if era_block:
+            system += "\n\n" + era_block
         opener = (f"书况：\n{summary}\n\n作者为第 {ch} 章选定了分支 {sel}：\n"
                   f"方向：{branch['summary']}\n节拍：{beats}\n关键选择：{branch['choice']}\n"
                   f"动机代价：{branch['motive_cost']}\n"
@@ -1258,6 +1642,7 @@ def write_prepare(book, ch, bible=None):
                    if isinstance(c, dict) and c.get("id") and c.get("name")}
     # 前文：只读 canon（P2 正史截断核心），迁移期无 canon 才回退 draft 并标注
     canon_texts, prev_source = prev_canon_texts(book, ch)
+    era_ctx = _era_context_text(bible, card, source)
     if projection:
         # P4：HOT/WARM/COLD 投影（shadows/COLD 绝不注入）
         config = {"id_name_map": id_name_map, "canon_texts": canon_texts,
@@ -1272,9 +1657,13 @@ def write_prepare(book, ch, bible=None):
         if id_name_map:
             msgs[1]["content"] += ("\n\n人物 id 对照（状态提案/章节卡里的 char 引用用 id）："
                                    + "，".join(f"{cid}={name}" for cid, name in id_name_map.items()))
+    # M3B：时代素材注入 prompt 尾部（投影开/关均生效；按章节卡相关性匹配，无匹配回退前 N 条）
+    era_block, era_used = era_injection(bible, era_ctx, ch=ch)
+    if era_block:
+        msgs[1]["content"] += "\n\n" + era_block
     return {"book": book, "ch": ch, "bible": bible, "card": card, "source": source,
             "lock_path": lock_path, "msgs": msgs, "lang": client_lang,
-            "spec": spec, "state_revision": state.revision}
+            "spec": spec, "state_revision": state.revision, "era_used": era_used}
 
 
 def write_prose(job, client=None, log=None):
@@ -1374,10 +1763,11 @@ def write_chapter_core(book, ch, client=None, log=None):
     if canary is not None:
         emit(f"金丝雀检查：{canary or '无泄漏'}")
     emit(f"下一步：python workbench.py commit {book} {ch}")
-    audit_result = run_audit(book, bible, ch, text) if bible is not None else None
+    # 合理性审核（reader 通道，异构；失败不阻塞）——job["bible"] 是 write_prepare 装载的 bible
+    audit_result = run_audit(book, job["bible"], ch, text)
     return {"version": fd["version"], "text": text, "draft_path": fd["draft_path"],
             "lint_path": fd["lint_path"], "report": fd["report"], "flags": fd["flags"],
-            "audit": audit_result, **dx}
+            "audit": audit_result, "era_used": [m.get("id") for m in job["era_used"]], **dx}
 
 
 REVISE_PROMPT = {
@@ -1474,27 +1864,6 @@ def revise_core(book, ch, intent, base_version=None, bible=None, log=None):
             "lint_path": lint_path, "lint_report": lint["flags"],
             "base_version": base_version or (versions[-1].replace(".md", "") if versions else None),
             "intent": intent, **dx, "audit": audit_result}
-
-
-def audit_summary(audit_result):
-    return audit_mod.audit_summary(audit_result)
-
-
-REVISE_PROMPT = {
-    "zh": (
-        "你是这部小说的作者。下面是第 {ch} 章的当前稿。作者的微调意图：{intent}\n"
-        "要求：只修改意图涉及的部分，未涉及的段落尽量逐字保留；保持人物声口与动机链；"
-        "保持既有伏笔与钩子不丢失；不要新增总结式收尾。输出修改后的全文，不要任何说明。"
-    ),
-    "en": (
-        "You are the author of this novel. Below is the current draft of chapter {ch}. "
-        "The author's revision intent: {intent}\n"
-        "Fix ONLY what the intent concerns; keep untouched passages verbatim; "
-        "preserve character voices and motive chains; keep existing hooks intact; "
-        "no summarizing endings. Output the full revised text only."
-    ),
-}
-
 
 
 def audit_summary(audit_result):
@@ -1932,31 +2301,6 @@ def run_fact_extraction(book, bible, ch, canon_text, delta, state_revision):
     return fact
 
 
-def run_fact_extraction(book, bible, ch, canon_text, delta, state_revision):
-    """抽取 + 保存 + 遗漏检测。抛异常由调用方捕获（不阻塞 commit）。"""
-    client = extraction_client_for(bible, book)
-    model = getattr(client, "model", "?")
-    raw = client.chat([{"role": "user", "content": gh.build_extraction_prompt(
-        bible, ch, canon_text, state_revision, delta.get("draft", "?"))}],
-        tag=f"fact-ch{ch:02d}")
-    fact_raw = _extract_json(raw, "object")
-    fact, warnings = gh.normalize_fact(fact_raw, bible, canon_text, ch, state_revision, model)
-    for w in warnings:
-        print(f"[graph] 警告：{w}")
-    path, entry = gh.save_fact(ws_dir(book), fact)
-    print(f"[graph] 事实已抽取：{path}（版本 {len(entry['versions'])}，"
-          f"events={len(fact['events'])}, state_changes={len(fact['state_changes_observed'])}）")
-    # 遗漏检测：正文观察到、delta 未登记 → 警告 + 待审补丁文件（绝不改 state）
-    omissions = gh.detect_omissions(fact, delta)
-    if omissions:
-        opath = gh.save_omissions(ws_dir(book), ch, omissions, delta.get("draft", "?"))
-        print(f"[graph] 遗漏警告：{len(omissions)} 项状态变化在 delta 中无对应 op → {opath}")
-        for o in omissions:
-            print(f"  - {o['character_id']}.{o['kind']}：{o.get('value', '')}"
-                  f"（建议 op：{json.dumps(o['suggested_op'], ensure_ascii=False)[:120]}）")
-    return fact
-
-
 # ---------------- status ----------------
 
 def cmd_status(args):
@@ -2041,7 +2385,7 @@ def books_overview():
 
 
 def main():
-    cmds = {"new": cmd_new, "char": cmd_char, "discuss": cmd_discuss,
+    cmds = {"new": cmd_new, "char": cmd_char, "world": cmd_world, "discuss": cmd_discuss,
             "lock": cmd_lock, "write": cmd_write, "commit": cmd_commit,
             "plan": cmd_plan, "map": cmd_map,
             "exempt": cmd_exempt, "books": cmd_books, "status": cmd_status}

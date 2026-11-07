@@ -5,22 +5,19 @@
     "char_01": {
       "knowledge": {
         "knows": [
-          "F1",
-          "F1_REVEAL"
+          "F1"
         ],
         "unknown_to_them": [],
         "false_beliefs": []
       },
-      "location": "",
+      "location": "九门典当行",
       "injuries": [],
-      "inventory": [
-        "六十一块钱"
-      ],
+      "inventory": [],
       "relationships": {
         "char_02": {
-          "type": "行会理事与学徒（对立施压）",
+          "type": "戒备/对立的行会理事与当铺少东",
           "chapter": 1,
-          "evidence": "贺三刀的声音。行会老理事，笑面，账算得极清的那种人。"
+          "evidence": "贺三刀跨出门槛，忽然回头，笑面还是笑面：“听说今天有人往你这儿送了块表？”"
         }
       }
     },
@@ -29,7 +26,7 @@
         "knows": [],
         "unknown_to_them": [],
         "false_beliefs": [
-          "以为陆小满会把怀表交给行会（只要并局诱之以利就能拿走表）"
+          "他不知道陆小满已通过刻痕手抖认出表上刻字的人可能是他"
         ]
       },
       "location": "",
@@ -46,45 +43,20 @@
       "chapters": [
         1
       ]
-    },
-    "F1_REVEAL": {
-      "learned_by": [
-        "char_01"
-      ],
-      "chapters": [
-        1
-      ]
     }
   },
   "hooks": {
-    "F1": {
+    "F1_REVEAL": {
       "history": [
         {
           "chapter": 1,
           "action": "plant",
-          "evidence": "绸子里躺着一块怀表，银壳，链子断了一截"
+          "evidence": "刻痕的收笔处，有极细的一道划伤，像刻字的人手抖了一下，笔画拖出一道毛边。"
         }
       ],
       "status": "plant",
       "chapter": 1,
-      "evidence": "绸子里躺着一块怀表，银壳，链子断了一截"
-    },
-    "F1_REVEAL": {
-      "history": [
-        {
-          "chapter": 1,
-          "action": "plant",
-          "evidence": "壳底有刻字，划痕里嵌着黑泥，他用袖口擦了擦"
-        },
-        {
-          "chapter": 1,
-          "action": "develop",
-          "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。"
-        }
-      ],
-      "status": "develop",
-      "chapter": 1,
-      "evidence": "永泰昌，汶水城南旧牌楼底下，还剩半扇门。"
+      "evidence": "刻痕的收笔处，有极细的一道划伤，像刻字的人手抖了一下，笔画拖出一道毛边。"
     }
   },
   "timeline": [
@@ -92,16 +64,13 @@
       "chapter": 1,
       "draft": "v002",
       "ops": [
-        "advance_hook",
-        "advance_hook",
-        "learn",
+        "set_location",
         "learn",
         "advance_hook",
         "add_relationship",
-        "set_inventory",
         "set_false_belief"
       ],
-      "committed_at": "2026-11-05T14:14:54"
+      "committed_at": "2026-11-07T19:53:11"
     }
   ],
   "exemptions": []
