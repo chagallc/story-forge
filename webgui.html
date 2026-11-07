@@ -283,6 +283,7 @@ function matchRoute(){
   if ((m = h.match(/^#\/book\/([^/]+)\/chapter\/(\d+)$/))) return {view:"chap", name:m[1], ch:+m[2]};
   if ((m = h.match(/^#\/book\/([^/]+)\/canon$/))) return {view:"canon", name:m[1]};
   if ((m = h.match(/^#\/book\/([^/]+)\/codiscuss$/))) return {view:"codiscuss", name:m[1]};
+  if ((m = h.match(/^#\/book\/([^/]+)\/codiscuss$/))) return {view:"codiscuss", name:m[1]};
   return {view:"404"};
 }
 
@@ -294,6 +295,7 @@ async function renderRoute(){
     else if (r.view==="char") await viewChar(r.name, r.cid);
     else if (r.view==="chap") await viewChapter(r.name, r.ch);
     else if (r.view==="canon") await viewCanon(r.name);
+    else if (r.view==="codiscuss") await viewCodiscuss(r.name);
     else if (r.view==="codiscuss") await viewCodiscuss(r.name);
     else main().innerHTML = '<div class="pane">页面不存在，<a href="#/">回书架</a>。</div>';
   }catch(e){
@@ -421,6 +423,7 @@ function drawBook(name, data){
       <button class="btn sm" id="btn-gonewdisc">＋ 讨论新章</button>
       <button class="btn sm primary" id="btn-gonewchar">＋ 新人物</button>
       <button class="btn sm" id="btn-gocodiscuss">✎ 人物共创</button>
+      <button class="btn sm" id="btn-gocodiscuss">✎ 人物共创</button>
     </div>
   </div>
   <div class="cols">
@@ -472,6 +475,7 @@ function drawBook(name, data){
   document.getElementById("btn-gocanon").onclick =
     ()=>{ location.hash = `#/book/${encodeURIComponent(name)}/canon`; };
   document.getElementById("btn-gonewchar").onclick =
+  byId("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
   document.getElementById("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
     ()=>{ location.hash = `#/book/${encodeURIComponent(name)}/char/new`; };
   document.getElementById("btn-gonewdisc").onclick = async ()=>{
@@ -1247,6 +1251,8 @@ async function viewCanon(name){
 
 /* 启动 */
 renderRoute();
+let _cdTurns = [];
+let _cdBook = "";
 async function viewCodiscuss(name) {
   _cdBook = name;
   const m = main();
