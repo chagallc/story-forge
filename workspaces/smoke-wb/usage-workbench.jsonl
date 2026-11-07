@@ -4,3 +4,4 @@
 {"tag": "delta-ch01", "model": "glm-5.3-flash", "usage": {"completion_tokens": 476, "completion_tokens_details": {"reasoning_tokens": 4}, "prompt_tokens": 1586, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 2062}}
 {"tag": "fact-ch01", "model": "qwen3.8-flash", "usage": {"prompt_tokens": 1569, "total_tokens": 2695, "completion_tokens": 1126, "prompt_tokens_details": {"cached_tokens": 0, "text_tokens": 1569}}}
 {"tag": "fact-ch02", "model": "qwen3.8-flash", "usage": {"prompt_tokens": 558, "total_tokens": 1072, "completion_tokens": 514, "prompt_tokens_details": {"cached_tokens": 0, "text_tokens": 558}}}
+{"tag": "codiscuss-start", "model": "glm-5.3-flash", "usage": {"completion_tokens": 975, "completion_tokens_details": {"reasoning_tokens": 13}, "prompt_tokens": 487, "prompt_tokens_details": {"cached_tokens": 0}, "total_tokens": 1462}}

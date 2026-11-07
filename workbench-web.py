@@ -26,7 +26,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 
-import workbench as wb  # noqa: E402
+import workbench as wb
+from src.harness import codiscuss as _cd  # noqa: E402  # noqa: E402
 from src.harness.state import StoryState  # noqa: E402
 
 HTML_PATH = os.path.join(ROOT, "webgui.html")
@@ -329,6 +330,14 @@ class Handler(BaseHTTPRequestHandler):
                 if method == "GET":
                     return self._send_json(200, book_view(book))
                 raise ApiError(405, "method not allowed")
+            if rest == ["codiscuss"]:
+                if method == "GET":
+                    return self._send_json(200, _cd.load_codiscuss(book) or {"turns": []})
+                raise ApiError(405, "method not allowed")
+            if rest[:1] == ["codiscuss"] and len(rest) == 2:
+                if method != "POST":
+                    raise ApiError(405, "method not allowed")
+                return self._route_codiscuss(rest[1], book)
             if rest == ["canon"] and method == "GET":
                 return self._send_json(200, canon_view(book))
             if rest[:1] == ["char"]:
@@ -390,6 +399,68 @@ class Handler(BaseHTTPRequestHandler):
         if action == "exempt":
             return self.api_exempt(book, ch)
         raise ApiError(404, f"未知动作：{action}")
+
+
+
+    def _route_codiscuss(self, action, book):
+        body = self._read_json_body()
+        bible = wb.load_bible(book)
+        session = _cd.load_codiscuss(book)
+        turns = (session or {}).get("turns", [])
+        client = wb.client_for(bible, "writer", book)
+
+        if action == "start":
+            brief = str(body.get("brief") or "")
+            msgs = _cd.codiscuss_messages(bible, [], brief_extra=brief)
+            reply = client.chat(msgs, tag="codiscuss-start")
+            turns = [{"role": "user", "content": brief},
+                     {"role": "ai", "content": reply}]
+            _cd.save_codiscuss_session(book, {"brief": brief, "turns": turns})
+            return self._send_json(200, {"ok": True, "turns": turns})
+
+        if action == "message":
+            message = str(body.get("message") or "").strip()
+            if not message:
+                raise ApiError(400, "空消息")
+            turns = turns + [{"role": "user", "content": message}]
+            msgs = _cd.codiscuss_messages(bible, turns)
+            reply = client.chat(msgs, tag="codiscuss-msg")
+            turns = turns + [{"role": "ai", "content": reply}]
+            _cd.save_codiscuss_session(book, {"brief": session.get("brief", "") if session else "",
+                                              "turns": turns})
+            return self._send_json(200, {"ok": True, "turns": turns})
+
+        if action == "extract":
+            # 落卡提炼：从讨论提炼人物 JSON（返回预览，前端确认后调 save）
+            chars = _cd.extract_characters_from_discussion(
+                turns, client, book, bible.get("book", {}).get("language", "zh"))
+            return self._send_json(200, {"ok": True, "characters": chars})
+
+        if action == "save":
+            chars = body.get("characters") or []
+            if not chars:
+                raise ApiError(400, "characters 为空")
+            existing = bible.get("characters", [])
+            have_names = {c.get("name") for c in existing}
+            seq = len(existing)
+            for c in chars:
+                if not isinstance(c, dict) or not c.get("name"):
+                    continue
+                if c.get("name") in have_names:
+                    continue  # 重名跳过（避免覆盖已有人物）
+                seq += 1
+                c.setdefault("id", f"char_{seq:02d}")
+                c.setdefault("card", "")
+                c.setdefault("anchors", [])
+                c.setdefault("knowledge_rules", {"learn": [], "never_learn": []})
+                c.setdefault("lorebook", [])
+                existing.append(c)
+                have_names.add(c.get("name"))
+            bible["characters"] = existing
+            wb.save_bible(book, bible)
+            return self._send_json(200, {"ok": True, "added": len(chars)})
+
+        raise ApiError(404, f"unknown codiscuss action: {action}")
 
     # ---- 静态页 ----
 
