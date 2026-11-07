@@ -282,7 +282,7 @@ function matchRoute(){
   if ((m = h.match(/^#\/book\/([^/]+)\/char\/([^/]+)$/))) return {view:"char", name:m[1], cid:m[2]};
   if ((m = h.match(/^#\/book\/([^/]+)\/chapter\/(\d+)$/))) return {view:"chap", name:m[1], ch:+m[2]};
   if ((m = h.match(/^#\/book\/([^/]+)\/canon$/))) return {view:"canon", name:m[1]};
-  if ((m = h.match(/^#\/book\/([^/]+)\/codiscuss$/))) return {view:"codiscuss", name:m[1]};
+  if ((m = h.match(/^#\/book\/([^/]+)\/world$/))) return {view:"world", name:m[1]};
   if ((m = h.match(/^#\/book\/([^/]+)\/codiscuss$/))) return {view:"codiscuss", name:m[1]};
   return {view:"404"};
 }
@@ -295,7 +295,7 @@ async function renderRoute(){
     else if (r.view==="char") await viewChar(r.name, r.cid);
     else if (r.view==="chap") await viewChapter(r.name, r.ch);
     else if (r.view==="canon") await viewCanon(r.name);
-    else if (r.view==="codiscuss") await viewCodiscuss(r.name);
+    else if (r.view==="world") await viewWorld(r.name);
     else if (r.view==="codiscuss") await viewCodiscuss(r.name);
     else main().innerHTML = '<div class="pane">页面不存在，<a href="#/">回书架</a>。</div>';
   }catch(e){
@@ -420,6 +420,7 @@ function drawBook(name, data){
       <span class="badge lang">${esc(data.book.language||"zh")}</span></h2>
     <div class="row">
       <button class="btn sm" id="btn-gocanon">📖 正史阅读</button>
+      <button class="btn sm" id="btn-goworld">🌍 世界设定</button>
       <button class="btn sm" id="btn-gonewdisc">＋ 讨论新章</button>
       <button class="btn sm primary" id="btn-gonewchar">＋ 新人物</button>
       <button class="btn sm" id="btn-gocodiscuss">✎ 人物共创</button>
@@ -473,10 +474,11 @@ function drawBook(name, data){
 
   document.getElementById("btn-gocanon").onclick =
     ()=>{ location.hash = `#/book/${encodeURIComponent(name)}/canon`; };
+  document.getElementById("btn-goworld").onclick =
+    ()=>{ location.hash = `#/book/${encodeURIComponent(name)}/world`; };
   document.getElementById("btn-gonewchar").onclick =
-  document.getElementById("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
-  document.getElementById("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
     ()=>{ location.hash = `#/book/${encodeURIComponent(name)}/char/new`; };
+  document.getElementById("btn-gocodiscuss").onclick = () => { location.hash = "#/book/" + name + "/codiscuss"; };
   document.getElementById("btn-gonewdisc").onclick = async ()=>{
     const next = (chapters.filter(c=>c.status==="empty").map(c=>c.chapter)[0]) || null;
     if (!next){ toast("规划章数已用完，可先建新书或重开已有章","err"); return; }
@@ -1246,6 +1248,267 @@ async function viewCanon(name){
       </div>
       <div class="prose-view">${esc(c.text)}</div>`).join("")}
   </div>`;
+}
+
+/* ================= 屏 6 · 世界设定（M3B-G 时代素材） ================= */
+const ERA_CATEGORIES = ["历史事件","地理环境","流行文化","生活细节","物品道具","人物背景素材","规则与禁忌","其他"];
+let _worldSel = null;   // 当前选中的素材 id（null = 新建表单）
+let _worldCat = "";     // 左栏分类过滤
+let _worldBook = "";
+
+async function viewWorld(name){
+  _worldBook = name;
+  setCrumb([{t:"书架",hash:"#/"},{t:name,hash:`#/book/${encodeURIComponent(name)}`},{t:"世界设定"}]);
+  const w = await api("GET", `/api/book/${encodeURIComponent(name)}/world`);
+  w.era_materials = w.era_materials || [];
+  w.locations = w.locations || [];
+  drawWorld(name, w);
+}
+
+function drawWorld(name, w){
+  main().innerHTML = `
+  <div class="row" style="justify-content:space-between;margin-bottom:10px">
+    <h2 style="margin:0">🌍 世界设定
+      <span class="muted small mono">${esc(name)}</span>
+      <span class="badge">素材 ${(w.era_materials||[]).length} · 地点 ${(w.locations||[]).length}</span></h2>
+    <div class="row">
+      <button class="btn primary" id="w-propose">✎ AI 提议素材</button>
+      <a href="#/book/${encodeURIComponent(name)}">← 返回工作台</a>
+    </div>
+  </div>
+  <div class="pane" style="margin-bottom:14px">
+    <div class="row">
+      <div style="width:220px"><label><b>时代（time_period）</b></label>
+        <input type="text" id="w-time" value="${esc(w.time_period||"")}" placeholder="1998年夏，武汉"></div>
+      <div style="flex:1"><label>世界观设定（setting）</label>
+        <input type="text" id="w-setting" value="${esc(w.setting||"")}"></div>
+      <div style="align-self:flex-end"><button class="btn" id="w-meta-save">保存设定</button></div>
+    </div>
+    <div class="err" id="w-err" style="display:none"></div>
+  </div>
+  <div class="cols" style="grid-template-columns:340px minmax(0,1fr)">
+    <div class="col" style="max-height:calc(100vh - 240px)">
+      <h4>分类 / 素材</h4>
+      <div class="taglist" id="w-cats"></div>
+      <div class="stack" id="w-list" style="margin-top:10px"></div>
+      <hr class="hr">
+      <h4>地点（locations）</h4>
+      <div class="stack" id="w-locs"></div>
+    </div>
+    <div class="col" style="max-height:none" id="w-editor"></div>
+  </div>`;
+
+  document.getElementById("w-meta-save").onclick = async ev=>{
+    const stop = btnLoading(ev.target, "保存中…");
+    try{
+      await api("POST", `/api/book/${encodeURIComponent(name)}/world/meta`, {
+        time_period: document.getElementById("w-time").value.trim(),
+        setting: document.getElementById("w-setting").value.trim()});
+      stop(); toast("世界设定已保存","ok"); renderRoute();
+    }catch(e){ stop(); toast(e.message,"err"); }
+  };
+  document.getElementById("w-propose").onclick = ()=>worldProposeModal(name);
+
+  drawWorldList(name, w);
+  drawWorldLocations(name, w);
+  drawWorldEditor(name, w, _worldSel);
+}
+
+function drawWorldList(name, w){
+  const mats = w.era_materials || [];
+  const cats = [...new Set(["全部", ...mats.map(m=>m.category||"其他")])];
+  const catBox = document.getElementById("w-cats");
+  catBox.innerHTML = cats.map(c=>{
+    const n = c==="全部" ? mats.length : mats.filter(m=>(m.category||"其他")===c).length;
+    return `<span class="tag" data-cat="${esc(c)}" style="cursor:pointer;
+      ${c===( _worldCat||"全部")?"background:var(--accent-soft);border-color:var(--accent);color:var(--accent)":""}">
+      ${esc(c)} ${n}</span>`;}).join("");
+  catBox.querySelectorAll("[data-cat]").forEach(t=>{
+    t.onclick = ()=>{ _worldCat = t.dataset.cat==="全部" ? "" : t.dataset.cat; drawWorldList(name, w); };
+  });
+  const list = document.getElementById("w-list");
+  const shown = mats.filter(m=>!_worldCat || (m.category||"其他")===_worldCat);
+  list.innerHTML = shown.length ? "" : '<div class="muted small">还没有素材。用「＋ 添加素材」手记，或「✎ AI 提议素材」让 AI 先出一批候选。</div>';
+  shown.forEach(m=>{
+    const it = document.createElement("div");
+    it.className = "item" + (m.id===_worldSel ? " sel":"");
+    it.innerHTML = `<span class="mark">·</span>
+      <span><span class="tag mono">${esc(m.id||"")}</span> <b>[${esc(m.category||"其他")}]</b>
+        ${esc((m.keywords||[]).join("、"))}</span>
+      <span class="meta">${esc(strClip(m.content, 30))}</span>`;
+    it.onclick = ()=>{ _worldSel = m.id; drawWorldEditor(name, w, m.id); drawWorldList(name, w); };
+    list.appendChild(it);
+  });
+}
+
+function strClip(s, n){ s = String(s||""); return s.length > n ? s.slice(0, n) + "…" : s; }
+
+function drawWorldLocations(name, w){
+  const box = document.getElementById("w-locs");
+  const locs = w.locations || [];
+  box.innerHTML = "";
+  if (!locs.length){ box.innerHTML = '<div class="muted small">暂无地点条目。</div>'; return; }
+  locs.forEach(x=>{
+    const it = document.createElement("div");
+    it.className = "item";
+    it.innerHTML = `<span class="name">${esc(x.name||"")}</span>
+      <span class="meta">${esc(strClip(x.description||"", 24))}</span>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn sm ghost" data-del="${esc(x.id)}">✕</button>`;
+    it.querySelector("[data-del]").onclick = async ev=>{
+      ev.stopPropagation();
+      if (!(await confirmDialog({title:"删除地点？", html:`<p>${esc(x.name)}</p>`, okLabel:"删除", okClass:"danger"}))) return;
+      try{ await api("POST", `/api/book/${encodeURIComponent(name)}/world/location/remove`, {id: x.id});
+        toast("地点已删除","ok"); renderRoute(); }
+      catch(e){ toast(e.message,"err"); }
+    };
+    box.appendChild(it);
+  });
+}
+
+function drawWorldEditor(name, w, matId){
+  const el = document.getElementById("w-editor");
+  const mats = w.era_materials || [];
+  const m = matId ? mats.find(x=>x.id===matId) : null;
+  const rng = m && m.chapter_range ? m.chapter_range : [];
+  el.innerHTML = `
+    <h4>${m ? `编辑素材 ${esc(m.id||"")}` : "＋ 添加素材"}</h4>
+    <div class="row">
+      <div style="width:200px"><label>分类</label>
+        <select id="we-cat">${ERA_CATEGORIES.map(c=>
+          `<option ${c===(m?(m.category||"其他"):"其他")?"selected":""}>${c}</option>`).join("")}</select></div>
+      <div style="flex:1"><label>关键词（逗号分隔，供讨论/落笔相关性匹配）</label>
+        <input type="text" id="we-kw" value="${esc((m?(m.keywords||[]):[]).join("，"))}"></div>
+    </div>
+    <label>素材内容（可直接写进正文的具体细节）</label>
+    <textarea id="we-content" class="prose">${esc(m?(m.content||""):"")}</textarea>
+    <div class="row" style="margin-top:8px">
+      <div style="width:150px"><label>适用章节范围（可空）</label>
+        <input type="text" id="we-range" value="${esc(rng.length?rng.filter(x=>x!=null).join("-"):"")}" placeholder="如 3-6"></div>
+      <div style="flex:1"><label>来源</label>
+        <input type="text" id="we-source" value="${esc(m?(m.source||""):"手动添加")}" ${m?"readonly":""}></div>
+    </div>
+    <div class="err" id="we-err" style="display:none"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="we-save">${m?"保存修改":"添加素材"}</button>
+      ${m?`<button class="btn danger" id="we-del">删除</button>`:""}
+      ${m?`<button class="btn ghost" id="we-new">改新建</button>`:""}
+    </div>`;
+
+  const parseRange = s=>{
+    s = (s||"").trim();
+    if (!s) return null;
+    const mt = s.match(/^(\d+)\s*[-~]\s*(\d+)$/);
+    return mt ? [ +mt[1], +mt[2] ] : (/^\d+$/.test(s) ? [ +s, null ] : null);
+  };
+  el.querySelector("#we-save").onclick = async ev=>{
+    const errBox = el.querySelector("#we-err"); errBox.style.display="none";
+    const payload = {
+      id: m ? m.id : undefined,
+      category: el.querySelector("#we-cat").value,
+      keywords: el.querySelector("#we-kw").value.split(/[,，]/).map(x=>x.trim()).filter(Boolean),
+      content: el.querySelector("#we-content").value.trim(),
+      chapter_range: parseRange(el.querySelector("#we-range").value),
+    };
+    const stop = btnLoading(ev.target, "保存中…");
+    try{
+      const r = await api("POST", `/api/book/${encodeURIComponent(name)}/world/material`,
+                          {entry: payload});
+      stop(); toast(`素材已保存：${r.material.id}`, "ok");
+      _worldSel = r.material.id; renderRoute();
+    }catch(e){ stop(); showErr(errBox, e); }
+  };
+  const del = el.querySelector("#we-del");
+  if (del) del.onclick = async ()=>{
+    if (!(await confirmDialog({title:"删除素材？",
+        html:`<p>${esc(m.id)} ${esc(strClip(m.content, 50))}</p>`, okLabel:"删除", okClass:"danger"}))) return;
+    try{ await api("POST", `/api/book/${encodeURIComponent(name)}/world/material/remove`, {id: m.id});
+      toast("素材已删除","ok"); _worldSel = null; renderRoute(); }
+    catch(e){ toast(e.message,"err"); }
+  };
+  const nw = el.querySelector("#we-new");
+  if (nw) nw.onclick = ()=>{ _worldSel = null; drawWorldEditor(name, w, null); drawWorldList(name, w); };
+}
+
+async function worldProposeModal(name){
+  const w = await api("GET", `/api/book/${encodeURIComponent(name)}/world`);
+  const defaultTopic = (w.time_period ? `${w.time_period} 的日常生活` : "");
+  const ov = document.createElement("div"); ov.className = "overlay";
+  ov.innerHTML = `<div class="modal wide"><h3>✎ AI 提议素材（reader 通道，异构）</h3>
+    <div class="modal-body">
+      <div class="row">
+        <div style="flex:1"><label>收集主题（topic）</label>
+          <input type="text" id="wp-topic" value="${esc(defaultTopic)}"
+            placeholder="1998年武汉夏天 中学生的日常生活"></div>
+        <div style="width:110px"><label>条数</label>
+          <input type="number" id="wp-count" value="10" min="1" max="30"></div>
+        <div style="align-self:flex-end"><button class="btn primary" id="wp-go">生成提议</button></div>
+      </div>
+      <div class="err" id="wp-err" style="display:none"></div>
+      <div id="wp-candidates" style="margin-top:10px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="wp-close">关闭</button>
+      <button class="btn primary" id="wp-confirm" style="display:none">确认写入选中项</button>
+    </div></div>`;
+  ov.onclick = ev=>{ if (ev.target===ov) ov.remove(); };
+  document.body.appendChild(ov);
+  ov.querySelector("#wp-close").onclick = ()=>ov.remove();
+
+  ov.querySelector("#wp-go").onclick = async ev=>{
+    const errBox = ov.querySelector("#wp-err"); errBox.style.display="none";
+    const box = ov.querySelector("#wp-candidates");
+    box.innerHTML = '<div class="muted"><span class="spin-inline"></span>AI 阅读设定并收集素材中…（非流式，可能需要一两分钟）</div>';
+    const stop = btnLoading(ev.target, "提议中…");
+    try{
+      const r = await api("POST", `/api/book/${encodeURIComponent(name)}/world/propose`, {
+        topic: ov.querySelector("#wp-topic").value.trim(),
+        count: +ov.querySelector("#wp-count").value || 10});
+      stop();
+      renderCandidates(r.candidates || []);
+    }catch(e){
+      stop();
+      box.innerHTML = "";
+      showErr(errBox, e);   // LLM 失败不阻塞：可改主题重试或手动添加
+    }
+
+    function renderCandidates(cands){
+      box.innerHTML = (cands.length ? "" : '<div class="muted">AI 没有给出候选（可换个更具体的主题重试）。</div>')
+        + `<p class="small muted">逐条确认/修改/拒绝——勾选的条目将以「AI提议已确认」批量写入 era_materials。</p>`
+        + cands.map((c,i)=>`
+        <div class="branch" style="margin-bottom:8px">
+          <div class="row">
+            <label style="margin:0;flex:none"><input type="checkbox" class="wp-pick" data-i="${i}" checked> 采纳</label>
+            <select class="wp-cat" style="width:160px">${ERA_CATEGORIES.map(c0=>
+              `<option ${c0===(c.category||"其他")?"selected":""}>${c0}</option>`).join("")}</select>
+            <input type="text" class="wp-kw" style="flex:1" value="${esc((c.keywords||[]).join("，"))}" placeholder="关键词，逗号分隔">
+          </div>
+          <textarea class="wp-content" style="margin-top:6px;min-height:48px">${esc(c.content||"")}</textarea>
+        </div>`).join("");
+      const btn = ov.querySelector("#wp-confirm");
+      btn.style.display = cands.length ? "" : "none";
+      btn.onclick = async ()=>{
+        const picks = [...box.querySelectorAll(".wp-pick")].filter(x=>x.checked);
+        if (!picks.length){ toast("没有勾选任何条目","err"); return; }
+        const materials = picks.map(x=>{
+          const i = +x.dataset.i;
+          const row = x.closest(".branch");
+          return {
+            category: row.querySelector(".wp-cat").value,
+            keywords: row.querySelector(".wp-kw").value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
+            content: row.querySelector(".wp-content").value.trim(),
+          };
+        }).filter(x=>x.content);
+        const stop2 = btnLoading(btn, "写入中…");
+        try{
+          const r2 = await api("POST", `/api/book/${encodeURIComponent(name)}/world/confirm`, {materials});
+          stop2();
+          toast(`已写入 ${r2.saved.length} 条素材（AI提议已确认）`, "ok");
+          ov.remove(); _worldSel = null; renderRoute();
+        }catch(e){ stop2(); toast(e.message,"err"); }
+      };
+    }
+  };
 }
 
 /* 启动 */

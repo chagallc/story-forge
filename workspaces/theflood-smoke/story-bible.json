@@ -1,0 +1,83 @@
+{
+  "schema_version": 5,
+  "revision": 4,
+  "book": {
+    "title": "大水将至",
+    "genre": "怀旧都市悬疑加克苏鲁神话",
+    "language": "zh",
+    "platform": "番茄/webnovel",
+    "logline": "1998年武汉盛夏，初中生李小凡的调查团发现民间组织囤积物资准备古怪祭祀，在抗洪防汛的大背景下追查，结尾发现仪式是为送戴厚眼镜的小男孩胡子回他的位面。",
+    "context_projection": false
+  },
+  "opening_contract": {
+    "want_visible_by": 1500,
+    "disturbance_in_ch1": true,
+    "dialogue_ratio_min": 0.4,
+    "no_info_dump": true,
+    "notes": "见 docs/decisions/0005"
+  },
+  "characters": [],
+  "world": {
+    "setting": "1998年武汉， ordinary 街区生活，偶有超自然暗示",
+    "glossary": [],
+    "time_period": "1998年夏，武汉",
+    "era_materials": [
+      {
+        "category": "生活细节",
+        "keywords": [
+          "凉席",
+          "竹床",
+          "睡觉"
+        ],
+        "content": "武汉的夏夜热得像蒸笼，李小凡家客厅里那张磨得发亮的竹床铺满了汗渍，他翻个身，凉席边缘在胳膊上压出一道红印子。",
+        "chapter_range": null,
+        "source": "AI提议已确认",
+        "id": "mat_001"
+      },
+      {
+        "category": "物品道具",
+        "keywords": [
+          "冰袋",
+          "汽水",
+          "小卖部"
+        ],
+        "content": "巷口小卖部的玻璃柜台下塞着几个鼓胀的白色塑料冰袋，里面冻着两块钱一瓶的“二厂”汽水，瓶身外壁渗出的水珠滴在柜台上积成一小滩。",
+        "chapter_range": null,
+        "source": "AI提议已确认",
+        "id": "mat_002"
+      }
+    ],
+    "locations": [],
+    "rules": []
+  },
+  "compass": {
+    "ending_direction": "",
+    "reader_promise": "",
+    "active_long_line_ids": []
+  },
+  "arc": {
+    "template": "悬疑假设弧",
+    "anchors": [],
+    "total_chapters": 12,
+    "locked_through": 0,
+    "planned_through": 8,
+    "compass": {
+      "ending_direction": "",
+      "reader_promise": "",
+      "active_long_line_ids": []
+    },
+    "volumes": [
+      {
+        "id": "V1",
+        "status": "active",
+        "chapters": [
+          1,
+          12
+        ]
+      }
+    ]
+  },
+  "ledger": [],
+  "shadows": [],
+  "chapters": {}
+}

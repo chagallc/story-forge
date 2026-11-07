@@ -8,11 +8,16 @@
           "F1_HOOK"
         ],
         "unknown_to_them": [],
-        "false_beliefs": []
+        "false_beliefs": [
+          "贺三刀没有看清柜台右侧油布包里露出的怀表"
+        ]
       },
       "location": "典当行阁楼",
       "injuries": [],
-      "inventory": [],
+      "inventory": [
+        "师父的怀表（含归绥刻字）",
+        "从死当名册抽出的怀表那半页（对折藏于夹袄）"
+      ],
       "relationships": {}
     },
     "char_02": {
@@ -21,7 +26,7 @@
         "unknown_to_them": [],
         "false_beliefs": []
       },
-      "location": "陆小满的当铺内屋",
+      "location": "",
       "injuries": [],
       "inventory": [],
       "relationships": {}
@@ -38,17 +43,34 @@
     }
   },
   "hooks": {
-    "F1_REVEAL": {
+    "F1": {
       "history": [
         {
           "chapter": 1,
+          "action": "plant",
+          "evidence": "师父失踪十九天。铺子里的人都说掌柜的出远门收货去了。"
+        },
+        {
+          "chapter": 1,
           "action": "develop",
-          "evidence": "表壳背面刻着三个字，刀工很深，笔画边缘的包浆被手汗磨亮了，是常年被拇指摩挲的位置。师父的表。"
+          "evidence": "目光越过名册，落在柜台右侧——油布包没来得及收，怀表的黄铜壳露出一个角"
         }
       ],
       "status": "develop",
       "chapter": 1,
-      "evidence": "表壳背面刻着三个字，刀工很深，笔画边缘的包浆被手汗磨亮了，是常年被拇指摩挲的位置。师父的表。"
+      "evidence": "目光越过名册，落在柜台右侧——油布包没来得及收，怀表的黄铜壳露出一个角"
+    },
+    "F1_REVEAL": {
+      "history": [
+        {
+          "chapter": 1,
+          "action": "payoff",
+          "evidence": "这是师父的表。链子第三节那个焊疤，他八岁就见过"
+        }
+      ],
+      "status": "payoff",
+      "chapter": 1,
+      "evidence": "这是师父的表。链子第三节那个焊疤，他八岁就见过"
     }
   },
   "timeline": [
@@ -56,10 +78,15 @@
       "chapter": 1,
       "draft": "v001",
       "ops": [
+        "advance_hook",
+        "advance_hook",
+        "advance_hook",
+        "set_inventory",
+        "set_inventory",
         "set_location",
-        "advance_hook"
+        "set_false_belief"
       ],
-      "committed_at": "2026-11-05T14:13:17"
+      "committed_at": "2026-11-07T19:52:08"
     },
     {
       "chapter": 2,
@@ -68,7 +95,7 @@
         "learn",
         "set_location"
       ],
-      "committed_at": "2026-11-05T14:13:34"
+      "committed_at": "2026-11-07T19:52:18"
     }
   ],
   "exemptions": [
@@ -82,7 +109,7 @@
       "source_text_hash": "bbd367c84faaa968fb44a2b0b2101a40acf6b9c1",
       "reason": "结构刻意短句，保留",
       "created_by": "author",
-      "created_at": "2026-11-05T14:13:41"
+      "created_at": "2026-11-07T19:52:25"
     }
   ]
 }

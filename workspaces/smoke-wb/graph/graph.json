@@ -1,13 +1,13 @@
 {
   "meta": {
-    "node_count": 13,
-    "edge_count": 21,
+    "node_count": 16,
+    "edge_count": 30,
     "as_of": null,
     "chapters": [
       1,
       2
     ],
-    "generated_at": "2026-11-05T14:18:45",
+    "generated_at": "2026-11-07T19:53:26",
     "book": "smoke-wb",
     "title": "雾锁九门",
     "source": "graph/facts/* 重放（派生投影，非第二正史）"
@@ -22,10 +22,10 @@
     {
       "id": "ev:ev_001_01",
       "type": "Event",
-      "label": "神秘人当掉一块怀表",
+      "label": "蓑衣人深夜典当一块怀表，陆小满以八块现洋成交并登记死当名册。",
       "chapter": 1,
-      "evidence": "酉时刚过，柜台外进来一个人，帽檐压得很低，把一块怀表放在柜面上。",
-      "description": "神秘人当掉一块怀表"
+      "evidence": "「八块就八块。写票。」\n\n太痛快了。痛快得不像当东西，像扔东西。陆小满铺开死当名册，蘸墨。「当户姓名。」",
+      "description": "蓑衣人深夜典当一块怀表，陆小满以八块现洋成交并登记死当名册。"
     },
     {
       "id": "char:char_01",
@@ -34,25 +34,55 @@
       "character_id": "char_01"
     },
     {
-      "id": "loc:柜台",
+      "id": "loc:九门典当行柜台",
       "type": "Location",
-      "label": "柜台"
+      "label": "九门典当行柜台"
     },
     {
       "id": "ev:ev_001_02",
       "type": "Event",
-      "label": "陆小满认出怀表是师父的遗物",
+      "label": "陆小满发现怀表是失踪十九天的师父之物，表盖刻有地名“归绥”。",
       "chapter": 1,
-      "evidence": "表壳背面刻着三个字，刀工很深，笔画边缘的包浆被手汗磨亮了，是常年被拇指摩挲的位置。师父的表。那个铜壳上缺了一道口子、师父说摔的、他摸了十年缺口的表。",
-      "description": "陆小满认出怀表是师父的遗物"
+      "evidence": "这是师父的表。链子第三节那个焊疤，他八岁就见过，师父说那是被人抢过一次留下的。这表此刻在他手心里，走得一丝不乱，像师父还揣着它。\n\n师父失踪十九天。铺子里的人都说掌柜的出远门收货去了。十九天，没有信。",
+      "description": "陆小满发现怀表是失踪十九天的师父之物，表盖刻有地名“归绥”。"
     },
     {
       "id": "ev:ev_001_03",
       "type": "Event",
-      "label": "陆小满篡改流当登记日期以拖延上报",
+      "label": "贺三刀夜访典当行，提出明年开春将九门并入总会统一管理的计划。",
       "chapter": 1,
-      "evidence": "他把日期往后挪了两天。墨迹未干，他用指腹蹭了一下边角，蹭出一点毛边，不细看看不出来。他把登记簿合上，压在算盘底下。",
-      "description": "陆小满篡改流当登记日期以拖延上报"
+      "evidence": "「行里议了议，九门这块牌子，明年开春并入总会统一管。账目、死当、夜班，都走总会的手续。你是学徒，做不了主，我不为难你。你替你师父守着，我就跟你师父的道理。」",
+      "description": "贺三刀夜访典当行，提出明年开春将九门并入总会统一管理的计划。"
+    },
+    {
+      "id": "char:char_02",
+      "type": "Character",
+      "label": "贺三刀",
+      "character_id": "char_02"
+    },
+    {
+      "id": "ev:ev_001_04",
+      "type": "Event",
+      "label": "陆小满在贺三刀查阅名册时，故意遮挡怀表的典当记录，仅展示前日的锡烛台记录。",
+      "chapter": 1,
+      "evidence": "陆小满把名册推过去。翻开的那页上，只有前天的一对锡烛台。怀表那一行，墨迹还没干，他把那一页往前折了半页，压在装订线里。",
+      "description": "陆小满在贺三刀查阅名册时，故意遮挡怀表的典当记录，仅展示前日的锡烛台记录。"
+    },
+    {
+      "id": "ev:ev_001_05",
+      "type": "Event",
+      "label": "贺三刀瞥见柜台上的怀表一角但未点破，随后离开。",
+      "chapter": 1,
+      "evidence": "贺三刀看得很慢。烛台，当户，价钱，一行行用指头点过去。点完，他抬眼，目光越过名册，落在柜台右侧——油布包没来得及收，怀表的黄铜壳露出一个角，在灯下泛着光。\n\n贺三刀看了半秒。\n\n也就半秒。然后他的笑一点没变，端茶。",
+      "description": "贺三刀瞥见柜台上的怀表一角但未点破，随后离开。"
+    },
+    {
+      "id": "ev:ev_001_06",
+      "type": "Event",
+      "label": "陆小满抽出记载怀表的页面藏入夹袄，并在吹灯前发现桌上有贺三刀之前留下的湿印。",
+      "chapter": 1,
+      "evidence": "他把那一页从装订线里抽出来，对折，塞进贴身的夹袄。然后拿起表，翻到背面，指腹再一次压上那三个字。\n\n归绥。\n\n他吹灯之前，把柜台上贺三刀留下的茶盏倒扣过来。倒扣的瞬间他看见盏底压着一圈湿印，湿印下面，桌上还有半个更深些的印子。\n\n有人来过。在贺三刀之前。那人坐的位置，正对着他今晚翻名册的柜台一角。",
+      "description": "陆小满抽出记载怀表的页面藏入夹袄，并在吹灯前发现桌上有贺三刀之前留下的湿印。"
     },
     {
       "id": "ch:2",
@@ -63,45 +93,36 @@
     {
       "id": "ev:ev_002_01",
       "type": "Event",
-      "label": "陆小满在雨夜向贺三刀展示一枚无当票的死当怀表",
+      "label": "陆小满在雨夜当铺向贺三刀询问怀表来路，贺三刀以死当不问来路为由拒绝透露并催促喝茶",
       "chapter": 2,
-      "evidence": "怀表在柜面上躺着。",
-      "description": "陆小满在雨夜向贺三刀展示一枚无当票的死当怀表"
+      "evidence": "「按规矩说，死当不问来路。」\n雨夜。柜上灯昏。\n贺三刀喝茶。茶是好茶。\n「这物件不干净。」\n陆小满不接话。\n怀表在柜面上躺着。\n「喝茶喝茶，急什么。」",
+      "description": "陆小满在雨夜当铺向贺三刀询问怀表来路，贺三刀以死当不问来路为由拒绝透露并催促喝茶"
     },
     {
-      "id": "char:char_02",
-      "type": "Character",
-      "label": "贺三刀",
-      "character_id": "char_02"
-    },
-    {
-      "id": "loc:柜上",
+      "id": "loc:当铺柜上",
       "type": "Location",
-      "label": "柜上"
+      "label": "当铺柜上"
     },
     {
       "id": "ev:ev_002_02",
       "type": "Event",
-      "label": "贺三刀指出物件不干净并质疑没有当票",
+      "label": "陆小满发现怀表无当票且表芯声异常，贺三刀确认其身份后决定暂存三天",
       "chapter": 2,
-      "evidence": "「这物件不干净。」",
-      "description": "贺三刀指出物件不干净并质疑没有当票"
+      "evidence": "陆小满把怀表贴在耳边，表芯的声音像有人在敲门。\n「当票呢？」\n「没有。」\n贺三刀的茶碗停在半空。\n灯花爆了一下。\n「死当也是当。」\n陆小满低着头。\n「行会的规矩，你不是不知道。」\n「我知道。」\n雨点砸在窗纸上。\n贺三刀笑。笑得很慢。\n「三天。三天后来收。」",
+      "description": "陆小满发现怀表无当票且表芯声异常，贺三刀确认其身份后决定暂存三天"
     },
     {
       "id": "ev:ev_002_03",
       "type": "Event",
-      "label": "贺三刀同意按死当规矩处理，约定三天后由陆小满来收",
+      "label": "贺三刀离开后，陆小满决定当晚调查地名线索",
       "chapter": 2,
-      "evidence": "「三天。三天后来收。」",
-      "description": "贺三刀同意按死当规矩处理，约定三天后由陆小满来收"
+      "evidence": "门关上了。\n陆小满才抬头。\n他决定今晚就把地名查清楚。",
+      "description": "贺三刀离开后，陆小满决定当晚调查地名线索"
     },
     {
-      "id": "ev:ev_002_04",
-      "type": "Event",
-      "label": "陆小满决定当晚查清地名",
-      "chapter": 2,
-      "evidence": "他决定今晚就把地名查清楚。",
-      "description": "陆小满决定当晚查清地名"
+      "id": "loc:当铺",
+      "type": "Location",
+      "label": "当铺"
     }
   ],
   "edges": [
@@ -114,7 +135,7 @@
     },
     {
       "source": "ev:ev_001_01",
-      "target": "loc:柜台",
+      "target": "loc:九门典当行柜台",
       "type": "OCCURS_AT",
       "chapter": 1
     },
@@ -127,7 +148,7 @@
     },
     {
       "source": "ev:ev_001_02",
-      "target": "loc:柜台",
+      "target": "loc:九门典当行柜台",
       "type": "OCCURS_AT",
       "chapter": 1
     },
@@ -139,8 +160,68 @@
       "role": "出场"
     },
     {
+      "source": "char:char_02",
+      "target": "ev:ev_001_03",
+      "type": "PARTICIPATES_IN",
+      "chapter": 1,
+      "role": "出场"
+    },
+    {
       "source": "ev:ev_001_03",
-      "target": "loc:柜台",
+      "target": "loc:九门典当行柜台",
+      "type": "OCCURS_AT",
+      "chapter": 1
+    },
+    {
+      "source": "char:char_01",
+      "target": "ev:ev_001_04",
+      "type": "PARTICIPATES_IN",
+      "chapter": 1,
+      "role": "出场"
+    },
+    {
+      "source": "char:char_02",
+      "target": "ev:ev_001_04",
+      "type": "PARTICIPATES_IN",
+      "chapter": 1,
+      "role": "出场"
+    },
+    {
+      "source": "ev:ev_001_04",
+      "target": "loc:九门典当行柜台",
+      "type": "OCCURS_AT",
+      "chapter": 1
+    },
+    {
+      "source": "char:char_01",
+      "target": "ev:ev_001_05",
+      "type": "PARTICIPATES_IN",
+      "chapter": 1,
+      "role": "出场"
+    },
+    {
+      "source": "char:char_02",
+      "target": "ev:ev_001_05",
+      "type": "PARTICIPATES_IN",
+      "chapter": 1,
+      "role": "出场"
+    },
+    {
+      "source": "ev:ev_001_05",
+      "target": "loc:九门典当行柜台",
+      "type": "OCCURS_AT",
+      "chapter": 1
+    },
+    {
+      "source": "char:char_01",
+      "target": "ev:ev_001_06",
+      "type": "PARTICIPATES_IN",
+      "chapter": 1,
+      "role": "出场"
+    },
+    {
+      "source": "ev:ev_001_06",
+      "target": "loc:九门典当行柜台",
       "type": "OCCURS_AT",
       "chapter": 1
     },
@@ -151,18 +232,30 @@
       "chapter": 1
     },
     {
-      "source": "ev:ev_001_02",
-      "target": "ev:ev_001_03",
+      "source": "ev:ev_001_03",
+      "target": "ev:ev_001_04",
       "type": "CAUSES",
       "chapter": 1
     },
     {
-      "source": "char:char_01",
+      "source": "ev:ev_001_04",
+      "target": "ev:ev_001_05",
+      "type": "CAUSES",
+      "chapter": 1
+    },
+    {
+      "source": "ev:ev_001_05",
+      "target": "ev:ev_001_06",
+      "type": "CAUSES",
+      "chapter": 1
+    },
+    {
+      "source": "char:char_02",
       "target": "ch:1",
       "type": "KNOWS",
       "chapter": 1,
-      "fact": "知晓榆关口为北方地名且与师父有关",
-      "evidence": "先查那三个字。刻的是个地名，念“榆关口”。师父是南边人，口音里带着水汽，一辈子没说过自己跟北方有什么瓜葛。"
+      "fact": "知晓九门典当行柜台上有怀表实物，但未见名册中对应记录",
+      "evidence": "目光越过名册，落在柜台右侧——油布包没来得及收，怀表的黄铜壳露出一个角，在灯下泛着光。"
     },
     {
       "source": "char:char_01",
@@ -180,16 +273,9 @@
     },
     {
       "source": "ev:ev_002_01",
-      "target": "loc:柜上",
+      "target": "loc:当铺柜上",
       "type": "OCCURS_AT",
       "chapter": 2
-    },
-    {
-      "source": "char:char_02",
-      "target": "ev:ev_002_02",
-      "type": "PARTICIPATES_IN",
-      "chapter": 2,
-      "role": "出场"
     },
     {
       "source": "char:char_01",
@@ -199,17 +285,17 @@
       "role": "出场"
     },
     {
-      "source": "ev:ev_002_02",
-      "target": "loc:柜上",
-      "type": "OCCURS_AT",
-      "chapter": 2
-    },
-    {
       "source": "char:char_02",
-      "target": "ev:ev_002_03",
+      "target": "ev:ev_002_02",
       "type": "PARTICIPATES_IN",
       "chapter": 2,
       "role": "出场"
+    },
+    {
+      "source": "ev:ev_002_02",
+      "target": "loc:当铺柜上",
+      "type": "OCCURS_AT",
+      "chapter": 2
     },
     {
       "source": "char:char_01",
@@ -220,20 +306,7 @@
     },
     {
       "source": "ev:ev_002_03",
-      "target": "loc:柜上",
-      "type": "OCCURS_AT",
-      "chapter": 2
-    },
-    {
-      "source": "char:char_01",
-      "target": "ev:ev_002_04",
-      "type": "PARTICIPATES_IN",
-      "chapter": 2,
-      "role": "出场"
-    },
-    {
-      "source": "ev:ev_002_04",
-      "target": "loc:柜上",
+      "target": "loc:当铺",
       "type": "OCCURS_AT",
       "chapter": 2
     },
@@ -242,7 +315,15 @@
       "target": "ch:2",
       "type": "KNOWS",
       "chapter": 2,
-      "fact": "决定今晚把地名查清楚",
+      "fact": "怀表无当票",
+      "evidence": "「当票呢？」\n「没有。」"
+    },
+    {
+      "source": "char:char_01",
+      "target": "ch:2",
+      "type": "KNOWS",
+      "chapter": 2,
+      "fact": "计划今晚查清地名",
       "evidence": "他决定今晚就把地名查清楚。"
     }
   ]

@@ -340,6 +340,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._route_codiscuss(rest[1], book)
             if rest == ["canon"] and method == "GET":
                 return self._send_json(200, canon_view(book))
+            if rest[:1] == ["world"]:
+                return self._route_world(method, book, rest[1:])
             if rest[:1] == ["char"]:
                 return self._route_char(method, book, rest[1:])
             if rest[:1] == ["chapter"] and len(rest) >= 2:
@@ -401,6 +403,104 @@ class Handler(BaseHTTPRequestHandler):
         raise ApiError(404, f"未知动作：{action}")
 
 
+
+    def _route_world(self, method, book, rest):
+        """世界设定端点（M3B-G）：
+        GET    /world                       → world 全量
+        POST   /world/meta                  → {time_period?, setting?} 更新
+        POST   /world/material              → {entry} 单条新增/更新（id 存在即更新）
+        POST   /world/material/remove       → {id} 删除素材
+        POST   /world/propose               → {topic, count} AI 提议候选（reader 通道，不落盘）
+        POST   /world/confirm               → {materials:[...]} 批量确认写入（source=AI提议已确认）
+        POST   /world/location              → {entry} 地点新增/更新；/world/location/remove {id}
+        """
+        if rest == []:
+            if method == "GET":
+                bible = wb.load_bible(book)
+                return self._send_json(200, wb._ensure_world_fields(bible.setdefault("world", {})))
+            raise ApiError(405, "method not allowed")
+        action = safe_segment(rest[0], "世界设定动作")
+        sub = safe_segment(rest[1], "子动作") if len(rest) >= 2 else None
+        if sub is not None and sub != "remove":
+            raise ApiError(404, f"未知世界设定动作：{action}/{sub}")
+        if method != "POST":
+            raise ApiError(405, "method not allowed")
+        body = self._read_json_body()
+        if action == "meta":
+            with ws_lock(book):
+                bible = wb.load_bible(book)
+                world = wb._ensure_world_fields(bible.setdefault("world", {}))
+                if "time_period" in body:
+                    world["time_period"] = str(body.get("time_period") or "").strip()
+                if "setting" in body:
+                    world["setting"] = str(body.get("setting") or "").strip()
+                wb.save_bible(book, bible)
+                return self._send_json(200, {"ok": True, "world": world})
+        if action in ("material", "location") and sub == "remove":
+            mat_id = str(body.get("id") or "").strip()
+            with ws_lock(book):
+                bible = wb.load_bible(book)
+                try:
+                    removed = (wb.remove_location_core(book, bible, mat_id) if action == "location"
+                               else wb.remove_material_core(book, bible, mat_id))
+                except wb.Refused as ex:
+                    raise refuse_to_api(ex)
+                return self._send_json(200, {"ok": True, "removed": removed.get("id")})
+        if action == "material":
+            entry = body.get("entry")
+            if not isinstance(entry, dict):
+                raise ApiError(400, "缺少 entry 对象")
+            with ws_lock(book):
+                bible = wb.load_bible(book)
+                try:
+                    e = wb.save_material_core(book, bible, entry,
+                                              source=str(body.get("source") or ""))
+                except wb.Refused as ex:
+                    raise refuse_to_api(ex)
+                return self._send_json(200, {"ok": True, "material": e})
+        if action == "propose":
+            # AI 素材提议：不落盘；LLM 失败转 502（前端可重试，不阻塞编辑）
+            with ws_lock(book):
+                bible = wb.load_bible(book)
+                try:
+                    candidates = wb.propose_materials_core(
+                        book, bible, str(body.get("topic") or ""),
+                        count=body.get("count") or 10)
+                except wb.Refused as ex:
+                    raise refuse_to_api(ex)
+                except ValueError as ex:  # LLM 输出非 JSON 数组等解析失败 → 可重试
+                    raise ApiError(502, f"AI 提议输出解析失败（可改主题后重试）：{ex}")
+            return self._send_json(200, {"ok": True, "candidates": candidates,
+                                         "topic": str(body.get("topic") or "")})
+        if action == "confirm":
+            materials = body.get("materials")
+            if not isinstance(materials, list) or not materials:
+                raise ApiError(400, "materials 必须是非空数组")
+            with ws_lock(book):
+                bible = wb.load_bible(book)
+                saved, skipped = [], []
+                for it in materials:
+                    if not isinstance(it, dict) or not str(it.get("content") or "").strip():
+                        skipped.append(it.get("id") if isinstance(it, dict) else it)
+                        continue
+                    try:
+                        e = wb.save_material_core(book, bible, it, source="AI提议已确认")
+                        saved.append(e)
+                    except wb.Refused:
+                        skipped.append(it.get("id"))
+                return self._send_json(200, {"ok": True, "saved": saved, "skipped": skipped})
+        if action == "location":
+            entry = body.get("entry")
+            if not isinstance(entry, dict):
+                raise ApiError(400, "缺少 entry 对象")
+            with ws_lock(book):
+                bible = wb.load_bible(book)
+                try:
+                    e = wb.save_location_core(book, bible, entry)
+                except wb.Refused as ex:
+                    raise refuse_to_api(ex)
+                return self._send_json(200, {"ok": True, "location": e})
+        raise ApiError(404, f"未知世界设定动作：{action}")
 
     def _route_codiscuss(self, action, book):
         body = self._read_json_body()
@@ -618,11 +718,11 @@ class Handler(BaseHTTPRequestHandler):
                 except OSError:
                     pass
             raise
-        # 写报告落盘（drafts/vNNN.report.json）：drafts 历史里可回看丢弃 op/警告
+        # 写报告落盘（drafts/vNNN.report.json）：drafts 历史里可回看丢弃 op/警告/审核/时代素材
         report = {"chapter": ch, "draft": fd["version"], "lint_report": fd["report"],
                   "dropped_ops": dx["dropped_ops"], "warnings": dx["warnings"],
-                  "kept_ops": dx["kept_ops"],
-                  "audit": audit_r}
+                  "kept_ops": dx["kept_ops"], "audit": audit_r,
+                  "era_materials_used": [m.get("id") for m in job.get("era_used") or []]}
         wb._write_json(os.path.join(wb.drafts_dir(book, ch), f"{fd['version']}.report.json"), report)
         self._send_json(200, {"ok": True, "version": fd["version"],
                               "draft_path": os.path.relpath(fd["draft_path"], wb.ws_dir(book)),

@@ -5,16 +5,40 @@
   "omissions": [
     {
       "character_id": "char_01",
+      "kind": "inventory",
+      "value": "怀表（已典当/暂存于贺三刀处）",
+      "evidence": "怀表在柜面上躺着。",
+      "suggested_op": {
+        "op": "set_inventory",
+        "evidence": "怀表在柜面上躺着。",
+        "character_id": "char_01",
+        "value": "怀表（已典当/暂存于贺三刀处）"
+      }
+    },
+    {
+      "character_id": "char_01",
       "kind": "knowledge",
-      "value": "决定今晚把地名查清楚",
+      "value": "怀表无当票",
+      "evidence": "「当票呢？」\n「没有。」",
+      "suggested_op": {
+        "op": "learn",
+        "evidence": "「当票呢？」\n「没有。」",
+        "character_id": "char_01",
+        "fact_id": "怀表无当票"
+      }
+    },
+    {
+      "character_id": "char_01",
+      "kind": "knowledge",
+      "value": "计划今晚查清地名",
       "evidence": "他决定今晚就把地名查清楚。",
       "suggested_op": {
         "op": "learn",
         "evidence": "他决定今晚就把地名查清楚。",
         "character_id": "char_01",
-        "fact_id": "决定今晚把地名查清楚"
+        "fact_id": "计划今晚查清地名"
       }
     }
   ],
-  "generated_at": "2026-11-05T14:13:41"
+  "generated_at": "2026-11-07T19:52:25"
 }

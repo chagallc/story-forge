@@ -4,16 +4,46 @@
  "base_state_revision": 0,
  "ops": [
   {
-   "op": "set_location",
-   "character_id": "char_02",
-   "value": "陆小满的当铺内屋",
-   "evidence": "贺三刀进了柜台里屋，自己找凳子坐下，拍开茶叶罐"
+   "op": "advance_hook",
+   "hook_id": "F1",
+   "action": "plant",
+   "evidence": "师父失踪十九天。铺子里的人都说掌柜的出远门收货去了。"
   },
   {
    "op": "advance_hook",
    "hook_id": "F1_REVEAL",
+   "action": "payoff",
+   "evidence": "这是师父的表。链子第三节那个焊疤，他八岁就见过"
+  },
+  {
+   "op": "advance_hook",
+   "hook_id": "F1",
    "action": "develop",
-   "evidence": "表壳背面刻着三个字，刀工很深，笔画边缘的包浆被手汗磨亮了，是常年被拇指摩挲的位置。师父的表。"
+   "evidence": "目光越过名册，落在柜台右侧——油布包没来得及收，怀表的黄铜壳露出一个角"
+  },
+  {
+   "op": "set_inventory",
+   "character_id": "char_01",
+   "value": "师父的怀表（含归绥刻字）",
+   "evidence": "把八块钱锁进钱匣，才重新拿起表"
+  },
+  {
+   "op": "set_inventory",
+   "character_id": "char_01",
+   "value": "从死当名册抽出的怀表那半页（对折藏于夹袄）",
+   "evidence": "他把那一页从装订线里抽出来，对折，塞进贴身的夹袄"
+  },
+  {
+   "op": "set_location",
+   "character_id": "char_01",
+   "value": "九门典当行",
+   "evidence": "他吹灯之前，把柜台上贺三刀留下的茶盏倒扣过来"
+  },
+  {
+   "op": "set_false_belief",
+   "character_id": "char_01",
+   "value": "贺三刀没有看清柜台右侧油布包里露出的怀表",
+   "evidence": "也就半秒。然后他的笑一点没变，端茶"
   }
  ]
 }

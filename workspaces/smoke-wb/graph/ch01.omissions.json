@@ -4,41 +4,17 @@
   "note": "待审补丁建议：正文观察到但 delta 未登记的状态变化。人工审核后可把 suggested_op 手工并入对应 drafts/vNNN.delta.json 并重跑 commit 流程；本文件绝不自动改正史。",
   "omissions": [
     {
-      "character_id": "char_01",
-      "kind": "inventory",
-      "value": "获得师父的怀表（死当品）",
-      "evidence": "陆小满拿放大镜先看机芯。瑞士芯，民国十几年的活，夹板打磨过手，齿轮没换过。",
-      "suggested_op": {
-        "op": "set_inventory",
-        "evidence": "陆小满拿放大镜先看机芯。瑞士芯，民国十几年的活，夹板打磨过手，齿轮没换过。",
-        "character_id": "char_01",
-        "value": "获得师父的怀表（死当品）"
-      }
-    },
-    {
-      "character_id": "char_01",
+      "character_id": "char_02",
       "kind": "knowledge",
-      "value": "知晓榆关口为北方地名且与师父有关",
-      "evidence": "先查那三个字。刻的是个地名，念“榆关口”。师父是南边人，口音里带着水汽，一辈子没说过自己跟北方有什么瓜葛。",
+      "value": "知晓九门典当行柜台上有怀表实物，但未见名册中对应记录",
+      "evidence": "目光越过名册，落在柜台右侧——油布包没来得及收，怀表的黄铜壳露出一个角，在灯下泛着光。",
       "suggested_op": {
         "op": "learn",
-        "evidence": "先查那三个字。刻的是个地名，念“榆关口”。师父是南边人，口音里带着水汽，一辈子没说过自己跟北方有什么瓜葛。",
-        "character_id": "char_01",
-        "fact_id": "知晓榆关口为北方地名且与师父有关"
-      }
-    },
-    {
-      "character_id": "char_01",
-      "kind": "false_belief",
-      "value": "认为货主姓周（实为假名或误导）",
-      "evidence": "那人想了想，报了个假名，姓周。陆小满写下去",
-      "suggested_op": {
-        "op": "set_false_belief",
-        "evidence": "那人想了想，报了个假名，姓周。陆小满写下去",
-        "character_id": "char_01",
-        "value": "认为货主姓周（实为假名或误导）"
+        "evidence": "目光越过名册，落在柜台右侧——油布包没来得及收，怀表的黄铜壳露出一个角，在灯下泛着光。",
+        "character_id": "char_02",
+        "fact_id": "知晓九门典当行柜台上有怀表实物，但未见名册中对应记录"
       }
     }
   ],
-  "generated_at": "2026-11-05T14:13:34"
+  "generated_at": "2026-11-07T19:52:18"
 }

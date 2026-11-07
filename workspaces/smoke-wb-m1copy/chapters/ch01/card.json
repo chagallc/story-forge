@@ -16,7 +16,7 @@
     "cost": "留下把柄"
   },
   "intended_consequence": "拿到第一条线索",
-  "recorded_consequence": "钩子 F1 plant；钩子 F1_REVEAL plant；char_01 获知 F1；char_01 获知 F1_REVEAL；钩子 F1_REVEAL develop；char_01 → char_02：行会理事与学徒（对立施压）；char_01 物品变动：六十一块钱；char_02 误信：以为陆小满会把怀表交给行会（只要并局诱之以利就能拿走表）",
+  "recorded_consequence": "char_01 行至 九门典当行；char_01 获知 F1；钩子 F1_REVEAL plant；char_01 → char_02：戒备/对立的行会理事与当铺少东；char_02 误信：他不知道陆小满已通过刻痕手抖认出表上刻字的人可能是他",
   "reader_promise": {
     "type": "信息",
     "content": "地名指向旧铺号"

@@ -28,7 +28,11 @@
   ],
   "world": {
     "setting": "s",
-    "glossary": []
+    "glossary": [],
+    "time_period": "",
+    "era_materials": [],
+    "locations": [],
+    "rules": []
   },
   "arc": {
     "template": "悬疑假设弧",
@@ -115,5 +119,5 @@
     "active_long_line_ids": []
   },
   "shadows": [],
-  "schema_version": 4
+  "schema_version": 5
 }

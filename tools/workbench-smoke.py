@@ -371,8 +371,8 @@ def main():
     r = run(["new", BOOK], input=new_input)
     check("new 退出码 0", r.returncode == 0, r.stderr[-500:])
     bible = wb.load_bible(BOOK)
-    check("bible schema v4 + 投影默认关 + volumes + 纪律窗口",
-          bible.get("schema_version") == 4
+    check("bible schema v5 + 投影默认关 + volumes + 纪律窗口",
+          bible.get("schema_version") == 5
           and (bible["book"].get("context_projection")) is False
           and bible["arc"]["planned_through"] == 8
           and bible["arc"]["volumes"][0]["id"] == "V1"
@@ -380,6 +380,10 @@ def main():
     check("compass/arc/shadows 默认齐全",
           bible.get("shadows") == [] and bible["arc"].get("locked_through") == 0
           and bible["compass"].get("active_long_line_ids") == [])
+    check("M3B：world v5 字段默认齐全（time_period/era_materials/locations/rules）",
+          bible["world"].get("time_period") == "" and bible["world"].get("era_materials") == []
+          and bible["world"].get("locations") == [] and bible["world"].get("rules") == []
+          and bible["world"].get("setting") != None)
 
     bible = wb.load_bible(BOOK)
     seed_v3_book(bible)
@@ -492,8 +496,9 @@ def main():
     r = run(["commit", BOOK, "1"], input="y\n\n")
     check("重复 commit 被拒（revision 不匹配）", r.returncode == 1 and "不匹配" in r.stdout)
 
-    # ============ 2. 离线段：FakeClient 写 ch2（投影双模式/canon 截断/版本递增） ============
+    # ============ 2. 离线段：FakeClient 写 ch2（投影双模式/canon 截断/版本递增/时代素材注入） ============
     real_client_for = wb.client_for
+    real_run_audit = wb.run_audit
     try:
         bible = wb.load_bible(BOOK)
         card2 = seed_ch2_card(bible)
@@ -502,6 +507,18 @@ def main():
             f.write("\nDRAFT-ONLY-MARKER-草稿独有内容不应进入下一章上下文。")
         bible = wb.load_bible(BOOK)
         bible["shadows"] = [{"id": "S1", "note": "SHADOW-MARKER-绝不可见"}]
+        # M3B：种子时代素材（命中 ch2 卡上下文的 / 未命中回退的 / chapter_range 不覆盖 ch2 的）
+        bible.setdefault("world", {}).setdefault("era_materials", []).extend([
+            {"id": "mat_901", "category": "物品道具", "keywords": ["怀表", "刻痕"],
+             "content": "M3B-ERA-MATCH-表壳内侧旋开处刻着一行小字，是修表匠的铺号。",
+             "source": "手动添加", "chapter_range": None},
+            {"id": "mat_902", "category": "生活细节", "keywords": ["完全不相干词"],
+             "content": "M3B-ERA-FALLBACK-不应随命中素材一起注入（有命中时只注入命中项）。",
+             "source": "", "chapter_range": None},
+            {"id": "mat_903", "category": "历史事件", "keywords": ["怀表", "地名"],
+             "content": "M3B-ERA-RANGEOUT-本章范围外素材不得注入。",
+             "source": "", "chapter_range": [5, 8]},
+        ])
         wb.save_bible(BOOK, bible)
 
         # —— 投影开 ——
@@ -517,6 +534,7 @@ def main():
                 {"op": "set_location", "character_id": "char_01", "value": "典当行阁楼",
                  "evidence": "他决定今晚就把地名查清楚。"}]}, ensure_ascii=False)])
         wb.client_for = lambda *a, **k: fake
+        wb.run_audit = lambda *a, **k: None  # FakeClient 回复按位消费，audit 会被回退兜底文本打乱序列
         wb.cmd_write(["smoke-wb", "2"])
         full = "\n".join(m["content"] for c in fake.calls if c["tag"] == "wb-ch02"
                          for m in c["messages"])
@@ -531,6 +549,10 @@ def main():
               "完整的伏笔设定" not in full and "SHADOW-MARKER" not in full
               and "默认不注入" not in full)
         check("投影开：章节卡合约+对话密度进 HOT", "作者合约" in full and "对话密度" in full)
+        check("M3B 投影开：命中素材注入 prompt 尾部（时代素材块）",
+              "时代素材" in full and "M3B-ERA-MATCH" in full)
+        check("M3B 投影开：有命中时不回退全量 + chapter_range 不覆盖的素材不注入",
+              "M3B-ERA-FALLBACK" not in full and "M3B-ERA-RANGEOUT" not in full)
         delta2 = load_json(os.path.join(wb.drafts_dir(BOOK, 2), "v001.delta.json"))
         check("delta 预清洗：name→id 改写 + 非白名单/坏 evidence op 丢弃",
               len(delta2["ops"]) == 2
@@ -567,6 +589,7 @@ def main():
                 {"op": "learn", "character_id": "char_01", "fact_id": "F1_REVEAL",
                  "evidence": "他决定今晚就把地名查清楚。"}]}, ensure_ascii=False)])
         wb.client_for = lambda *a, **k: fake
+        wb.run_audit = lambda *a, **k: None
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             wb.cmd_write(["smoke-wb", "2"])
@@ -579,10 +602,13 @@ def main():
               "DRAFT-ONLY-MARKER" not in full and tail10 in full)
         check("投影关：never_learn 冲突提前警告（不丢弃，commit 才硬拒）",
               "never_learn 冲突" in out2, out2[-300:])
+        check("M3B 投影关：时代素材块同样注入 prompt 尾部",
+              "时代素材" in full and "M3B-ERA-MATCH" in full)
         check("draft 版本按章内递增 v002",
               os.path.exists(os.path.join(wb.drafts_dir(BOOK, 2), "v002.md")))
     finally:
         wb.client_for = real_client_for
+        wb.run_audit = real_run_audit
 
     # —— 豁免生命周期（P6，离线） ——
     r = run(["exempt", BOOK, "2", "分节碎", "结构刻意短句，保留"])
@@ -628,14 +654,16 @@ def main():
     check("M1 副本 status 不报错", r.returncode == 0, (r.stderr or "")[-400:])
     mig = load_json(wb.bible_path(M1COPY))
     mcard_file = load_json(wb.card_file(M1COPY, 1))
-    check("M1 副本迁移 v2→v4：id 生成/card.json 改写/written→drafted/volumes+纪律收敛",
-          mig.get("schema_version") == 4
+    check("M1 副本迁移 v2→v5：id 生成/card.json 改写/written→drafted/volumes+纪律收敛+world 字段",
+          mig.get("schema_version") == 5
           and mig["characters"][0].get("id") == "char_01"
           and mcard_file["pov"]["character"] == "char_01"
           and mig["chapters"]["1"]["status"] == "drafted"
           and mig["arc"]["planned_through"] == 9  # locked 1 + 8
           and mig["arc"]["volumes"][0]["chapters"] == [1, 12]
-          and mig["book"]["context_projection"] is False)
+          and mig["book"]["context_projection"] is False
+          and mig["world"].get("era_materials") == []
+          and "time_period" in mig["world"])
     r = run(["write", M1COPY, "1"])
     print("--- M1 副本 write 输出尾部 ---")
     print((r.stdout or r.stderr)[-400:])
@@ -674,12 +702,13 @@ def main():
     r = run(["status", LEGACY])
     check("v1 status 迁移不报错", r.returncode == 0 and "migrated" in r.stdout)
     lmig = load_json(wb.bible_path(LEGACY))
-    check("v1 迁移链：cell 原样保留 + 包装卡 id 化 + v4（volumes/纪律收敛）",
-          lmig["schema_version"] == 4
+    check("v1 迁移链：cell 原样保留 + 包装卡 id 化 + v5（volumes/纪律收敛/world 字段）",
+          lmig["schema_version"] == 5
           and lmig["chapters"]["1"]["cell"]["pressure"][0]["char"] == "陆小满"
           and lmig["chapters"]["1"]["card"]["engine"]["pressure"][0]["char"] == "char_01"
           and lmig["arc"]["planned_through"] == 8
-          and lmig["arc"]["volumes"][0]["id"] == "V1")
+          and lmig["arc"]["volumes"][0]["id"] == "V1"
+          and lmig["world"].get("era_materials") == [] and "time_period" in lmig["world"])
     spec0 = {"language": "zh", "characters": legacy_bible["characters"], "ledger": legacy_bible["ledger"],
              "engine": {"cells": [legacy_bible["chapters"]["1"]["cell"]]}}
     directive0 = build_engine_directive(spec0, 1)
@@ -688,18 +717,21 @@ def main():
     check("v1 迁移后细胞指令逐字等价", build_engine_directive(spec1, 1) == directive0)
 
     real_client_for = wb.client_for
+    real_run_audit5 = wb.run_audit
     try:
         fake = FakeClient([_short_paras_prose(), json.dumps(
             {"chapter": 1, "draft": "v001", "base_state_revision": 0, "ops": [
                 {"op": "learn", "character_id": "陆小满", "fact_id": "F1",
                  "evidence": "雨点砸在窗纸上。"}]}, ensure_ascii=False)])
         wb.client_for = lambda *a, **k: fake
+        wb.run_audit = lambda *a, **k: None
         wb.cmd_write([LEGACY, "1"])
         check("v1 write 直通（fake client）出三件套",
               os.path.exists(os.path.join(wb.drafts_dir(LEGACY, 1), "v001.md"))
               and os.path.exists(os.path.join(wb.drafts_dir(LEGACY, 1), "v001.delta.json")))
     finally:
         wb.client_for = real_client_for
+        wb.run_audit = real_run_audit5
     r = run(["commit", LEGACY, "1"], input="y\n\n")
     check("v1 commit 直通（无卡跳过 recorded_consequence 回填）",
           r.returncode == 0 and "跳过 recorded_consequence" in r.stdout
@@ -733,6 +765,7 @@ def main():
     real_client_for2, real_input = wb.client_for, builtins.input
     try:
         wb.client_for = lambda *a, **k: fake12
+        wb.run_audit = lambda *a, **k: None  # 12 章回复按位消费，audit 会吃掉后续章的回复
         builtins.input = run_input(["y", ""] * 12)  # 每章 commit：确认 y + 回车采纳提炼句
         buf12 = io.StringIO()
         with contextlib.redirect_stdout(buf12):
@@ -742,6 +775,7 @@ def main():
         out12 = buf12.getvalue()
     finally:
         wb.client_for, builtins.input = real_client_for2, real_input
+        wb.run_audit = real_run_audit
     b12 = wb.load_bible(BOOK12)
     check("12 章全部 committed（FakeClient 离线写满）",
           all((b12["chapters"].get(str(c)) or {}).get("status") == "committed" for c in range(1, 13)))
@@ -871,12 +905,14 @@ def main():
                         "state_changes_observed": [], "hooks_touched": [], "unresolved_questions": []},
                        ensure_ascii=False)])
         wb.client_for = lambda *a, **k: fake_rec
+        wb.run_audit = lambda *a, **k: None  # 恢复段的 fact 回复不能被 audit 消费
         builtins.input = run_input(["y", ""])
         with contextlib.redirect_stdout(io.StringIO()):
             wb.cmd_write([BOOK12, "12"])
             wb.cmd_commit([BOOK12, "12"])
     finally:
         wb.client_for, builtins.input = real_client_for2, real_input
+        wb.run_audit = real_run_audit
     check("删 graph/ 后 write+commit 正常且重抽恢复 facts",
           os.path.exists(os.path.join(wb.ws_dir(BOOK12), "graph", "facts", "ch12.fact.json")))
 
@@ -911,6 +947,156 @@ def main():
     check("legacy 可 plan 且滚动纪律截断（locked 1 + cap 9 → planned 9）",
           bl["arc"]["planned_through"] == 9 and "截断" in out_l,
           out_l[-300:] if bl["arc"]["planned_through"] != 9 else "")
+
+    # ============ 13. M3B：世界设定/时代素材（离线 CRUD+注入+propose 规范化+audit 正样本） ============
+    # —— v4→v5 迁移单元（验收 #5：旧 bible 无 era_materials 自动补空数组） ——
+    BOOKV4 = "smoke-wb-v4copy"
+    if os.path.isdir(wb.ws_dir(BOOKV4)):
+        shutil.rmtree(wb.ws_dir(BOOKV4))
+    os.makedirs(wb.ws_dir(BOOKV4), exist_ok=True)
+    v4_bible = {"schema_version": 4, "revision": 1,
+                "book": {"title": "雾锁九门（v4副本）", "genre": "都市悬疑", "language": "zh",
+                         "platform": "qidian", "logline": "v5 迁移验证"},
+                "characters": [], "world": {"setting": "旧设定", "glossary": []},
+                "arc": {"template": "悬疑假设弧", "anchors": [], "total_chapters": 12},
+                "ledger": [], "chapters": {}}
+    with open(wb.bible_path(BOOKV4), "w", encoding="utf-8") as f:
+        json.dump(v4_bible, f, ensure_ascii=False, indent=2)
+    mig5 = wb.load_bible(BOOKV4)
+    check("v4→v5 迁移：schema=5 且 world 补齐 era_materials/locations/rules/time_period（原 setting 保留）",
+          mig5.get("schema_version") == 5
+          and mig5["world"].get("era_materials") == [] and mig5["world"].get("locations") == []
+          and mig5["world"].get("rules") == [] and "time_period" in mig5["world"]
+          and mig5["world"].get("setting") == "旧设定")
+    check("v5 迁移幂等（再 load 不再打印 migrated）",
+          wb.load_bible(BOOKV4).get("schema_version") == 5)
+
+    # —— 素材 CRUD 核心（离线，操作在 BOOK 上：mat_901/902/903 已在段 2 种子） ——
+    bible = wb.load_bible(BOOK)
+    e = wb.save_material_core(BOOK, bible, {"category": "流行文化", "keywords": ["录像厅"],
+                                            "content": "M3B-CRUD-巷尾录像厅海报手写周排片。"})
+    check("素材新增：id 自动生成（mat_904）", e["id"] == "mat_904"
+          and any(m["id"] == "mat_904" for m in wb.load_bible(BOOK)["world"]["era_materials"]))
+    try:
+        wb.save_material_core(BOOK, bible, {"category": "生活细节", "content": "  "})
+        check("素材空 content 拒绝", False)
+    except wb.Refused:
+        check("素材空 content 拒绝", True)
+    e2 = wb.save_material_core(BOOK, bible, {"id": "mat_904", "category": "完全自创分类",
+                                             "content": "M3B-CRUD-改后的内容。"})
+    check("素材更新（同 id 整体替换）+ 枚举外分类归「其他」且原词并入 keywords",
+          len([m for m in wb.load_bible(BOOK)["world"]["era_materials"] if m["id"] == "mat_904"]) == 1
+          and e2["category"] == "其他" and "完全自创分类" in e2["keywords"])
+    removed = wb.remove_material_core(BOOK, wb.load_bible(BOOK), "mat_902")
+    check("素材删除 + 删不存在 id 拒绝",
+          removed["id"] == "mat_902" and not any(m["id"] == "mat_902" for m in
+                                                 wb.load_bible(BOOK)["world"]["era_materials"]))
+    try:
+        wb.remove_material_core(BOOK, wb.load_bible(BOOK), "mat_902")
+        check("素材删不存在 id 拒绝", False)
+    except wb.Refused:
+        check("素材删不存在 id 拒绝", True)
+    # chapter_range 解析：字符串 / 端点可空
+    er = wb.save_material_core(BOOK, wb.load_bible(BOOK),
+                               {"category": "历史事件", "keywords": ["防汛"], "content": "M3B-RANGE-解析。",
+                                "chapter_range": "3-6"})
+    check("chapter_range 解析（'3-6'→[3,6]）", er["chapter_range"] == [3, 6])
+    er2 = wb.save_material_core(BOOK, wb.load_bible(BOOK),
+                                {"category": "地理环境", "keywords": ["江滩"], "content": "M3B-RANGE2-解析。",
+                                 "chapter_range": [4, None]})
+    check("chapter_range 解析（[4,null] 保留开区间）", er2["chapter_range"] == [4, None])
+
+    # —— 相关性选择单元（工单规则：命中→按分取；无命中→回退前 N；range 不覆盖→排除） ——
+    bible = wb.load_bible(BOOK)
+    sel = wb.select_era_materials(bible, "怀表 死当 地名 刻痕", ch=2)
+    check("选择：命中关键词的素材按分在前、range 不覆盖的排除",
+          sel and sel[0]["id"] == "mat_901"
+          and all(m["id"] != "mat_903" for m in sel)
+          and all(m["id"] != "mat_902" for m in sel))
+    sel_fallback = wb.select_era_materials(bible, "完全无关的上下文词组", ch=1)
+    check("选择：无命中回退前 N 条（保持确定性顺序）",
+          sel_fallback and sel_fallback[0]["id"] == "mat_901")
+    sel_empty = wb.select_era_materials({"world": {"era_materials": []}}, "任意")
+    check("选择：空素材返回空列表", sel_empty == [])
+    block, used = wb.era_injection(bible, "怀表 死当", ch=2)
+    check("注入块格式（【时代素材…】+ [分类] 前缀行）",
+          block.startswith("【时代素材") and "\n- [物品道具] M3B-ERA-MATCH" in block
+          and used and used[0]["id"] == "mat_901")
+
+    # —— 讨论/codiscuss 注入（工单功能 4：system 追加摘要） ——
+    branch_a = next(b for b in json.load(open(wb.branches_file(BOOK, 1), encoding="utf-8"))
+                    ["branches"] if b["id"] == "A")
+    _, d_system, _ = wb._discussion_opener(wb.load_bible(BOOK), 1, "A", branch_a)
+    check("章节讨论 system 追加时代素材摘要（≤8 条）",
+          "时代素材" in d_system and "M3B-ERA-MATCH" in d_system)
+    from src.harness import codiscuss as _cd_mod
+    cd_msgs = _cd_mod.codiscuss_messages(wb.load_bible(BOOK), [], brief_extra="1998 年怀表")
+    check("人物共创 system 追加时代素材摘要",
+          "时代素材" in cd_msgs[0]["content"] and "M3B-ERA-MATCH" in cd_msgs[0]["content"])
+
+    # —— propose 规范化（离线 FakeClient；真实质量测试见 webgui-smoke/theflood） ——
+    fake_p = FakeClient([json.dumps([
+        {"category": "历史事件", "keywords": ["抗洪"], "content": "M3B-PROPOSE-1998年长江特大洪水。",
+         "chapter_range": None},
+        {"category": "完全没听说过的分类", "keywords": [], "content": "M3B-PROPOSE-分类外候选。"},
+        {"category": "生活细节", "keywords": ["文具"], "content": "   "},
+    ], ensure_ascii=False)])
+    before_cnt = len(wb.load_bible(BOOK)["world"]["era_materials"])
+    cands = wb.propose_materials_core(BOOK, wb.load_bible(BOOK), "1998 年日常细节", count=10,
+                                      client=fake_p)
+    after_cnt = len(wb.load_bible(BOOK)["world"]["era_materials"])
+    check("propose 规范化：空 content 候选丢弃 + 枚举外分类归一 + 候选不落盘",
+          len(cands) == 2 and cands[1]["category"] == "其他"
+          and "完全没听说过的分类" in cands[1]["keywords"]
+          and all(c.get("source") == "" for c in cands)
+          and after_cnt == before_cnt)
+    try:
+        wb.propose_materials_core(BOOK, wb.load_bible(BOOK), "  ", client=fake_p)
+        check("propose 空 topic 拒绝", False)
+    except wb.Refused:
+        check("propose 空 topic 拒绝", True)
+
+    # —— CLI world 命令（工单功能 1） ——
+    r = run(["world", BOOK, "list"])
+    check("CLI world list：时代/素材/分类/id 行", r.returncode == 0 and "时代素材" in r.stdout
+          and "mat_901" in r.stdout and "[物品道具]" in r.stdout)
+    r = run(["world", BOOK, "remove", "mat_904"])
+    check("CLI world remove 成功且落盘",
+          r.returncode == 0 and "已删除" in r.stdout
+          and not any(m["id"] == "mat_904" for m in wb.load_bible(BOOK)["world"]["era_materials"]))
+    r = run(["world", BOOK, "remove", "mat_904"])
+    check("CLI world remove 不存在 id 拒绝（退出码 1）",
+          r.returncode == 1 and "不存在" in r.stdout)
+    r = run(["world", BOOK, "add"], input="生活细节\n文具,书包\nM3B-CLI-ADD-英雄牌钢笔装在阵风牌书包侧袋。\n\n手动添加\n")
+    check("CLI world add（交互式）成功", r.returncode == 0 and "素材已添加" in r.stdout
+          and any("M3B-CLI-ADD" in (m.get("content") or "") for m in
+                  wb.load_bible(BOOK)["world"]["era_materials"]))
+    r = run(["world", BOOK, "set", "time_period", "九十年代末"])
+    check("CLI world set time_period", r.returncode == 0
+          and wb.load_bible(BOOK)["world"]["time_period"] == "九十年代末")
+
+    # —— audit 正样本（修复后的 write_chapter_core audit 挂接：fake 第 3 回复为审核 JSON） ——
+    audit_json = {"issues": [{"type": "因果断裂", "severity": "low", "quote": "M3B-AUDIT-无具体引用",
+                              "explanation": "假审核发现的假问题"}]}
+    real_client_for3 = wb.client_for
+    try:
+        fake_a = FakeClient([_short_paras_prose(), json.dumps(
+            {"chapter": 2, "draft": "v003", "base_state_revision": StoryState(wb.state_path(BOOK)).revision,
+             "ops": []}, ensure_ascii=False), json.dumps(audit_json, ensure_ascii=False)])
+        wb.client_for = lambda *a, **k: fake_a
+        buf_a = io.StringIO()
+        with contextlib.redirect_stdout(buf_a):
+            rres = wb.write_chapter_core(BOOK, 2)
+        out_a = buf_a.getvalue()
+    finally:
+        wb.client_for = real_client_for3
+    check("write_chapter_core 挂接合理性审核（第 3 次 LLM 调用解析进结果）",
+          isinstance(rres.get("audit"), dict)
+          and rres["audit"].get("issues") and rres["audit"]["issues"][0]["type"] == "因果断裂")
+    check("audit 摘要函数可用（计数格式）",
+          "合理性审核：1 项" in wb.audit_summary(rres["audit"]))
+    check("write 报告 era_materials_used 字段在返回结果中",
+          isinstance(rres.get("era_used"), list))
 
     # ============ 12. 收尾总览 ============
     r = run(["status", BOOK12])
